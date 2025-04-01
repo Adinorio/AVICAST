@@ -1,0 +1,167 @@
+{% extends 'dashboardadminapp/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="roles-container">
+    <div class="roles-header">
+        <h1 class="page-title">Roles & Assignments</h1>
+        <button id="openDrawerBtn" class="btn btn-primary" disabled>➕ Add Assignments</button>
+    </div>
+
+    <div class="roles-list">
+        {% for user in users %}
+        <div class="role-item">
+            <input type="checkbox" class="user-select" data-user-id="{{ user.id }}">
+            <div class="user-card">
+                <div class="user-avatar">
+                    <img src="{% static 'dashboardadminapp/images/user-avatar.jpg' %}" alt="User Avatar">
+                </div>
+                <div class="user-details">
+                    <div class="user-header">
+                        <span class="user-name">{{ user.first_name }} {{ user.last_name }}</span>
+                        <span class="user-role-badge">{{ user.role }}</span>
+                        <span class="status-badge {% if user.is_active %}enabled{% else %}disabled{% endif %}">
+                            {% if user.is_active %}Active{% else %}Disabled{% endif %}
+                        </span>
+                    </div>
+                    <table class="user-info-table">
+                        <tr>
+                            <td><strong>User ID:</strong></td>
+                            <td>{{ user.id }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Role:</strong></td>
+                            <td>{{ user.role }}</td>
+                        </tr>
+                    </table>
+                    <button class="btn btn-secondary change-role-btn" data-user-id="{{ user.id }}" 
+                            data-user-name="{{ user.first_name }} {{ user.last_name }}" 
+                            data-user-role="{{ user.role }}">
+                        ✏ Change Assignments
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-center">No users available.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Side Drawer for Assignments -->
+<div id="sideDrawer" class="drawer">
+    <div class="drawer-overlay"></div>
+    <div class="drawer-content">
+        <h2 id="drawerTitle">Assign Roles & Assignments</h2>
+        
+        <div class="roles-section">
+            <strong>Roles:</strong>
+            <label><input type="radio" name="roles" value="admin"> Admin</label>
+            <label><input type="radio" name="roles" value="user"> User</label>
+        </div>
+
+        <div class="assignments-section">
+            <strong>Assignments:</strong>
+            <label><input type="checkbox" name="assignments" value="BL"> Bird List (BL)</label>
+            <label><input type="checkbox" name="assignments" value="BI"> Bird Identifier (BI)</label>
+            <label><input type="checkbox" name="assignments" value="BCM"> Bird Census Management (BCM)</label>
+        </div>
+
+        <div class="drawer-buttons">
+            <button id="saveAssignmentsBtn" class="btn btn-success">Save</button>
+            <button id="closeDrawerBtn" class="btn btn-danger">Close</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectUsers = document.querySelectorAll('.user-select');
+    const openDrawerBtn = document.getElementById('openDrawerBtn');
+    const sideDrawer = document.getElementById('sideDrawer');
+    const closeDrawerBtn = document.getElementById('closeDrawerBtn');
+    const saveAssignmentsBtn = document.getElementById('saveAssignmentsBtn');
+    const changeRoleButtons = document.querySelectorAll('.change-role-btn');
+    const drawerTitle = document.getElementById('drawerTitle');
+
+    let selectedUserIds = [];
+
+    // Enable "Add Assignments" button when at least one user is selected
+    selectUsers.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            selectedUserIds = [...document.querySelectorAll('.user-select:checked')].map(cb => cb.dataset.userId);
+            openDrawerBtn.disabled = selectedUserIds.length === 0;
+        });
+    });
+
+    // Open Side Drawer when clicking "Change Assignments"
+    changeRoleButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const userId = this.dataset.userId;
+            const userName = this.dataset.userName;
+            const userRole = this.dataset.userRole;
+
+            // Update drawer title
+            drawerTitle.innerText = `Assign Roles & Assignments for ${userName}`;
+
+            // Reset checkboxes and role selection
+            document.querySelectorAll('input[name="roles"]').forEach(radio => {
+                radio.checked = radio.value === userRole;
+            });
+            document.querySelectorAll('input[name="assignments"]').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+
+            // Open Drawer
+            sideDrawer.style.right = '0';
+            sideDrawer.style.opacity = '1';
+            sideDrawer.setAttribute('data-user-id', userId);
+        });
+    });
+
+    // Close Side Drawer
+    closeDrawerBtn.addEventListener('click', function() {
+        sideDrawer.style.right = '-350px';
+        sideDrawer.style.opacity = '0';
+    });
+
+    // Save Assignments
+    saveAssignmentsBtn.addEventListener('click', function() {
+        const userId = sideDrawer.getAttribute('data-user-id');
+        const selectedRole = document.querySelector("input[name='roles']:checked")?.value;
+        const selectedAssignments = [...document.querySelectorAll("input[name='assignments']:checked")].map(cb => cb.value);
+
+        if (!selectedRole) {
+            alert("Please select a role.");
+            return;
+        }
+
+        fetch("{% url 'dashboardadminapp:assign_roles' %}", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-CSRFToken": "{{ csrf_token }}" },
+            body: JSON.stringify({
+                user_id: userId,
+                role: selectedRole,
+                assignments: selectedAssignments
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Roles & Assignments Updated!");
+                location.reload();
+            } else {
+                alert("Error updating roles.");
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("An unexpected error occurred.");
+        });
+    });
+});
+</script>
+{% endblock %}

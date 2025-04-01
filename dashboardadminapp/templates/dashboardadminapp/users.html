@@ -1,0 +1,118 @@
+{% extends 'dashboardadminapp/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="users-container" style="max-width:1200px; margin:0 auto; padding:20px; font-family:sans-serif;">
+    <!-- Header Row: Title, Search, ADD USER, Settings -->
+    <div class="users-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h1 class="page-title" style="margin:0;">Users</h1>
+        <div class="header-right" style="display:flex; align-items:center;">
+            <div class="search-bar" style="display:flex; align-items:center; margin-right:10px;">
+                <input type="text" id="userSearch" placeholder="Search by ID, name" style="padding:5px 10px; border:1px solid #ccc; border-radius:4px;">
+                <button class="search-icon btn btn-outline-secondary" style="margin-left:5px;">🔍</button>
+            </div>
+            <!-- Add User link -->
+            <a href="{% url 'dashboardadminapp:add_user' %}" class="btn btn-primary me-2">Add User</a>
+            <button class="settings-btn btn btn-outline-secondary">⋮</button>
+        </div>
+    </div>
+
+    <!-- Filters: Active, Disabled & Archived Users -->
+    <div class="user-filters" style="display:flex; gap:20px; margin-bottom:20px;">
+        <div class="filter-item">
+            <span class="filter-label" style="font-weight:bold;">Active Users</span>
+            <span class="filter-badge" style="background-color:#28a745; color:#fff; padding:3px 8px; border-radius:4px;">{{ active_users }}</span>
+        </div>
+        <div class="filter-item">
+            <span class="filter-label" style="font-weight:bold;">Disabled Users</span>
+            <span class="filter-badge" style="background-color:#6c757d; color:#fff; padding:3px 8px; border-radius:4px;">{{ disabled_users }}</span>
+        </div>
+        <div class="filter-item">
+            <a href="{% url 'dashboardadminapp:archived_users' %}" class="btn btn-outline-secondary">📂 Archived Users</a>
+        </div>
+    </div>
+
+    <!-- User Table -->
+    <div class="user-table">
+        <table class="table table-striped" style="width:100%; border-collapse:collapse;">
+            <thead style="position:sticky; top:0; background:#fff; z-index:2;">
+                <tr>
+                    <th style="width:40px;"><input type="checkbox" id="selectAll"></th>
+                    <th>User ID</th>
+                    <th>Name</th>
+                    <th>User Type</th>
+                    <th>Last Active</th>
+                    <th>Actions</th> <!-- NEW COLUMN -->
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr data-user-id="{{ user.id }}">
+                    <td><input type="checkbox" class="user-checkbox"></td>
+                    <td>{{ user.id }}</td>
+                    <td>
+                        <strong>{{ user.first_name }} {% if user.middle_name %}{{ user.middle_name }} {% endif %}{{ user.last_name }}</strong>
+                        <br>{{ user.email }}
+                    </td>
+                    <td>{{ user.role }}</td>
+                    <td>{{ user.last_active|date:"F j, Y" }}</td>
+                    <td>
+                        <a href="{% url 'dashboardadminapp:edit_user' user.id %}" class="btn btn-warning btn-sm">📝 Edit</a>
+                        <button class="btn btn-danger btn-sm archive-user-btn" data-user-id="{{ user.id }}">📂 Archive</button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center">No users found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- JavaScript for "Select All" and Archive Confirmation -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.user-checkbox');
+    const archiveButtons = document.querySelectorAll('.archive-user-btn');
+
+    // Select All Checkbox Functionality
+    selectAll.addEventListener('change', function() {
+        checkboxes.forEach(cb => cb.checked = this.checked);
+    });
+
+    // Archive User Confirmation
+    archiveButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const userId = this.dataset.userId;
+            const row = document.querySelector(`tr[data-user-id="${userId}"]`);
+            
+            if (confirm("Are you sure you want to archive this user?")) {
+                fetch(`/dashboardadmin/archive_user/${userId}/`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": "{{ csrf_token }}"
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("User successfully archived.");
+                        row.remove(); // Remove the row from the table
+                    } else {
+                        alert("Error archiving user.");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    alert("An unexpected error occurred.");
+                });
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

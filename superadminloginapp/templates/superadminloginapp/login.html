@@ -1,0 +1,42 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | AVICAST</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+<body>
+    <div class="login-container">
+        <!-- Left side with background image -->
+        <div class="login-image"></div>
+
+        <!-- Right side with login form -->
+        <div class="login-form-container">
+            <h2>Login into account</h2>
+            <form method="POST" class="login-form">
+                {% csrf_token %}
+                
+                <div class="input-group">
+                    <i class="fa fa-user"></i>
+                    <input type="text" name="user_id" required placeholder="User ID">
+                </div>
+                
+                <div class="input-group">
+                    <i class="fa fa-lock"></i>
+                    <input type="password" name="password" required placeholder="Password">
+                </div>
+
+                <button type="submit" class="login-button">LOGIN</button>
+
+                {% if error_message %}
+                    <p class="error-message">{{ error_message }}</p>
+                {% endif %}
+
+            </form>
+        </div>
+    </div>
+</body>
+</html>

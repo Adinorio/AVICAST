@@ -1,0 +1,218 @@
+{% extends 'dashboardadminapp/base.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard</title>
+  <style>
+    /* Container for the entire dashboard */
+    .dashboard-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      font-family: sans-serif;
+    }
+
+    /* Main Dashboard Header */
+    .welcome {
+      font-size: 28px;
+      margin-bottom: 5px;
+    }
+    .subtitle {
+      font-size: 18px;
+      color: #888;
+      margin-bottom: 20px;
+    }
+
+    /* Stats Table */
+    .stats-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .stats-table td {
+      padding: 0;
+    }
+
+    /* Stats Containers */
+    .stat-item {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #f7f7f7;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      min-width: 200px;
+      height: 100px;
+    }
+    .stat-icon {
+      font-size: 24px;
+      margin-right: 10px;
+    }
+    .stat-text {
+      font-size: 18px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    /* Log Table & Image Container */
+    .content-container {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+      border-collapse: separate; /* Prevents unwanted lines */
+      overflow: hidden;
+    }
+    
+    /* Log Container */
+    .log-container {
+      flex: 1;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      min-height: 400px;
+      overflow: hidden;
+    }
+
+    /* Sticky Log Table Header */
+    .log-container table {
+      width: 100%;
+      border-collapse: collapse;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    .log-container thead {
+      position: sticky;
+      top: 0;
+      background-color: #fff;
+      z-index: 2;
+      box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+      flex: none; /* Header should not shrink */
+    }
+    .log-container th, .log-container td {
+      text-align: left;
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+    }
+
+    /* Log Table Body Scrollable When Necessary */
+    .log-content {
+      flex-grow: 1;
+      overflow-y: auto;
+      min-height: 50px;
+    }
+
+    /* Image Container */
+    .image-container {
+      flex: 1;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      min-height: 400px;
+    }
+    .image-container img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      object-fit: cover;
+    }
+
+    /* Ensure log-container and image-container adjust together */
+    .log-container,
+    .image-container {
+      min-height: 400px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+      .content-container {
+        flex-direction: column;
+      }
+      .log-container,
+      .image-container {
+        height: auto;
+        margin-bottom: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+{% block content %}
+  <div class="dashboard-container">
+    <!-- Welcome Header -->
+    <h1 class="welcome">Welcome {{ user.first_name }} {{ user.last_name }}!</h1>
+    <p class="subtitle">Dashboard</p>
+    
+    <table class="stats-table">
+        <tr>
+          <td>
+            <div class="stat-item">
+              <span class="stat-icon">&#128100;</span>
+              <span class="stat-text">Total No. of Field Workers ({{ field_workers }})</span>
+            </div>
+          </td>
+          <td>
+            <div class="stat-item">
+              <span class="stat-icon">&#128100;</span>
+              <span class="stat-text">Total No. of Admin ({{ admins }})</span>
+            </div>
+          </td>
+          <td>
+            <div class="stat-item">
+              <span class="stat-icon">&#128100;</span>
+              <span class="stat-text">Total No. of Users ({{ total_users }})</span>
+            </div>
+          </td>
+        </tr>
+      </table>
+      
+    
+    <!-- Main Content: Log Table + Image Container -->
+    <div class="content-container">
+      <!-- Log Container -->
+      <div class="log-container">
+        <table>
+          <thead>
+            <tr>
+              <th class="event-col">Event</th>
+              <th class="time-col">⏰ Time</th>
+              <th class="date-col">📅 Date</th>
+            </tr>
+          </thead>
+          <tbody class="log-content">
+            {% for log in logs %}
+            <tr>
+              <td>{{ log.event }}</td>
+              <td>{{ log.timestamp|time:"H:i A" }}</td>
+              <td>{{ log.timestamp|date:"F j, Y" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="3">No logs available</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Image Container -->
+      <div class="image-container">
+        <img src="{% static 'dashboardadminapp/images/Bird.jpg' %}" alt="Birds on sticks">
+      </div>
+    </div>
+  </div>
+{% endblock %}
+</body>
+</html>

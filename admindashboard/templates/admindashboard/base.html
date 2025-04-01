@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard | AVICAST</title>
+    <link rel="stylesheet" href="{% static 'admindashboard/css/style.css' %}">
+</head>
+<body>
+    <header>
+        <h2>Admin Dashboard</h2>
+        <nav>
+            <a href="{% url 'admindashboard:dashboard' %}">Dashboard</a>
+            <a href="{% url 'dashboardadminapp:logout' %}">Logout</a>
+        </nav>
+    </header>
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+</body>
+</html>

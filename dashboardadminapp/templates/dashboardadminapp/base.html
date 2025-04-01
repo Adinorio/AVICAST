@@ -1,0 +1,25 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AVICAST Dashboard</title>
+  <link rel="stylesheet" href="{% static 'dashboardadminapp/css/stylesdashboard.css' %}">
+  <link rel="stylesheet" href="{% static 'css/users.css' %}">
+</head>
+<body>
+  <div class="sidebar">
+    <h2>AVICAST</h2>
+    <a href="{% url 'dashboardadminapp:dashboard' %}">Dashboard</a>
+    <a href="{% url 'dashboardadminapp:users' %}">Users</a>
+    <a href="{% url 'dashboardadminapp:roles' %}">Roles/Assignments</a>
+    <a href="{% url 'dashboardadminapp:logs' %}">Logs</a>
+    <a href="{% url 'login' %}" class="logout-btn">Logout</a>
+  </div>
+
+  <div class="main-content">
+    {% block content %}{% endblock %}
+  </div>
+</body>
+</html>
