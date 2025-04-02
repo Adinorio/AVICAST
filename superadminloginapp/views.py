@@ -3,6 +3,7 @@ from django.contrib.auth.hashers import check_password
 from .models import User
 from dashboardadminapp.models import UserProfile
 from .forms import LoginForm
+from django.contrib.auth import logout
 
 def login_view(request):
     error_message = None
@@ -43,3 +44,6 @@ def login_view(request):
     # Render the login page with the form and possible error message
     return render(request, "superadminloginapp/login.html", {"form": form, "error_message": error_message})
 
+def logout_view(request):
+    logout(request)  # This logs out the user
+    return redirect('/superadminloginapp/login/') 
