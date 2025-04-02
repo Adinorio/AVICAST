@@ -1,3 +1,5 @@
+# superadminloginapp/apps.py
+
 from django.apps import AppConfig
 
 class AccountsConfig(AppConfig):
@@ -5,5 +7,5 @@ class AccountsConfig(AppConfig):
     name = 'superadminloginapp'
 
     def ready(self):
-        from .models import User
-        User.create_default_user()
+        # Remove the call to create_default_user here
+        pass
