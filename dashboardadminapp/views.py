@@ -139,7 +139,7 @@ def assign_roles(request):
 
             if not role:
                 return JsonResponse({"success": False, "error": "No role specified."})
-
+            #Test
             # Update users' roles
             UserProfile.objects.filter(id__in=user_ids).update(role=role)
 
