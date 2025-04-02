@@ -34,6 +34,9 @@
                 {% if error_message %}
                     <p class="error-message">{{ error_message }}</p>
                 {% endif %}
+                
+                <!-- Optional: If you want a redirect for the next page after login -->
+                <input type="hidden" name="next" value="{{ request.GET.next }}">
 
             </form>
         </div>

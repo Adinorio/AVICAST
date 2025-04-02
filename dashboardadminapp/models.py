@@ -17,7 +17,7 @@ def generate_user_id():
     return f"25-2409-{new_id:03d}"
 
 class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)  # Link to User model
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")  
     custom_user_id = models.CharField(max_length=15, unique=True, null=False, blank=False)
     first_name = models.CharField(max_length=100)
     middle_name = models.CharField(max_length=100, blank=True, null=True)
@@ -35,4 +35,5 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.role})"
+
 

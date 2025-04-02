@@ -91,7 +91,7 @@ def archive_user(request, user_id):
     if request.method == "POST":
         try:
             user_profile = get_object_or_404(UserProfile, id=user_id)
-            user_profile.is_archived = True  # Correct model
+            user_profile.is_archived = True
             user_profile.is_active = False
             user_profile.save()
             return JsonResponse({"success": True})
@@ -105,7 +105,7 @@ def archived_users(request):
 
 def edit_user(request, user_id):
     user_profile = get_object_or_404(UserProfile, id=user_id)  
-    user = user_profile.user  # Get related auth user
+    user = user_profile.user  # Get related User
 
     if request.method == "POST":
         first_name = request.POST.get("first_name", user_profile.first_name)
@@ -113,12 +113,7 @@ def edit_user(request, user_id):
         email = request.POST.get("email", user_profile.email)
         role = request.POST.get("role", user_profile.role)
 
-        # Update both User and UserProfile
-        user.first_name = first_name
-        user.last_name = last_name
-        user.email = email
-        user.save()
-
+        # Update only UserProfile, since User has only `user_id` and `password`
         user_profile.first_name = first_name
         user_profile.last_name = last_name
         user_profile.email = email
@@ -135,11 +130,11 @@ def assign_roles(request):
         try:
             data = json.loads(request.body)
             user_ids = data.get("user_ids", [])
-            role = data.get("role")  # Expecting a single role
+            role = data.get("role")
 
             if not role:
                 return JsonResponse({"success": False, "error": "No role specified."})
-            #Test
+
             # Update users' roles
             UserProfile.objects.filter(id__in=user_ids).update(role=role)
 

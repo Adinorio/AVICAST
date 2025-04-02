@@ -1,21 +1,48 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Admin Dashboard | AVICAST</title>
-    <link rel="stylesheet" href="{% static 'admindashboard/css/style.css' %}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin Dashboard{% endblock %}</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    {% block extra_head %}{% endblock %}  <!-- Optional block for adding extra styles or scripts in specific templates -->
 </head>
 <body>
-    <header>
-        <h2>Admin Dashboard</h2>
-        <nav>
-            <a href="{% url 'admindashboard:dashboard' %}">Dashboard</a>
-            <a href="{% url 'dashboardadminapp:logout' %}">Logout</a>
-        </nav>
+    <!-- Header Section -->
+    <header class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="#">Admin Dashboard</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item active">
+                    <a class="nav-link" href="{% url 'admindashboard:dashboard' %}">Dashboard</a>
+                </li>
+
+                <!-- Add more nav items as needed -->
+            </ul>
+        </div>
     </header>
-    <main>
+
+    <!-- Main Content Section -->
+    <div class="container mt-4">
         {% block content %}
+        <!-- Content will be injected here by child templates -->
         {% endblock %}
-    </main>
+    </div>
+
+    <!-- Footer Section -->
+    <footer class="bg-light text-center py-4 mt-4">
+        <p>&copy; 2025 Admin Dashboard. All rights reserved.</p>
+    </footer>
+
+    <!-- JavaScript Files -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    {% block extra_scripts %}{% endblock %}  <!-- Optional block for adding extra JS -->
 </body>
 </html>

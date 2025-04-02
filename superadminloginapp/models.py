@@ -8,6 +8,10 @@ class User(models.Model):
     @staticmethod
     def create_default_user():
         hashed_password = make_password("Avicast123")
-        if not User.objects.filter(user_id="010101").exists():
-            User.objects.create(user_id="010101", password=hashed_password)
+        user, created = User.objects.get_or_create(
+            user_id="010101",
+            defaults={"password": hashed_password}
+        )
+        return user  # Optional: Return user instance
+
 
