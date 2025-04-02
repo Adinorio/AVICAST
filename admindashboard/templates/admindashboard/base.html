@@ -1,48 +1,82 @@
 {% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Admin Dashboard{% endblock %}</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    {% block extra_head %}{% endblock %}  <!-- Optional block for adding extra styles or scripts in specific templates -->
+    <title>Avicast Dashboard</title>
+    <link rel="stylesheet" href="{% static 'admindashboard/css/AppStyle.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <!-- Header Section -->
-    <header class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="#">Admin Dashboard</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav">
-                <li class="nav-item active">
-                    <a class="nav-link" href="{% url 'admindashboard:dashboard' %}">Dashboard</a>
-                </li>
 
-                <!-- Add more nav items as needed -->
-            </ul>
-        </div>
-    </header>
-
-    <!-- Main Content Section -->
-    <div class="container mt-4">
-        {% block content %}
-        <!-- Content will be injected here by child templates -->
-        {% endblock %}
+    <div id="loading-screen">
+        <div class="spinner"></div>
+        <p>Loading...</p>
     </div>
 
-    <!-- Footer Section -->
-    <footer class="bg-light text-center py-4 mt-4">
-        <p>&copy; 2025 Admin Dashboard. All rights reserved.</p>
-    </footer>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="logo-container">
+            <div class="logo">A</div>
+            <span class="brand-name">Avicast</span>
+            <i class="fas fa-times close-btn" onclick="toggleSidebar()"></i>
+        </div>
+        <ul class="menu">
+            <li><a href="#" onclick="showLoading(event)"><i class="fas fa-dove"></i> Birds List</a></li>
+            <li><a href="#" onclick="showLoading(event)"><i class="fas fa-search"></i> Birds Identification</a></li>
+            <li><a href="#" onclick="showLoading(event)"><i class="fas fa-map-marker-alt"></i> Sites</a></li>
+            <li><a href="#" onclick="showLoading(event)"><i class="fas fa-chart-bar"></i> Statistical Reports</a></li>
+            <li><a href="#" onclick="showLoading(event)"><i class="fas fa-question-circle"></i> Help</a></li>
+            <li class="logout"><a href="#" onclick="showLoading(event)"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+        </ul>
+    </aside>
 
-    <!-- JavaScript Files -->
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- Main content area -->
+    <div class="main-content">
+        <!-- Top Navigation -->
+        <nav class="top-nav">
+            <i class="fas fa-bars menu-btn" onclick="toggleSidebar()"></i>
+            <div class="user-info">
+                <i class="fas fa-bell"></i>
+                <img src="{% static 'images/user-profile.jpg' %}" alt="User Profile">
+                <span>{{ user.username }}</span>
+            </div>
+        </nav>
 
-    {% block extra_scripts %}{% endblock %}  <!-- Optional block for adding extra JS -->
+        <!-- Page content injected here -->
+        <section class="dashboard">
+            {% block content %}
+            <!-- This is where your page-specific content will go -->
+            {% endblock %}
+        </section>
+    </div>
+
+    <script>
+        // Sidebar toggle functionality
+        function toggleSidebar() {
+            const sidebar = document.getElementById("sidebar");
+            const mainContent = document.querySelector(".main-content");
+
+            sidebar.classList.toggle("active");
+            mainContent.classList.toggle("sidebar-open");
+        }
+
+        // Show loading screen before redirect
+        function showLoading(event, url = null) {
+            event.preventDefault();
+            const loadingScreen = document.getElementById("loading-screen");
+            loadingScreen.style.display = "flex";
+
+            setTimeout(function () {
+                if (url) {
+                    window.location.href = url;
+                } else {
+                    window.location.href = event.target.href;
+                }
+            }, 500);
+        }
+    </script>
 </body>
 </html>

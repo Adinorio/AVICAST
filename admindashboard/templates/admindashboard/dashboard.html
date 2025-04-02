@@ -1,5 +1,28 @@
 {% extends "admindashboard/base.html" %}
 
 {% block content %}
-  <h1>Hello, World!</h1>
+  <h1>Welcome to the Dashboard, {{ user.username }}!</h1>
+
+  <div class="dashboard-grid">
+    <div class="dashboard-box">
+      <h2>📊 Statistical Reports</h2>
+      <p>View the latest data and reports.</p>
+      <a href="#" class="btn" onclick="showLoading(event)">Go to Reports</a>
+    </div>
+    <div class="dashboard-box">
+      <h2>🖼️ Water Bird Census Management</h2>
+      <p>Manage water bird census reports.</p>
+      <a href="#" class="btn" onclick="showLoading(event)">Manage Sites</a>
+    </div>
+    <div class="dashboard-box">
+      <h2>🔍 Birds Identification</h2>
+      <p>Identify and manage bird species.</p>
+      <a href="#" class="btn" onclick="showLoading(event)">Go to Identification</a>
+    </div>
+    <div class="dashboard-box">
+      <h2>🦜 List of Birds</h2>
+      <p>View detailed bird species descriptions.</p>
+      <a href="#" class="btn" onclick="showLoading(event)">View Birds List</a>
+    </div>
+  </div>
 {% endblock %}

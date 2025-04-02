@@ -131,3 +131,9 @@ STATICFILES_DIRS = [
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+STATIC_URL = '/static/'
+
+# During development, you may need to use this for serving static files in debug mode
+STATICFILES_DIRS = [
+    BASE_DIR / "static",  # Assuming the static folder is at the base level
+]
