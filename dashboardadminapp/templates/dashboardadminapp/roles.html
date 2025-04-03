@@ -2,81 +2,184 @@
 {% load static %}
 
 {% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roles & Assignments</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'dashboardadminapp/css/stylesdashboard.css' %}">
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f8f9fa;
+            display: flex;
+        }
+
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+            width: calc(100% - 250px);
+            overflow-x: auto;
+        }
+
+        .roles-container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+            overflow: auto;
+        }
+
+        .roles-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .roles-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .role-item {
+            background: #fff;
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+            transition: 0.3s ease-in-out;
+            width: 100%;
+        }
+
+        .role-item:hover {
+            transform: scale(1.02);
+        }
+
+        .user-avatar img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+        }
+
+        .user-details {
+            flex: 1;
+            margin-left: 15px;
+        }
+
+        .change-role-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .change-role-btn:hover {
+            background: #0056b3;
+        }
+
+        /* Drawer Styles */
+        .drawer {
+            position: fixed;
+            right: -350px;
+            top: 0;
+            width: 350px;
+            height: 100%;
+            background: white;
+            box-shadow: -5px 0px 10px rgba(0, 0, 0, 0.2);
+            transition: 0.3s ease-in-out;
+            padding: 20px;
+            z-index: 100;
+        }
+
+        .drawer-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .drawer-buttons {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .drawer-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 99;
+        }
+    </style>
+</head>
+<body>
+
 <div class="roles-container">
     <div class="roles-header">
-        <h1 class="page-title">Roles & Assignments</h1>
-        <button id="openDrawerBtn" class="btn btn-primary" disabled>➕ Add Assignments</button>
+        <h1>Roles & Assignments</h1>
+        <button id="openDrawerBtn" disabled>+ Add Assignments</button>
     </div>
 
     <div class="roles-list">
-        {% for user in users %}
+        {% for profile in user_profiles %}
         <div class="role-item">
-            <input type="checkbox" class="user-select" data-user-id="{{ user.id }}">
-            <div class="user-card">
-                <div class="user-avatar">
-                    <img src="{% static 'dashboardadminapp/images/user-avatar.jpg' %}" alt="User Avatar">
-                </div>
-                <div class="user-details">
-                    <div class="user-header">
-                        <span class="user-name">{{ user.first_name }} {{ user.last_name }}</span>
-                        <span class="user-role-badge">{{ user.role }}</span>
-                        <span class="status-badge {% if user.is_active %}enabled{% else %}disabled{% endif %}">
-                            {% if user.is_active %}Active{% else %}Disabled{% endif %}
-                        </span>
-                    </div>
-                    <table class="user-info-table">
-                        <tr>
-                            <td><strong>User ID:</strong></td>
-                            <td>{{ user.id }}</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Role:</strong></td>
-                            <td>{{ user.role }}</td>
-                        </tr>
-                    </table>
-                    <button class="btn btn-secondary change-role-btn" data-user-id="{{ user.id }}" 
-                            data-user-name="{{ user.first_name }} {{ user.last_name }}" 
-                            data-user-role="{{ user.role }}">
-                        ✏ Change Assignments
-                    </button>
-                </div>
+            <div class="user-avatar">
+                <img src="{{ profile.user.profile_picture.url|default:'https://via.placeholder.com/50' }}" alt="{{ profile.first_name }}">
             </div>
+            <div class="user-details">
+                <h4>{{ profile.first_name }} {{ profile.last_name }}</h4>
+                <p>Current Role: <strong>{{ profile.role }}</strong></p>
+            </div>
+            <input type="checkbox" class="user-select" data-user-id="{{ profile.id }}">
+            <button class="change-role-btn" data-user-id="{{ profile.id }}" data-user-name="{{ profile.first_name }} {{ profile.last_name }}" data-user-role="{{ profile.role }}">Change Assignments</button>
         </div>
         {% empty %}
-        <p class="text-center">No users available.</p>
+        <p>No users found.</p>
         {% endfor %}
     </div>
 </div>
 
-<!-- Side Drawer for Assignments -->
-<div id="sideDrawer" class="drawer">
-    <div class="drawer-overlay"></div>
+<!-- Drawer (Side Panel) -->
+<div class="drawer-overlay"></div>
+<div class="drawer" id="sideDrawer">
     <div class="drawer-content">
         <h2 id="drawerTitle">Assign Roles & Assignments</h2>
         
-        <div class="roles-section">
-            <strong>Roles:</strong>
-            <label><input type="radio" name="roles" value="admin"> Admin</label>
-            <label><input type="radio" name="roles" value="user"> User</label>
-        </div>
+        <label><strong>Select Role:</strong></label>
+        <label><input type="radio" name="roles" value="Admin"> Admin</label>
+        <label><input type="radio" name="roles" value="Manager"> Manager</label>
+        <label><input type="radio" name="roles" value="User"> User</label>
+        
+        <hr>
 
-        <div class="assignments-section">
-            <strong>Assignments:</strong>
-            <label><input type="checkbox" name="assignments" value="BL"> Bird List (BL)</label>
-            <label><input type="checkbox" name="assignments" value="BI"> Bird Identifier (BI)</label>
-            <label><input type="checkbox" name="assignments" value="BCM"> Bird Census Management (BCM)</label>
-        </div>
+        <label><strong>Select Assignments:</strong></label>
+        <label><input type="checkbox" name="assignments" value="Task 1"> Task 1</label>
+        <label><input type="checkbox" name="assignments" value="Task 2"> Task 2</label>
+        <label><input type="checkbox" name="assignments" value="Task 3"> Task 3</label>
 
         <div class="drawer-buttons">
-            <button id="saveAssignmentsBtn" class="btn btn-success">Save</button>
-            <button id="closeDrawerBtn" class="btn btn-danger">Close</button>
+            <button id="closeDrawerBtn">Cancel</button>
+            <button id="saveAssignmentsBtn">Save</button>
         </div>
     </div>
 </div>
 
-{% endblock %}
-
-{% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const selectUsers = document.querySelectorAll('.user-select');
@@ -85,83 +188,65 @@ document.addEventListener('DOMContentLoaded', function() {
     const closeDrawerBtn = document.getElementById('closeDrawerBtn');
     const saveAssignmentsBtn = document.getElementById('saveAssignmentsBtn');
     const changeRoleButtons = document.querySelectorAll('.change-role-btn');
-    const drawerTitle = document.getElementById('drawerTitle');
+    const drawerOverlay = document.querySelector('.drawer-overlay');
 
     let selectedUserIds = [];
 
-    // Enable "Add Assignments" button when at least one user is selected
+    function updateAssignmentButtonState() {
+        selectedUserIds = [...document.querySelectorAll('.user-select:checked')].map(cb => cb.dataset.userId);
+        openDrawerBtn.disabled = selectedUserIds.length === 0;
+    }
+
     selectUsers.forEach(checkbox => {
-        checkbox.addEventListener('change', function() {
-            selectedUserIds = [...document.querySelectorAll('.user-select:checked')].map(cb => cb.dataset.userId);
-            openDrawerBtn.disabled = selectedUserIds.length === 0;
-        });
+        checkbox.addEventListener('change', updateAssignmentButtonState);
     });
 
-    // Open Side Drawer when clicking "Change Assignments"
     changeRoleButtons.forEach(button => {
         button.addEventListener('click', function() {
             const userId = this.dataset.userId;
             const userName = this.dataset.userName;
             const userRole = this.dataset.userRole;
 
-            // Update drawer title
-            drawerTitle.innerText = `Assign Roles & Assignments for ${userName}`;
+            document.getElementById('drawerTitle').innerText = `Assign Roles & Assignments for ${userName}`;
 
-            // Reset checkboxes and role selection
+            // Set the correct role
             document.querySelectorAll('input[name="roles"]').forEach(radio => {
                 radio.checked = radio.value === userRole;
             });
+
+            // Reset assignments
             document.querySelectorAll('input[name="assignments"]').forEach(checkbox => {
                 checkbox.checked = false;
             });
 
-            // Open Drawer
+            // Fetch current assignments for the user
+            fetch(`/dashboardadmin/get_user_assignments/${userId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    data.assignments.forEach(assignment => {
+                        document.querySelector(`input[name="assignments"][value="${assignment}"]`).checked = true;
+                    });
+                });
+
+            // Show the drawer
             sideDrawer.style.right = '0';
             sideDrawer.style.opacity = '1';
             sideDrawer.setAttribute('data-user-id', userId);
+            drawerOverlay.style.display = 'block';
         });
     });
 
-    // Close Side Drawer
-    closeDrawerBtn.addEventListener('click', function() {
+    function closeDrawer() {
         sideDrawer.style.right = '-350px';
         sideDrawer.style.opacity = '0';
-    });
+        drawerOverlay.style.display = 'none';
+    }
 
-    // Save Assignments
-    saveAssignmentsBtn.addEventListener('click', function() {
-        const userId = sideDrawer.getAttribute('data-user-id');
-        const selectedRole = document.querySelector("input[name='roles']:checked")?.value;
-        const selectedAssignments = [...document.querySelectorAll("input[name='assignments']:checked")].map(cb => cb.value);
-
-        if (!selectedRole) {
-            alert("Please select a role.");
-            return;
-        }
-
-        fetch("{% url 'dashboardadminapp:assign_roles' %}", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "X-CSRFToken": "{{ csrf_token }}" },
-            body: JSON.stringify({
-                user_id: userId,
-                role: selectedRole,
-                assignments: selectedAssignments
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert("Roles & Assignments Updated!");
-                location.reload();
-            } else {
-                alert("Error updating roles.");
-            }
-        })
-        .catch(error => {
-            console.error("Error:", error);
-            alert("An unexpected error occurred.");
-        });
-    });
+    closeDrawerBtn.addEventListener('click', closeDrawer);
+    drawerOverlay.addEventListener('click', closeDrawer);
 });
 </script>
+
+</body>
+</html>
 {% endblock %}

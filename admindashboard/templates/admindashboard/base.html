@@ -1,21 +1,93 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Admin Dashboard | AVICAST</title>
-    <link rel="stylesheet" href="{% static 'admindashboard/css/style.css' %}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avicast Dashboard</title>
+    <link rel="stylesheet" href="{% static 'admindashboard/css/AppStyle.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <header>
-        <h2>Admin Dashboard</h2>
-        <nav>
-            <a href="{% url 'admindashboard:dashboard' %}">Dashboard</a>
-            <a href="{% url 'dashboardadminapp:logout' %}">Logout</a>
+
+    <div id="loading-screen">
+        <div class="spinner"></div>
+        <p>Loading...</p>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="logo-container">
+            <div class="logo">A</div>
+            <span class="brand-name">Avicast</span>
+            <i class="fas fa-times close-btn" onclick="toggleSidebar()"></i>
+        </div>
+        <ul class="menu">
+            <li><a href="#" onclick="showLoading(event)"><i class="fas fa-dove"></i> Birds List</a></li>
+            <li><a href="#" onclick="showLoading(event)"><i class="fas fa-search"></i> Birds Identification</a></li>
+            <li><a href="#" onclick="showLoading(event)"><i class="fas fa-map-marker-alt"></i> Sites</a></li>
+            <li><a href="#" onclick="showLoading(event)"><i class="fas fa-chart-bar"></i> Statistical Reports</a></li>
+            <li><a href="#" onclick="showLoading(event)"><i class="fas fa-question-circle"></i> Help</a></li>
+            <li class="logout"><a href="#" onclick="confirmLogout(event)"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+        </ul>
+    </aside>
+
+    <!-- Main content area -->
+    <div class="main-content">
+        <!-- Top Navigation -->
+        <nav class="top-nav">
+            <i class="fas fa-bars menu-btn" onclick="toggleSidebar()"></i>
+            <div class="user-info">
+                <i class="fas fa-bell"></i>
+                <img src="{% static 'admindashboard/images/user-profile.jpg' %}" alt="User Profile">
+                <span>{{ user.username }}</span>
+            </div>
         </nav>
-    </header>
-    <main>
-        {% block content %}
-        {% endblock %}
-    </main>
+
+        <!-- Page content injected here -->
+        <section class="dashboard">
+            {% block content %}
+            <!-- This is where your page-specific content will go -->
+            {% endblock %}
+        </section>
+    </div>
+
+    <script>
+        // Sidebar toggle functionality
+        function toggleSidebar() {
+            const sidebar = document.getElementById("sidebar");
+            const mainContent = document.querySelector(".main-content");
+
+            sidebar.classList.toggle("active");
+            mainContent.classList.toggle("sidebar-open");
+        }
+
+        // Show loading screen before redirect
+        function showLoading(event, url = null) {
+            event.preventDefault();
+            const loadingScreen = document.getElementById("loading-screen");
+            loadingScreen.style.display = "flex";
+
+            setTimeout(function () {
+                if (url) {
+                    window.location.href = url;
+                } else {
+                    window.location.href = event.target.href;
+                }
+            }, 500);
+        }
+
+        // Confirm logout
+        function confirmLogout(event) {
+            event.preventDefault();  // Prevent the default link behavior
+            
+            // Ask the user for confirmation before logging out
+            if (confirm("Are you sure you want to log out?")) {
+                // If the user confirms, redirect to logout URL (Django view)
+                window.location.href = "{% url 'logout_view' %}";  // Make sure the URL is correct
+            }
+        }
+    </script>
 </body>
 </html>

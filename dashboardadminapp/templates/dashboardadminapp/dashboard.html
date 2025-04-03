@@ -6,18 +6,26 @@
   <meta charset="UTF-8">
   <title>Dashboard</title>
   <style>
-    /* Container for the entire dashboard */
+    /* Base reset */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      background-color: #f5f5f5;
+    }
+
+    /* Dashboard Container */
     .dashboard-container {
       max-width: 1200px;
       margin: 0 auto;
       padding: 20px;
-      font-family: sans-serif;
     }
 
     /* Main Dashboard Header */
     .welcome {
       font-size: 28px;
       margin-bottom: 5px;
+      font-weight: 600;
     }
     .subtitle {
       font-size: 18px;
@@ -29,63 +37,63 @@
     .stats-table {
       width: 100%;
       border-collapse: collapse;
-    }
-    .stats-table td {
-      padding: 0;
+      margin-bottom: 20px;
     }
 
-    /* Stats Containers */
+    /* Stats Header Row */
+    .stats-header td {
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+      padding-bottom: 10px;
+    }
+
+    /* Stats Data Row */
+    .stats-data td {
+      text-align: left;
+      padding-left: 20px; /* Adjust for proper left alignment */
+    }
+
     .stat-item {
       display: flex;
       align-items: center;
-      justify-content: center;
-      background-color: #f7f7f7;
-      padding: 15px;
-      border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-      text-align: center;
-      min-width: 200px;
-      height: 100px;
+      gap: 8px; /* Space between icon and number */
     }
+
     .stat-icon {
       font-size: 24px;
-      margin-right: 10px;
-    }
-    .stat-text {
-      font-size: 18px;
-      font-weight: bold;
       color: #333;
     }
 
-    /* Log Table & Image Container */
+    .stat-number {
+      font-size: 20px;
+      font-weight: bold;
+      color: #000;
+    }
+
+    /* Main Content: Log Table & Image Container */
     .content-container {
       display: flex;
       gap: 20px;
       align-items: flex-start;
-      border-collapse: separate; /* Prevents unwanted lines */
-      overflow: hidden;
     }
-    
+
     /* Log Container */
     .log-container {
       flex: 1;
       background-color: #fff;
       border-radius: 8px;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      min-height: 400px;
       overflow: hidden;
+      min-height: 400px;
+      border: 1px solid #ddd;
     }
-
-    /* Sticky Log Table Header */
     .log-container table {
       width: 100%;
       border-collapse: collapse;
-      height: 100%;
       display: flex;
       flex-direction: column;
+      height: 100%;
     }
     .log-container thead {
       position: sticky;
@@ -93,46 +101,35 @@
       background-color: #fff;
       z-index: 2;
       box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-      flex: none; /* Header should not shrink */
     }
     .log-container th, .log-container td {
       text-align: left;
       padding: 10px;
       border-bottom: 1px solid #eee;
+      white-space: nowrap;
     }
-
-    /* Log Table Body Scrollable When Necessary */
     .log-content {
-      flex-grow: 1;
+      flex: 1;
       overflow-y: auto;
-      min-height: 50px;
     }
 
     /* Image Container */
     .image-container {
       flex: 1;
-      background-color: #fff;
-      border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
       display: flex;
       justify-content: center;
       align-items: center;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
       overflow: hidden;
       min-height: 400px;
+      border: 1px solid #ddd;
     }
     .image-container img {
-      max-width: 100%;
-      height: auto;
-      border-radius: 8px;
+      width: 100%;
+      height: 100%;
       object-fit: cover;
-    }
-
-    /* Ensure log-container and image-container adjust together */
-    .log-container,
-    .image-container {
-      min-height: 400px;
-      display: flex;
-      flex-direction: column;
     }
 
     /* Responsive Adjustments */
@@ -142,8 +139,8 @@
       }
       .log-container,
       .image-container {
-        height: auto;
         margin-bottom: 20px;
+        min-height: 300px;
       }
     }
   </style>
@@ -155,29 +152,34 @@
     <h1 class="welcome">Welcome {{ user.first_name }} {{ user.last_name }}!</h1>
     <p class="subtitle">Dashboard</p>
     
+    <!-- Stats Table -->
     <table class="stats-table">
-        <tr>
-          <td>
-            <div class="stat-item">
-              <span class="stat-icon">&#128100;</span>
-              <span class="stat-text">Total No. of Field Workers ({{ field_workers }})</span>
-            </div>
-          </td>
-          <td>
-            <div class="stat-item">
-              <span class="stat-icon">&#128100;</span>
-              <span class="stat-text">Total No. of Admin ({{ admins }})</span>
-            </div>
-          </td>
-          <td>
-            <div class="stat-item">
-              <span class="stat-icon">&#128100;</span>
-              <span class="stat-text">Total No. of Users ({{ total_users }})</span>
-            </div>
-          </td>
-        </tr>
-      </table>
-      
+      <tr class="stats-header">
+        <td>Total No. of Field Workers</td>
+        <td>Total No. of Admin</td>
+        <td>Total No. of Users</td>
+      </tr>
+      <tr class="stats-data">
+        <td>
+          <div class="stat-item">
+            <span class="stat-icon">&#128100;</span>
+            <span class="stat-number">{{ field_workers }}</span>
+          </div>
+        </td>
+        <td>
+          <div class="stat-item">
+            <span class="stat-icon">&#128100;</span>
+            <span class="stat-number">{{ admins }}</span>
+          </div>
+        </td>
+        <td>
+          <div class="stat-item">
+            <span class="stat-icon">&#128100;</span>
+            <span class="stat-number">{{ total_users }}</span>
+          </div>
+        </td>
+      </tr>
+    </table>
     
     <!-- Main Content: Log Table + Image Container -->
     <div class="content-container">
@@ -187,8 +189,8 @@
           <thead>
             <tr>
               <th class="event-col">Event</th>
-              <th class="time-col">⏰ Time</th>
-              <th class="date-col">📅 Date</th>
+              <th class="time-col">Time</th>
+              <th class="date-col">Date</th>
             </tr>
           </thead>
           <tbody class="log-content">

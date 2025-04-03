@@ -11,10 +11,12 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
-import os
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+
+# Base directory setup
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Path to YOLO model
+MODEL_PATH = BASE_DIR / "models" / "yolov8x.pt"
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -122,11 +124,16 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# Ensure all static directories are included
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "superadminloginapp/static"),
+    BASE_DIR / "static",
+    BASE_DIR / "superadminloginapp" / "static",
+    BASE_DIR / "dashboardadminapp" / "static",  # ✅ Add this!
 ]
+
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 

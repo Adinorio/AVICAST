@@ -11,6 +11,8 @@ import json
 from django.db.models import Max
 from django.contrib.auth.hashers import make_password
 
+
+# Dashboard view
 def dashboard_view(request):
     field_workers = UserProfile.objects.filter(role="User").count()
     admins = UserProfile.objects.filter(role="Admin").count()
@@ -24,22 +26,44 @@ def dashboard_view(request):
         "logs": logs
     })
 
+
+# Users view
 def users_view(request):
-    users = UserProfile.objects.all()
+    users = UserProfile.objects.filter(is_archived=False)  # Get active users only
     active_users = users.filter(is_active=True).count()
     disabled_users = users.filter(is_active=False).count()
-
+    
     return render(request, "dashboardadminapp/users.html", {
         "users": users,
         "active_users": active_users,
         "disabled_users": disabled_users,
     })
 
-def generate_user_id():
-    last_user = UserProfile.objects.aggregate(Max('id'))["id__max"] or 0
-    new_id = last_user + 1
-    return f"25-2409-{new_id:03d}"
+def archived_users_view(request):
+    users = UserProfile.objects.filter(is_archived=True)  # Get only archived users
 
+    return render(request, "dashboardadminapp/archived_user.html", {
+        "users": users
+    })
+
+
+# Generate next ID
+def generate_next_id():
+    # Retrieve the last user profile ordered by custom_user_id
+    last_user_profile = UserProfile.objects.order_by('-custom_user_id').first()
+    
+    if last_user_profile:
+        # Assuming the custom_user_id format is "25-2409-001", we need to handle the last part correctly
+        last_digits = int(last_user_profile.custom_user_id.split('-')[-1])
+        new_digits = last_digits + 1
+    else:
+        new_digits = 1
+    
+    # Ensure the new ID has 3 digits with leading zeros
+    return f"25-2409-{new_digits:03d}"
+
+
+# Add user view
 def add_user(request):
     if request.method == "POST":
         first_name = request.POST.get("first_name")
@@ -59,9 +83,9 @@ def add_user(request):
         )
 
         # Create UserProfile linked to User
-        UserProfile.objects.create(
+        user_profile = UserProfile.objects.create(
             user=user,
-            custom_user_id=generate_user_id(),
+            custom_user_id=generate_next_id(),
             first_name=first_name,
             last_name=last_name,
             email=email,
@@ -75,23 +99,30 @@ def add_user(request):
 
     return render(request, "dashboardadminapp/add_user.html")
 
+
+# Roles view
 def roles_view(request):
-    users = UserProfile.objects.filter(is_active=True)
+    users = User.objects.all()  # Fetch all users
     return render(request, 'dashboardadminapp/roles.html', {'users': users})
 
+# Logs view
 def logs_view(request):
     return render(request, "dashboardadminapp/logs.html")
 
+
+# Custom logout view
 def custom_logout(request):
     logout(request)
     return redirect('/superadmin/login/')
 
+
+# Archive user view
 @csrf_exempt
 def archive_user(request, user_id):
     if request.method == "POST":
         try:
             user_profile = get_object_or_404(UserProfile, id=user_id)
-            user_profile.is_archived = True  # Correct model
+            user_profile.is_archived = True
             user_profile.is_active = False
             user_profile.save()
             return JsonResponse({"success": True})
@@ -99,13 +130,17 @@ def archive_user(request, user_id):
             return JsonResponse({"success": False, "error": str(e)})
     return JsonResponse({"success": False, "error": "Invalid request method."})
 
+
+# Archived users view
 def archived_users(request):
     users = UserProfile.objects.filter(is_archived=True)
     return render(request, 'dashboardadminapp/archived_users.html', {'users': users})
 
+
+# Edit user view
 def edit_user(request, user_id):
     user_profile = get_object_or_404(UserProfile, id=user_id)  
-    user = user_profile.user  # Get related auth user
+    user = user_profile.user  # Get related User
 
     if request.method == "POST":
         first_name = request.POST.get("first_name", user_profile.first_name)
@@ -113,12 +148,7 @@ def edit_user(request, user_id):
         email = request.POST.get("email", user_profile.email)
         role = request.POST.get("role", user_profile.role)
 
-        # Update both User and UserProfile
-        user.first_name = first_name
-        user.last_name = last_name
-        user.email = email
-        user.save()
-
+        # Update only UserProfile, since User has only `user_id` and `password`
         user_profile.first_name = first_name
         user_profile.last_name = last_name
         user_profile.email = email
@@ -130,12 +160,14 @@ def edit_user(request, user_id):
 
     return render(request, 'dashboardadminapp/edit_user.html', {'user': user_profile})
 
+
+# Assign roles view
 def assign_roles(request):
     if request.method == "POST":
         try:
             data = json.loads(request.body)
             user_ids = data.get("user_ids", [])
-            role = data.get("role")  # Expecting a single role
+            role = data.get("role")
 
             if not role:
                 return JsonResponse({"success": False, "error": "No role specified."})

@@ -23,7 +23,7 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('superadminloginapp.urls')),
- # Login app
-    path('dashboardadminapp/', include('dashboardadminapp.urls')),  # Include the dashboard URLs
+    path('superadminloginapp/', include('superadminloginapp.urls')),  # Make sure this is correct
+    path('dashboardadminapp/', include('dashboardadminapp.urls')),
+    path('admindashboard/', include('admindashboard.urls')),
 ] + static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS)
-path('admin-dashboard/', include('admindashboard.urls', namespace='admindashboard')),
