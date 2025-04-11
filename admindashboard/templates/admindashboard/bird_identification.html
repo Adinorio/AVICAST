@@ -45,6 +45,7 @@ const identifyBtn = document.getElementById('identifyBtn');
 const resultBox = document.getElementById('result-box');
 
 let currentImage = null;
+let currentImageDataUrl = null;  // store the image data URL for redrawing on canvas
 
 // Prevent default drag behaviors
 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -82,6 +83,7 @@ function handleFiles(files) {
   gallery.innerHTML = '';
   resultBox.innerHTML = '';
   currentImage = null;
+  currentImageDataUrl = null;
   disableIdentify();
 
   Array.from(files).forEach(file => {
@@ -97,12 +99,29 @@ function previewFile(file) {
   const reader = new FileReader();
   reader.readAsDataURL(file);
   reader.onloadend = function() {
-    const img = document.createElement('img');
-    img.src = reader.result;
-    img.style.maxWidth = '100%';
-    img.style.display = 'block';
-    img.style.margin = '0 auto 10px';
-    gallery.appendChild(img);
+    currentImageDataUrl = reader.result;  // save the data URL for future use
+    
+    // Create an image object so we can determine its dimensions
+    const img = new Image();
+    img.src = currentImageDataUrl;
+    img.onload = function() {
+      // Create a canvas element with the image dimensions
+      const canvas = document.createElement('canvas');
+      canvas.id = 'previewCanvas';
+      canvas.width = img.width;
+      canvas.height = img.height;
+      canvas.style.maxWidth = '100%';
+      canvas.style.display = 'block';
+      canvas.style.margin = '0 auto 10px';
+      
+      const ctx = canvas.getContext('2d');
+      // Draw the uploaded image onto the canvas
+      ctx.drawImage(img, 0, 0);
+      
+      // Clear previous content and append this canvas to gallery
+      gallery.innerHTML = '';
+      gallery.appendChild(canvas);
+    }
   }
 }
 
@@ -115,17 +134,76 @@ function disableIdentify() {
   identifyBtn.classList.add('disabled');
 }
 
-// Identify button event
+// Identify button event - using AJAX to call the Django view running YOLOv8
 identifyBtn.addEventListener('click', function() {
   if (!currentImage) return;
   
-  // Show a loading message in the result container
+  // Display a loading message
   resultBox.innerHTML = '<p>Processing image with YOLOv8...</p>';
+  disableIdentify();
   
-  // Simulate processing delay
-  setTimeout(() => {
-    resultBox.innerHTML = '<p>Result: Object(s) detected successfully.</p>';
-  }, 2000);
+  // Create FormData to send the image file
+  const formData = new FormData();
+  formData.append('image', currentImage);
+  
+  // Make a POST request to the API endpoint
+  fetch('/admindashboard/api/process_bird_image/', {
+    method: 'POST',
+    body: formData,
+  })
+  .then(response => response.json())
+  .then(data => {
+    // Check for any error messages sent by the backend
+    if(data.error) {
+      resultBox.innerHTML = '<p>Error processing image.</p>';
+    } else {
+      // Get the canvas element and its context
+      const canvas = document.getElementById('previewCanvas');
+      if (canvas && currentImageDataUrl) {
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        img.src = currentImageDataUrl;
+        img.onload = function() {
+          // Clear canvas and redraw the original image
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0);
+          // Loop through detections and draw each bounding box
+          data.detections.forEach(det => {
+            // Expected coordinates: [x1, y1, x2, y2]
+            let [x1, y1, x2, y2] = det.coordinates;
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = 'red';
+            ctx.font = "16px Arial";
+            ctx.fillStyle = 'red';
+            ctx.beginPath();
+            ctx.rect(x1, y1, x2 - x1, y2 - y1);
+            ctx.stroke();
+            const label = `${det.class} (${(det.confidence * 100).toFixed(1)}%)`;
+            ctx.fillText(label, x1, y1 > 15 ? y1 - 5 : y1 + 15);
+          });
+        }
+      }
+      
+      // Build and display the HTML containing detection results in the right column
+      let html = '';
+      if (data.detections && data.detections.length > 0) {
+        data.detections.forEach(det => {
+          html += `<p><strong>Species:</strong> ${det.class} <br>
+                  <strong>Confidence:</strong> ${(det.confidence * 100).toFixed(2)}% <br>
+                  <strong>Bounding Box:</strong> ${det.coordinates}</p>`;
+        });
+      } else {
+        html = "<p>No detections were made.</p>";
+      }
+      resultBox.innerHTML = html;
+    }
+    enableIdentify();
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    resultBox.innerHTML = '<p>Error processing image.</p>';
+    enableIdentify();
+  });
 });
 </script>
 
