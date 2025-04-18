@@ -1,220 +1,107 @@
-{% extends 'dashboardadminapp/base.html' %}
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Dashboard</title>
-  <style>
-    /* Base reset */
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: sans-serif;
-      background-color: #f5f5f5;
-    }
-
-    /* Dashboard Container */
-    .dashboard-container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-
-    /* Main Dashboard Header */
-    .welcome {
-      font-size: 28px;
-      margin-bottom: 5px;
-      font-weight: 600;
-    }
-    .subtitle {
-      font-size: 18px;
-      color: #888;
-      margin-bottom: 20px;
-    }
-
-    /* Stats Table */
-    .stats-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 20px;
-    }
-
-    /* Stats Header Row */
-    .stats-header td {
-      font-size: 20px;
-      font-weight: bold;
-      text-align: center;
-      padding-bottom: 10px;
-    }
-
-    /* Stats Data Row */
-    .stats-data td {
-      text-align: left;
-      padding-left: 20px; /* Adjust for proper left alignment */
-    }
-
-    .stat-item {
-      display: flex;
-      align-items: center;
-      gap: 8px; /* Space between icon and number */
-    }
-
-    .stat-icon {
-      font-size: 24px;
-      color: #333;
-    }
-
-    .stat-number {
-      font-size: 20px;
-      font-weight: bold;
-      color: #000;
-    }
-
-    /* Main Content: Log Table & Image Container */
-    .content-container {
-      display: flex;
-      gap: 20px;
-      align-items: flex-start;
-    }
-
-    /* Log Container */
-    .log-container {
-      flex: 1;
-      background-color: #fff;
-      border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
-      min-height: 400px;
-      border: 1px solid #ddd;
-    }
-    .log-container table {
-      width: 100%;
-      border-collapse: collapse;
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-    }
-    .log-container thead {
-      position: sticky;
-      top: 0;
-      background-color: #fff;
-      z-index: 2;
-      box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-    }
-    .log-container th, .log-container td {
-      text-align: left;
-      padding: 10px;
-      border-bottom: 1px solid #eee;
-      white-space: nowrap;
-    }
-    .log-content {
-      flex: 1;
-      overflow-y: auto;
-    }
-
-    /* Image Container */
-    .image-container {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background-color: #fff;
-      border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
-      min-height: 400px;
-      border: 1px solid #ddd;
-    }
-    .image-container img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    /* Responsive Adjustments */
-    @media (max-width: 768px) {
-      .content-container {
-        flex-direction: column;
-      }
-      .log-container,
-      .image-container {
-        margin-bottom: 20px;
-        min-height: 300px;
-      }
-    }
-  </style>
-</head>
-<body>
+{% extends 'base.html' %}
 {% block content %}
-  <div class="dashboard-container">
-    <!-- Welcome Header -->
-    <h1 class="welcome">Welcome {{ user.first_name }} {{ user.last_name }}!</h1>
-    <p class="subtitle">Dashboard</p>
-    
-    <!-- Stats Table -->
-    <table class="stats-table">
-      <tr class="stats-header">
-        <td>Total No. of Field Workers</td>
-        <td>Total No. of Admin</td>
-        <td>Total No. of Users</td>
-      </tr>
-      <tr class="stats-data">
-        <td>
-          <div class="stat-item">
-            <span class="stat-icon">&#128100;</span>
-            <span class="stat-number">{{ field_workers }}</span>
-          </div>
-        </td>
-        <td>
-          <div class="stat-item">
-            <span class="stat-icon">&#128100;</span>
-            <span class="stat-number">{{ admins }}</span>
-          </div>
-        </td>
-        <td>
-          <div class="stat-item">
-            <span class="stat-icon">&#128100;</span>
-            <span class="stat-number">{{ total_users }}</span>
-          </div>
-        </td>
-      </tr>
-    </table>
-    
-    <!-- Main Content: Log Table + Image Container -->
-    <div class="content-container">
-      <!-- Log Container -->
-      <div class="log-container">
-        <table>
-          <thead>
-            <tr>
-              <th class="event-col">Event</th>
-              <th class="time-col">Time</th>
-              <th class="date-col">Date</th>
-            </tr>
-          </thead>
-          <tbody class="log-content">
-            {% for log in logs %}
-            <tr>
-              <td>{{ log.event }}</td>
-              <td>{{ log.timestamp|time:"H:i A" }}</td>
-              <td>{{ log.timestamp|date:"F j, Y" }}</td>
-            </tr>
-            {% empty %}
-            <tr>
-              <td colspan="3">No logs available</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-      
-      <!-- Image Container -->
-      <div class="image-container">
-        <img src="{% static 'dashboardadminapp/images/Bird.jpg' %}" alt="Birds on sticks">
-      </div>
+
+<!-- Top info cards -->
+<div class="grid grid-cols-4 gap-4">
+  <div class="bg-yellow-50 p-4 rounded shadow">
+    <p class="text-xs text-gray-500">User ID</p>
+    <p class="text-lg font-semibold">0101011</p>
+  </div>
+  <div class="bg-purple-50 p-4 rounded shadow">
+    <p class="text-xs text-gray-500">Member since</p>
+    <p class="text-lg font-semibold">March 15, 2025</p>
+  </div>
+  <div class="bg-green-50 p-4 rounded shadow border border-blue-400">
+    <p class="text-xs text-gray-500">Password</p>
+    <p class="text-sm">Last changed March 15, 2025</p>
+  </div>
+  <div class="bg-orange-50 p-4 rounded shadow">
+    <p class="text-xs text-gray-500">Department Address</p>
+    <p class="text-sm">Commercial Complex, Cabahug St, Cadiz City</p>
+  </div>
+</div>
+
+<!-- Role counts -->
+<div class="grid grid-cols-3 gap-4 mt-8">
+  <div class="p-4 border rounded text-center">
+    <p class="text-sm text-gray-500">Super Admin</p>
+    <p class="text-3xl font-bold text-green-600">1</p>
+    <p class="text-xs mt-1 text-gray-400">Previous Login: March 15, 2025</p>
+  </div>
+  <div class="p-4 border rounded text-center">
+    <p class="text-sm text-gray-500">Admins</p>
+    <p class="text-3xl font-bold text-green-600">2</p>
+    <p class="text-xs mt-1 text-gray-400">Last added: March 16, 2025</p>
+  </div>
+  <div class="p-4 border rounded text-center">
+    <p class="text-sm text-gray-500">Field Workers</p>
+    <p class="text-3xl font-bold text-green-600">10</p>
+    <p class="text-xs mt-1 text-gray-400">Last added: March 16, 2025</p>
+  </div>
+</div>
+
+<!-- Logs Table -->
+<div class="mt-8">
+  <div class="flex justify-between mb-2">
+    <h2 class="text-xl font-semibold">Logs</h2>
+    <div class="space-x-2 text-sm">
+      <a href="#" class="text-green-600">All</a>
+      <a href="#" class="text-gray-500">Monthly</a>
+      <a href="#" class="text-gray-500">Weekly</a>
+      <a href="#" class="text-gray-500">Today</a>
     </div>
   </div>
+
+  <div class="overflow-x-auto bg-white border rounded shadow">
+    <table class="w-full text-left text-sm">
+      <thead class="sticky top-0 bg-gray-100">
+        <tr>
+          <th class="p-3">User ID</th>
+          <th class="p-3">Date</th>
+          <th class="p-3">User Role</th>
+          <th class="p-3">Full Name</th>
+          <th class="p-3">Status</th>
+          <th class="p-3">Time</th>
+          <th class="p-3">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="border-t">
+          <td class="p-3">01015</td>
+          <td class="p-3">17 May 2025</td>
+          <td class="p-3">Regular</td>
+          <td class="p-3">Masud Rana</td>
+          <td class="p-3">
+            <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded">Active</span>
+          </td>
+          <td class="p-3">10:00 AM</td>
+          <td class="p-3 text-green-600">Created</td>
+        </tr>
+        <tr class="border-t">
+          <td class="p-3">01016</td>
+          <td class="p-3">17 May 2025</td>
+          <td class="p-3">Regular</td>
+          <td class="p-3">Masud Rana</td>
+          <td class="p-3">
+            <span class="bg-yellow-100 text-yellow-700 text-xs px-2 py-1 rounded">Archived</span>
+          </td>
+          <td class="p-3">10:00 AM</td>
+          <td class="p-3 text-yellow-600">Archived</td>
+        </tr>
+        <tr class="border-t">
+          <td class="p-3">01017</td>
+          <td class="p-3">17 May 2025</td>
+          <td class="p-3">Regular</td>
+          <td class="p-3">Masud Rana</td>
+          <td class="p-3">
+            <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded">Active</span>
+          </td>
+          <td class="p-3">10:00 AM</td>
+          <td class="p-3 text-blue-600">Updated</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
 {% endblock %}
-</body>
-</html>

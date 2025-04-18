@@ -113,7 +113,7 @@ def logs_view(request):
 # Custom logout view
 def custom_logout(request):
     logout(request)
-    return redirect('/superadmin/login/')
+    return redirect(reverse('superadminloginapp:login'))
 
 
 # Archive user view

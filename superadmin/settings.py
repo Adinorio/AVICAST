@@ -42,7 +42,22 @@ INSTALLED_APPS = [
     'superadminloginapp',
     'dashboardadminapp',
     'admindashboard',
+
+    'tailwind',
+    'theme',
+    'django_browser_reload',
+
 ]
+
+TAILWIND_APP_NAME = 'theme'
+
+INTERNAL_IPS = [
+    "127.0.0.1",
+]
+
+
+NPM_BIN_PATH = "C:/Program Files/nodejs/npm.cmd"
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -52,6 +67,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django_browser_reload.middleware.BrowserReloadMiddleware',
 ]
 
 ROOT_URLCONF = 'superadmin.urls'
@@ -124,7 +140,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Ensure all static directories are included
 STATICFILES_DIRS = [
