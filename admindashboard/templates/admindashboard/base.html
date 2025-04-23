@@ -85,7 +85,7 @@
             // Ask the user for confirmation before logging out
             if (confirm("Are you sure you want to log out?")) {
                 // If the user confirms, redirect to logout URL (Django view)
-                window.location.href = "{% url 'logout_view' %}";  // Make sure the URL is correct
+                window.location.href = "{% url 'dashboardadminapp:logout' %}";  // Make sure the URL is correct
             }
         }
     </script>

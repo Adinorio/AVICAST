@@ -1,107 +1,95 @@
 {% extends 'base.html' %}
+
 {% block content %}
-
-<!-- Top info cards -->
-<div class="grid grid-cols-4 gap-4">
-  <div class="bg-yellow-50 p-4 rounded shadow">
-    <p class="text-xs text-gray-500">User ID</p>
-    <p class="text-lg font-semibold">0101011</p>
-  </div>
-  <div class="bg-purple-50 p-4 rounded shadow">
-    <p class="text-xs text-gray-500">Member since</p>
-    <p class="text-lg font-semibold">March 15, 2025</p>
-  </div>
-  <div class="bg-green-50 p-4 rounded shadow border border-blue-400">
-    <p class="text-xs text-gray-500">Password</p>
-    <p class="text-sm">Last changed March 15, 2025</p>
-  </div>
-  <div class="bg-orange-50 p-4 rounded shadow">
-    <p class="text-xs text-gray-500">Department Address</p>
-    <p class="text-sm">Commercial Complex, Cabahug St, Cadiz City</p>
-  </div>
-</div>
-
-<!-- Role counts -->
-<div class="grid grid-cols-3 gap-4 mt-8">
-  <div class="p-4 border rounded text-center">
-    <p class="text-sm text-gray-500">Super Admin</p>
-    <p class="text-3xl font-bold text-green-600">1</p>
-    <p class="text-xs mt-1 text-gray-400">Previous Login: March 15, 2025</p>
-  </div>
-  <div class="p-4 border rounded text-center">
-    <p class="text-sm text-gray-500">Admins</p>
-    <p class="text-3xl font-bold text-green-600">2</p>
-    <p class="text-xs mt-1 text-gray-400">Last added: March 16, 2025</p>
-  </div>
-  <div class="p-4 border rounded text-center">
-    <p class="text-sm text-gray-500">Field Workers</p>
-    <p class="text-3xl font-bold text-green-600">10</p>
-    <p class="text-xs mt-1 text-gray-400">Last added: March 16, 2025</p>
-  </div>
-</div>
-
-<!-- Logs Table -->
-<div class="mt-8">
-  <div class="flex justify-between mb-2">
-    <h2 class="text-xl font-semibold">Logs</h2>
-    <div class="space-x-2 text-sm">
-      <a href="#" class="text-green-600">All</a>
-      <a href="#" class="text-gray-500">Monthly</a>
-      <a href="#" class="text-gray-500">Weekly</a>
-      <a href="#" class="text-gray-500">Today</a>
+  <!-- Top info cards -->
+  <div class="grid grid-cols-4 gap-4">
+    <div class="bg-yellow-50 p-4 rounded shadow">
+      <p class="text-xs text-gray-500">User ID</p>
+      <p class="text-lg font-semibold">{{ user.user_id }}</p>
+    </div>
+    <div class="bg-purple-50 p-4 rounded shadow">
+      <p class="text-xs text-gray-500">Member since</p>
+      <p class="text-lg font-semibold">{{ user.date_joined|date:"F d, Y" }}</p>
+    </div>
+    <div class="bg-green-50 p-4 rounded shadow border border-blue-400">
+      <p class="text-xs text-gray-500">Password</p>
+      <p class="text-sm">Last changed {{ user.password_changed_at|date:"F d, Y" }}</p>
+    </div>
+    <div class="bg-orange-50 p-4 rounded shadow">
+      <p class="text-xs text-gray-500">Department Address</p>
+      <p class="text-sm">Commercial Complex, Cabahug St, Cadiz City</p>
     </div>
   </div>
 
-  <div class="overflow-x-auto bg-white border rounded shadow">
-    <table class="w-full text-left text-sm">
-      <thead class="sticky top-0 bg-gray-100">
-        <tr>
-          <th class="p-3">User ID</th>
-          <th class="p-3">Date</th>
-          <th class="p-3">User Role</th>
-          <th class="p-3">Full Name</th>
-          <th class="p-3">Status</th>
-          <th class="p-3">Time</th>
-          <th class="p-3">Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr class="border-t">
-          <td class="p-3">01015</td>
-          <td class="p-3">17 May 2025</td>
-          <td class="p-3">Regular</td>
-          <td class="p-3">Masud Rana</td>
-          <td class="p-3">
-            <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded">Active</span>
-          </td>
-          <td class="p-3">10:00 AM</td>
-          <td class="p-3 text-green-600">Created</td>
-        </tr>
-        <tr class="border-t">
-          <td class="p-3">01016</td>
-          <td class="p-3">17 May 2025</td>
-          <td class="p-3">Regular</td>
-          <td class="p-3">Masud Rana</td>
-          <td class="p-3">
-            <span class="bg-yellow-100 text-yellow-700 text-xs px-2 py-1 rounded">Archived</span>
-          </td>
-          <td class="p-3">10:00 AM</td>
-          <td class="p-3 text-yellow-600">Archived</td>
-        </tr>
-        <tr class="border-t">
-          <td class="p-3">01017</td>
-          <td class="p-3">17 May 2025</td>
-          <td class="p-3">Regular</td>
-          <td class="p-3">Masud Rana</td>
-          <td class="p-3">
-            <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded">Active</span>
-          </td>
-          <td class="p-3">10:00 AM</td>
-          <td class="p-3 text-blue-600">Updated</td>
-        </tr>
-      </tbody>
-    </table>
+  <!-- Role counts -->
+  <div class="grid grid-cols-3 gap-4 mt-8">
+    <div class="p-4 border rounded text-center">
+      <p class="text-sm text-gray-500">Super Admin</p>
+      <p class="text-3xl font-bold text-green-600">{{ admins }}</p>
+      <p class="text-xs mt-1 text-gray-400">Previous Login: March 15, 2025</p>
+    </div>
+    <div class="p-4 border rounded text-center">
+      <p class="text-sm text-gray-500">Admins</p>
+      <p class="text-3xl font-bold text-green-600">{{ admins }}</p>
+      <p class="text-xs mt-1 text-gray-400">Last added: March 16, 2025</p>
+    </div>
+    <div class="p-4 border rounded text-center">
+      <p class="text-sm text-gray-500">Field Workers</p>
+      <p class="text-3xl font-bold text-green-600">{{ field_workers }}</p>
+      <p class="text-xs mt-1 text-gray-400">Last added: March 16, 2025</p>
+    </div>
   </div>
-</div>
+
+  <!-- Logs Table -->
+  <div class="mt-8">
+    <div class="flex justify-between mb-2">
+      <h2 class="text-xl font-semibold">Logs</h2>
+      <div class="space-x-2 text-sm">
+        <a href="#" class="text-green-600">All</a>
+        <a href="#" class="text-gray-500">Monthly</a>
+        <a href="#" class="text-gray-500">Weekly</a>
+        <a href="#" class="text-gray-500">Today</a>
+      </div>
+    </div>
+
+    <div class="overflow-x-auto bg-white border rounded shadow">
+      <table class="w-full text-left text-sm">
+        <thead class="sticky top-0 bg-gray-100">
+          <tr>
+            <th class="p-3">User ID</th>
+            <th class="p-3">Date</th>
+            <th class="p-3">User Role</th>
+            <th class="p-3">Full Name</th>
+            <th class="p-3">Status</th>
+            <th class="p-3">Time</th>
+            <th class="p-3">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user_profile in users %}
+            <tr class="border-t">
+              <td class="p-3">{{ user_profile.custom_user_id }}</td>
+              <td class="p-3">{{ user_profile.last_active|date:"d M Y" }}</td>
+              <td class="p-3">{{ user_profile.role }}</td>
+              <td class="p-3">{{ user_profile.first_name }} {{ user_profile.last_name }}</td>
+              <td class="p-3">
+                {% if user_profile.is_active %}
+                  <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded">Active</span>
+                {% else %}
+                  <span class="bg-yellow-100 text-yellow-700 text-xs px-2 py-1 rounded">Archived</span>
+                {% endif %}
+              </td>
+              <td class="p-3">{{ user_profile.last_active|time:"h:i A" }}</td>
+              <td class="p-3 text-blue-600">Updated</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="7" class="text-center text-gray-500">No users found</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
 
 {% endblock %}

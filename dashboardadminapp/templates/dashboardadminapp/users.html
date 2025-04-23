@@ -1,95 +1,91 @@
 {% extends 'base.html' %}
-{% load static %}
-
 {% block content %}
 
-<!-- Statistics Cards -->
-<div class="grid grid-cols-3 gap-4 mb-6">
-  <div class="bg-white rounded-xl shadow p-6 text-center">
-    <h3 class="text-gray-500 text-sm">Super Admin</h3>
-    <p class="text-green-600 text-3xl font-bold mt-2">1</p>
+<!-- Top info cards -->
+<div class="grid grid-cols-4 gap-4">
+  <div class="bg-yellow-50 p-4 rounded shadow">
+    <p class="text-xs text-gray-500">User ID</p>
+    <p class="text-lg font-semibold">{{ user.user_id }}</p>
   </div>
-  <div class="bg-white rounded-xl shadow p-6 text-center">
-    <h3 class="text-gray-500 text-sm">Admin</h3>
-    <p class="text-green-600 text-3xl font-bold mt-2">2</p>
+  <div class="bg-purple-50 p-4 rounded shadow">
+    <p class="text-xs text-gray-500">Member since</p>
+    <p class="text-lg font-semibold">{{ user.date_joined|date:"F d, Y" }}</p>
   </div>
-  <div class="bg-white rounded-xl shadow p-6 text-center">
-    <h3 class="text-gray-500 text-sm">Field Worker</h3>
-    <p class="text-green-600 text-3xl font-bold mt-2">10</p>
+  <div class="bg-green-50 p-4 rounded shadow border border-blue-400">
+    <p class="text-xs text-gray-500">Password</p>
+    <p class="text-sm">Last changed {{ user.password_changed_at|date:"F d, Y" }}</p>
+  </div>
+  <div class="bg-orange-50 p-4 rounded shadow">
+    <p class="text-xs text-gray-500">Department Address</p>
+    <p class="text-sm">Commercial Complex, Cabahug St, Cadiz City</p>
   </div>
 </div>
 
-<!-- Users Management Card -->
-<div class="bg-white rounded-xl shadow p-6">
+<!-- Role counts -->
+<div class="grid grid-cols-3 gap-4 mt-8">
+  <div class="p-4 border rounded text-center">
+    <p class="text-sm text-gray-500">Super Admin</p>
+    <p class="text-3xl font-bold text-green-600">{{ admins }}</p>
+    <p class="text-xs mt-1 text-gray-400">Previous Login: March 15, 2025</p>
+  </div>
+  <div class="p-4 border rounded text-center">
+    <p class="text-sm text-gray-500">Admins</p>
+    <p class="text-3xl font-bold text-green-600">{{ admins }}</p>
+    <p class="text-xs mt-1 text-gray-400">Last added: March 16, 2025</p>
+  </div>
+  <div class="p-4 border rounded text-center">
+    <p class="text-sm text-gray-500">Field Workers</p>
+    <p class="text-3xl font-bold text-green-600">{{ field_workers }}</p>
+    <p class="text-xs mt-1 text-gray-400">Last added: March 16, 2025</p>
+  </div>
+</div>
 
-  <!-- Top Section: Tabs + Search & Actions -->
-  <div class="flex flex-wrap items-center justify-between mb-5">
-
-    <!-- Tabs -->
-    <div class="flex gap-2 mb-2">
-      <button class="px-4 py-1.5 rounded border border-gray-300 text-sm bg-green-50 text-green-700">View all</button>
-      <button class="px-4 py-1.5 rounded border border-gray-300 text-sm text-gray-600">Admin</button>
-      <button class="px-4 py-1.5 rounded border border-gray-300 text-sm text-gray-600">Field Workers</button>
-      <button class="px-4 py-1.5 rounded border border-gray-300 text-sm text-gray-600">Disabled</button>
+<!-- Logs Table -->
+<div class="mt-8">
+  <div class="flex justify-between mb-2">
+    <h2 class="text-xl font-semibold">Logs</h2>
+    <div class="space-x-2 text-sm">
+      <a href="#" class="text-green-600">All</a>
+      <a href="#" class="text-gray-500">Monthly</a>
+      <a href="#" class="text-gray-500">Weekly</a>
+      <a href="#" class="text-gray-500">Today</a>
     </div>
-
-    <!-- Search & Buttons -->
-    <div class="flex items-center gap-2 mb-2">
-      <input type="text" placeholder="Search"
-        class="border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none w-64">
-      <button class="p-2 border border-gray-300 rounded">
-        <img src="{% static 'images/filter-icon.svg' %}" class="w-4 h-4" alt="Filter">
-      </button>
-      <a href="{% url 'dashboardadminapp:add_user' %}"
-        class="bg-green-600 text-white px-4 py-2 rounded text-sm">+ Add User</a>
-    </div>
-
   </div>
 
-  <!-- Table -->
-  <div class="overflow-x-auto">
-    <table class="w-full text-sm text-left border-t">
-      <thead class="bg-gray-50">
+  <div class="overflow-x-auto bg-white border rounded shadow">
+    <table class="w-full text-left text-sm">
+      <thead class="sticky top-0 bg-gray-100">
         <tr>
-          <th class="px-4 py-3">User ID</th>
-          <th class="px-4 py-3">Date</th>
-          <th class="px-4 py-3">User Role</th>
-          <th class="px-4 py-3">Full Name</th>
-          <th class="px-4 py-3">Status</th>
-          <th class="px-4 py-3">Time</th>
-          <th class="px-4 py-3">Action</th>
+          <th class="p-3">User ID</th>
+          <th class="p-3">Date</th>
+          <th class="p-3">User Role</th>
+          <th class="p-3">Full Name</th>
+          <th class="p-3">Status</th>
+          <th class="p-3">Time</th>
+          <th class="p-3">Action</th>
         </tr>
       </thead>
       <tbody>
-        {% for user in users %}
-        <tr class="border-b hover:bg-gray-50">
-          <td class="px-4 py-3 font-medium text-gray-800">{{ user.id_number }}</td>
-          <td class="px-4 py-3 text-gray-600">{{ user.date_joined|date:"d F Y" }}</td>
-          <td class="px-4 py-3 text-gray-600">{{ user.role }}</td>
-          <td class="px-4 py-3 text-gray-800">{{ user.full_name }}</td>
-          <td class="px-4 py-3">
-            <span
-              class="px-2 py-1 rounded text-xs font-medium {% if user.status == 'Active' %}bg-green-100 text-green-700{% else %}bg-orange-100 text-orange-700{% endif %}">
-              {{ user.status }}
-            </span>
+        {% for user_profile in users %}
+        <tr class="border-t">
+          <td class="p-3">{{ user_profile.custom_user_id }}</td>
+          <td class="p-3">{{ user_profile.last_active|date:"d M Y" }}</td>
+          <td class="p-3">{{ user_profile.role }}</td>
+          <td class="p-3">{{ user_profile.first_name }} {{ user_profile.last_name }}</td>
+          <td class="p-3">
+            {% if user_profile.is_active %}
+              <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded">Active</span>
+            {% else %}
+              <span class="bg-yellow-100 text-yellow-700 text-xs px-2 py-1 rounded">Archived</span>
+            {% endif %}
           </td>
-          <td class="px-4 py-3 text-gray-600">10:00 AM</td>
-          <td class="px-4 py-3">
-            <a href="{% url 'dashboardadminapp:edit_user' user.id %}"
-              class="text-gray-600 hover:text-gray-800">
-              <img src="{% static 'images/gear-icon.svg' %}" class="w-5 h-5" alt="Settings">
-            </a>
-          </td>
-        </tr>
-        {% empty %}
-        <tr>
-          <td colspan="7" class="text-center py-6 text-gray-500">No users found.</td>
+          <td class="p-3">{{ user_profile.last_active|time:"h:i A" }}</td>
+          <td class="p-3 text-blue-600">Updated</td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
-
 </div>
 
 {% endblock %}

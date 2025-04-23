@@ -29,14 +29,18 @@ def dashboard_view(request):
 
 # Users view
 def users_view(request):
-    users = UserProfile.objects.filter(is_archived=False)  # Get active users only
-    active_users = users.filter(is_active=True).count()
-    disabled_users = users.filter(is_active=False).count()
-    
+    users = UserProfile.objects.filter(is_archived=False)  # Fetch active users
+    active_users = users.filter(is_active=True).count()  # Count active users
+    disabled_users = users.filter(is_active=False).count()  # Count disabled users
+    admins = users.filter(role="Admin").count()  # Count Admin users
+    field_workers = users.filter(role="User").count()  # Count Field Worker users
+
     return render(request, "dashboardadminapp/users.html", {
-        "users": users,
+        "users": users,  # Pass all active users to the template
         "active_users": active_users,
         "disabled_users": disabled_users,
+        "admins": admins,
+        "field_workers": field_workers,
     })
 
 def archived_users_view(request):
