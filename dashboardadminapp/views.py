@@ -51,31 +51,41 @@ def archived_users(request):
 
 # Add new user
 def add_user(request):
-    if request.method=="POST":
-        first_name = request.POST["first_name"]
-        last_name = request.POST["last_name"]
-        email = request.POST["email"]
-        password = request.POST["password"]
-        role = request.POST["role"]
+    if request.method == "POST":
+        first_name = request.POST.get("first_name")
+        middle_name = request.POST.get("middle_name", "")  # optional field
+        last_name = request.POST.get("last_name")
+        email = request.POST.get("email")
+        password = request.POST.get("password")
+        role = request.POST.get("role")
 
         if User.objects.filter(user_id=email).exists():
-            messages.error(request,"A user with this ID already exists.")
+            messages.error(request, "A user with this ID already exists.")
             return redirect("dashboardadminapp:add_user")
 
-        user = User.objects.create(user_id=email, password=make_password(password))
-        UserProfile.objects.create(
+        # 1. Create User
+        user = User.objects.create(
+            user_id=email,
+            password=make_password(password)
+        )
+
+        # 2. Create UserProfile (custom_user_id is auto-generated after save)
+        profile = UserProfile.objects.create(
             user=user,
             first_name=first_name,
+            middle_name=middle_name,
             last_name=last_name,
             email=email,
             role=role,
             last_active=now(),
             is_active=True
         )
-        messages.success(request,"User added successfully!")
+
+        messages.success(request, f"User {profile.custom_user_id} added successfully!")
         return redirect("dashboardadminapp:users")
 
-    return render(request,"dashboardadminapp/add_user.html")
+    return render(request, "dashboardadminapp/add_user.html")
+
 
 # Edit user
 def edit_user(request, user_id):

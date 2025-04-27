@@ -9,13 +9,12 @@
       <p class="text-xs text-gray-500">User ID</p>
       <p class="text-xl font-bold text-gray-800 break-all">{{ request.session.user_id }}</p>
     </div>
-
-    <!-- Member Since Card -->
+    <!-- Member Since -->
     <div class="bg-purple-50 p-4 rounded shadow border border-purple-200">
       <p class="text-xs text-gray-500">Member Since</p>
       <p class="text-lg font-semibold text-gray-800">{{ today|date:"F d, Y" }}</p>
     </div>
-    <!-- Password Change Card -->
+    <!-- Password Change -->
     <div class="bg-green-50 p-4 rounded shadow border border-green-200">
       <p class="text-xs text-gray-500">Password</p>
       {% if user.password_changed_at %}
@@ -24,8 +23,7 @@
         <p class="text-sm text-gray-800">No password change recorded</p>
       {% endif %}
     </div>
-
-    <!-- Department Address Card -->
+    <!-- Department Address -->
     <div class="bg-orange-50 p-4 rounded shadow border border-orange-200">
       <p class="text-xs text-gray-500">Department Address</p>
       <p class="text-sm text-gray-800">Commercial Complex, Cabahug St, Cadiz City</p>
@@ -51,23 +49,28 @@
     </div>
   </div>
 
-  <!-- Logs Table -->
+  <!-- Users Table header + filters -->
   <div class="mt-8">
     <div class="flex justify-between mb-2">
-      <h2 class="text-xl font-semibold">Logs</h2>
+      <h2 class="text-xl font-semibold">All Users</h2>
       <div class="space-x-2 text-sm">
-        <a href="#" class="text-green-600">All</a>
-        <a href="#" class="text-gray-500">Monthly</a>
-        <a href="#" class="text-gray-500">Weekly</a>
-        <a href="#" class="text-gray-500">Today</a>
+        <a href="{% url 'dashboardadminapp:add_user' %}" class="text-green-600">+ Add Users</a>
         <a href="{% url 'dashboardadminapp:archived_users' %}" class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200">Archived</a>
       </div>
+    </div>
+    <!-- compact filter row -->
+    <div class="flex space-x-2 mb-4 text-sm font-medium">
+      <button class="filter-btn px-2 py-1 rounded text-gray-700 hover:bg-gray-200" data-filter="all">View all</button>
+      <button class="filter-btn px-2 py-1 rounded text-gray-700 hover:bg-gray-200" data-filter="Admin">Admin</button>
+      <button class="filter-btn px-2 py-1 rounded text-gray-700 hover:bg-gray-200" data-filter="User">Field Workers</button>
+      <button class="filter-btn px-2 py-1 rounded text-gray-700 hover:bg-gray-200" data-filter="disabled">Disabled</button>
     </div>
 
     <div class="bg-white border rounded shadow overflow-x-auto">
       <table class="w-full text-left text-sm">
         <thead class="sticky top-0 bg-gray-100 z-10">
           <tr>
+            <th class="p-3 w-12"><input type="checkbox" class="form-checkbox h-4 w-4 text-blue-600"></th>
             <th class="p-3">User ID</th>
             <th class="p-3">Date</th>
             <th class="p-3">User Role</th>
@@ -79,7 +82,8 @@
         </thead>
         <tbody>
           {% for user_profile in users %}
-          <tr data-id="{{ user_profile.id }}" class="border-t">
+          <tr class="border-t">
+            <td class="p-3"><input type="checkbox" class="form-checkbox h-4 w-4 text-blue-600"></td>
             <td class="p-3">{{ user_profile.custom_user_id }}</td>
             <td class="p-3">{{ user_profile.last_active|date:"d M Y" }}</td>
             <td class="p-3">{{ user_profile.role }}</td>
@@ -96,7 +100,7 @@
             <td class="p-3">{{ user_profile.last_active|time:"h:i A" }}</td>
             <td class="p-3">
               <div class="relative inline-block text-left dropdown">
-                <button class="p-3 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 text-white rounded-full shadow-lg hover:scale-110 focus:outline-none dropdown-toggle">
+                <button class="p-3 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 text-white rounded-full shadow-lg hover:scale-110 transform transition-all duration-300 ease-in-out focus:outline-none dropdown-toggle">
                   <i class="fas fa-cogs text-xl"></i>
                 </button>
                 <div class="dropdown-menu hidden absolute right-0 mt-2 w-48 rounded-md border border-gray-300 bg-gray-200 z-50">
@@ -119,39 +123,62 @@
 
 <script>
 // dropdown toggle
-
-document.addEventListener('click', function(e){
-  document.querySelectorAll('.dropdown-menu').forEach(menu=> menu.classList.add('hidden'));
-});
-document.querySelectorAll('.dropdown-toggle').forEach(btn=>{
+document.addEventListener('click', ()=> document.querySelectorAll('.dropdown-menu').forEach(m=>m.classList.add('hidden')));
+document.querySelectorAll('.dropdown-toggle').forEach(btn=>
   btn.addEventListener('click', e=>{
     e.stopPropagation();
-    const menu = btn.nextElementSibling;
-    menu.classList.toggle('hidden');
+    btn.nextElementSibling.classList.toggle('hidden');
+  })
+);
+
+// "Select All" checkbox
+const headerCB = document.querySelector('thead input[type=checkbox]');
+const rowCBs = Array.from(document.querySelectorAll('tbody input[type=checkbox]'));
+if(headerCB){
+  headerCB.addEventListener('change', ()=>{
+    rowCBs.forEach(cb=>cb.checked = headerCB.checked);
   });
-});
+  rowCBs.forEach(cb=> cb.addEventListener('change', ()=>{
+    if(!cb.checked) headerCB.checked = false;
+    else if(rowCBs.every(r=>r.checked)) headerCB.checked = true;
+  }));
+}
 
-// AJAX handlers for Archive/Disable/Restore
-
-document.querySelectorAll('.ajax-btn').forEach(button=>{
+// AJAX Archive/Disable/Restore
+document.querySelectorAll('.ajax-btn').forEach(button=>
   button.addEventListener('click', async e=>{
     e.preventDefault();
     const url = button.dataset.actionUrl;
     const row = button.closest('tr');
-    const res = await fetch(url, {method:'POST', headers:{'X-CSRFToken': '{{ csrf_token }}','X-Requested-With':'XMLHttpRequest'}});
+    const res = await fetch(url,{
+      method:'POST',
+      headers:{
+        'X-CSRFToken': '{{ csrf_token }}',
+        'X-Requested-With':'XMLHttpRequest'
+      }
+    });
     const data = await res.json();
     if(data.success){
-      // update status cell
       const cell = row.querySelector('.status-cell');
-      if(url.includes('archive')){
-        cell.innerHTML = '<span class="bg-gray-500 text-white text-xs px-2 py-1 rounded">Archived</span>';
-      } else if(url.includes('disable')){
-        cell.innerHTML = '<span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded">Disabled</span>';
-      } else if(url.includes('restore') || url.includes('reactivate')){
-        cell.innerHTML = '<span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded">Active</span>';
-      }
+      if(url.includes('archive'))    cell.innerHTML = '<span class="bg-gray-500 text-white text-xs px-2 py-1 rounded">Archived</span>';
+      else if(url.includes('disable'))cell.innerHTML = '<span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded">Disabled</span>';
+      else                            cell.innerHTML = '<span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded">Active</span>';
     }
-  });
-});
+  })
+);
+
+// Filter buttons
+document.querySelectorAll('.filter-btn').forEach(btn=>
+  btn.addEventListener('click', ()=>{
+    const filter = btn.dataset.filter;
+    document.querySelectorAll('tbody tr').forEach(row=>{
+      const role   = row.querySelector('td:nth-child(4)').innerText.trim();
+      const status = row.querySelector('.status-cell span').innerText.trim().toLowerCase();
+      if(filter==='all')           row.style.display = '';
+      else if(filter==='disabled') row.style.display = (status==='disabled')? '' : 'none';
+      else                         row.style.display = (role===filter)? '' : 'none';
+    });
+  })
+);
 </script>
 {% endblock %}
