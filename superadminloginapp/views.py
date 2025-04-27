@@ -19,7 +19,8 @@ def login_view(request):
                 try:
                     superadmin = User.objects.get(user_id=user_id)
                     if check_password(password, superadmin.password):
-                        # Redirect to superadmin's dashboard (dashboardadminapp)
+                        # Store user_id and custom_user_id in session
+                        request.session['user_id'] = superadmin.user_id  # Store superadmin's user_id
                         return redirect("dashboardadminapp:dashboard")  # Superadmin Dashboard
                     else:
                         error_message = "Invalid password"
@@ -31,7 +32,8 @@ def login_view(request):
                 try:
                     user_profile = UserProfile.objects.get(custom_user_id=user_id)
                     if check_password(password, user_profile.user.password):  # Authenticate against User model
-                        # Redirect to regular admin dashboard (admindashboard)
+                        # Store custom_user_id in session
+                        request.session['user_id'] = user_profile.custom_user_id  # Store user's custom_user_id
                         return redirect("admindashboard:dashboard")  # Admin Dashboard
                     else:
                         error_message = "Invalid password"
@@ -46,4 +48,4 @@ def login_view(request):
 
 def logout_view(request):
     logout(request)  # This logs out the user
-    return redirect('/accounts/login/') 
+    return redirect('/accounts/login/')

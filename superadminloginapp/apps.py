@@ -1,11 +1,10 @@
-# superadminloginapp/apps.py
-
 from django.apps import AppConfig
 
-class AccountsConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
+class SuperadminloginappConfig(AppConfig):
     name = 'superadminloginapp'
 
     def ready(self):
-        # Remove the call to create_default_user here
-        pass
+        # Ensure that the default user is created when the app starts
+        from .models import User
+        User.create_default_user()
+

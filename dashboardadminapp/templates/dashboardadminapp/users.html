@@ -1,91 +1,157 @@
 {% extends 'base.html' %}
+
 {% block content %}
+<div class="bg-white min-h-screen p-4">
+  <!-- Top info cards -->
+  <div class="grid grid-cols-4 gap-4">
+    <!-- User ID Card -->
+    <div class="bg-yellow-50 p-4 rounded shadow border border-yellow-200">
+      <p class="text-xs text-gray-500">User ID</p>
+      <p class="text-xl font-bold text-gray-800 break-all">{{ request.session.user_id }}</p>
+    </div>
 
-<!-- Top info cards -->
-<div class="grid grid-cols-4 gap-4">
-  <div class="bg-yellow-50 p-4 rounded shadow">
-    <p class="text-xs text-gray-500">User ID</p>
-    <p class="text-lg font-semibold">{{ user.user_id }}</p>
-  </div>
-  <div class="bg-purple-50 p-4 rounded shadow">
-    <p class="text-xs text-gray-500">Member since</p>
-    <p class="text-lg font-semibold">{{ user.date_joined|date:"F d, Y" }}</p>
-  </div>
-  <div class="bg-green-50 p-4 rounded shadow border border-blue-400">
-    <p class="text-xs text-gray-500">Password</p>
-    <p class="text-sm">Last changed {{ user.password_changed_at|date:"F d, Y" }}</p>
-  </div>
-  <div class="bg-orange-50 p-4 rounded shadow">
-    <p class="text-xs text-gray-500">Department Address</p>
-    <p class="text-sm">Commercial Complex, Cabahug St, Cadiz City</p>
-  </div>
-</div>
+    <!-- Member Since Card -->
+    <div class="bg-purple-50 p-4 rounded shadow border border-purple-200">
+      <p class="text-xs text-gray-500">Member Since</p>
+      <p class="text-lg font-semibold text-gray-800">{{ today|date:"F d, Y" }}</p>
+    </div>
+    <!-- Password Change Card -->
+    <div class="bg-green-50 p-4 rounded shadow border border-green-200">
+      <p class="text-xs text-gray-500">Password</p>
+      {% if user.password_changed_at %}
+        <p class="text-sm text-gray-800">Last changed: {{ user.password_changed_at|date:"F d, Y" }}</p>
+      {% else %}
+        <p class="text-sm text-gray-800">No password change recorded</p>
+      {% endif %}
+    </div>
 
-<!-- Role counts -->
-<div class="grid grid-cols-3 gap-4 mt-8">
-  <div class="p-4 border rounded text-center">
-    <p class="text-sm text-gray-500">Super Admin</p>
-    <p class="text-3xl font-bold text-green-600">{{ admins }}</p>
-    <p class="text-xs mt-1 text-gray-400">Previous Login: March 15, 2025</p>
-  </div>
-  <div class="p-4 border rounded text-center">
-    <p class="text-sm text-gray-500">Admins</p>
-    <p class="text-3xl font-bold text-green-600">{{ admins }}</p>
-    <p class="text-xs mt-1 text-gray-400">Last added: March 16, 2025</p>
-  </div>
-  <div class="p-4 border rounded text-center">
-    <p class="text-sm text-gray-500">Field Workers</p>
-    <p class="text-3xl font-bold text-green-600">{{ field_workers }}</p>
-    <p class="text-xs mt-1 text-gray-400">Last added: March 16, 2025</p>
-  </div>
-</div>
-
-<!-- Logs Table -->
-<div class="mt-8">
-  <div class="flex justify-between mb-2">
-    <h2 class="text-xl font-semibold">Logs</h2>
-    <div class="space-x-2 text-sm">
-      <a href="#" class="text-green-600">All</a>
-      <a href="#" class="text-gray-500">Monthly</a>
-      <a href="#" class="text-gray-500">Weekly</a>
-      <a href="#" class="text-gray-500">Today</a>
+    <!-- Department Address Card -->
+    <div class="bg-orange-50 p-4 rounded shadow border border-orange-200">
+      <p class="text-xs text-gray-500">Department Address</p>
+      <p class="text-sm text-gray-800">Commercial Complex, Cabahug St, Cadiz City</p>
     </div>
   </div>
 
-  <div class="overflow-x-auto bg-white border rounded shadow">
-    <table class="w-full text-left text-sm">
-      <thead class="sticky top-0 bg-gray-100">
-        <tr>
-          <th class="p-3">User ID</th>
-          <th class="p-3">Date</th>
-          <th class="p-3">User Role</th>
-          <th class="p-3">Full Name</th>
-          <th class="p-3">Status</th>
-          <th class="p-3">Time</th>
-          <th class="p-3">Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for user_profile in users %}
-        <tr class="border-t">
-          <td class="p-3">{{ user_profile.custom_user_id }}</td>
-          <td class="p-3">{{ user_profile.last_active|date:"d M Y" }}</td>
-          <td class="p-3">{{ user_profile.role }}</td>
-          <td class="p-3">{{ user_profile.first_name }} {{ user_profile.last_name }}</td>
-          <td class="p-3">
-            {% if user_profile.is_active %}
-              <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded">Active</span>
-            {% else %}
-              <span class="bg-yellow-100 text-yellow-700 text-xs px-2 py-1 rounded">Archived</span>
-            {% endif %}
-          </td>
-          <td class="p-3">{{ user_profile.last_active|time:"h:i A" }}</td>
-          <td class="p-3 text-blue-600">Updated</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+  <!-- Role counts -->
+  <div class="grid grid-cols-3 gap-4 mt-8">
+    <div class="p-4 border rounded text-center">
+      <p class="text-sm text-gray-500">Super Admin</p>
+      <p class="text-3xl font-bold text-green-600">{{ admins }}</p>
+      <p class="text-xs mt-1 text-gray-400">Previous Login: March 15, 2025</p>
+    </div>
+    <div class="p-4 border rounded text-center">
+      <p class="text-sm text-gray-500">Admins</p>
+      <p class="text-3xl font-bold text-green-600">{{ admins }}</p>
+      <p class="text-xs mt-1 text-gray-400">Last added: March 16, 2025</p>
+    </div>
+    <div class="p-4 border rounded text-center">
+      <p class="text-sm text-gray-500">Field Workers</p>
+      <p class="text-3xl font-bold text-green-600">{{ field_workers }}</p>
+      <p class="text-xs mt-1 text-gray-400">Last added: March 16, 2025</p>
+    </div>
+  </div>
+
+  <!-- Logs Table -->
+  <div class="mt-8">
+    <div class="flex justify-between mb-2">
+      <h2 class="text-xl font-semibold">Logs</h2>
+      <div class="space-x-2 text-sm">
+        <a href="#" class="text-green-600">All</a>
+        <a href="#" class="text-gray-500">Monthly</a>
+        <a href="#" class="text-gray-500">Weekly</a>
+        <a href="#" class="text-gray-500">Today</a>
+        <a href="{% url 'dashboardadminapp:archived_users' %}" class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200">Archived</a>
+      </div>
+    </div>
+
+    <div class="bg-white border rounded shadow overflow-x-auto">
+      <table class="w-full text-left text-sm">
+        <thead class="sticky top-0 bg-gray-100 z-10">
+          <tr>
+            <th class="p-3">User ID</th>
+            <th class="p-3">Date</th>
+            <th class="p-3">User Role</th>
+            <th class="p-3">Full Name</th>
+            <th class="p-3">Status</th>
+            <th class="p-3">Time</th>
+            <th class="p-3">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user_profile in users %}
+          <tr data-id="{{ user_profile.id }}" class="border-t">
+            <td class="p-3">{{ user_profile.custom_user_id }}</td>
+            <td class="p-3">{{ user_profile.last_active|date:"d M Y" }}</td>
+            <td class="p-3">{{ user_profile.role }}</td>
+            <td class="p-3">{{ user_profile.first_name }} {{ user_profile.last_name }}</td>
+            <td class="p-3 status-cell">
+              {% if user_profile.is_archived %}
+                <span class="bg-gray-500 text-white text-xs px-2 py-1 rounded">Archived</span>
+              {% elif not user_profile.is_active %}
+                <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded">Disabled</span>
+              {% else %}
+                <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded">Active</span>
+              {% endif %}
+            </td>
+            <td class="p-3">{{ user_profile.last_active|time:"h:i A" }}</td>
+            <td class="p-3">
+              <div class="relative inline-block text-left dropdown">
+                <button class="p-3 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 text-white rounded-full shadow-lg hover:scale-110 focus:outline-none dropdown-toggle">
+                  <i class="fas fa-cogs text-xl"></i>
+                </button>
+                <div class="dropdown-menu hidden absolute right-0 mt-2 w-48 rounded-md border border-gray-300 bg-gray-200 z-50">
+                  <div class="py-1">
+                    <a href="{% url 'dashboardadminapp:edit_user' user_profile.id %}" class="block px-4 py-2 text-sm text-gray-900 hover:bg-blue-100">Edit</a>
+                    <button data-action-url="{% url 'dashboardadminapp:archive_user' user_profile.id %}" class="ajax-btn block w-full text-left px-4 py-2 text-sm text-gray-900 hover:bg-blue-100">Archive</button>
+                    <button data-action-url="{% url 'dashboardadminapp:disable_user' user_profile.id %}" class="ajax-btn block w-full text-left px-4 py-2 text-sm text-gray-900 hover:bg-blue-100">Disable</button>
+                    <button data-action-url="{% url 'dashboardadminapp:restore_user' user_profile.id %}" class="ajax-btn block w-full text-left px-4 py-2 text-sm text-gray-900 hover:bg-blue-100">Reactivate</button>
+                  </div>
+                </div>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
 
+<script>
+// dropdown toggle
+
+document.addEventListener('click', function(e){
+  document.querySelectorAll('.dropdown-menu').forEach(menu=> menu.classList.add('hidden'));
+});
+document.querySelectorAll('.dropdown-toggle').forEach(btn=>{
+  btn.addEventListener('click', e=>{
+    e.stopPropagation();
+    const menu = btn.nextElementSibling;
+    menu.classList.toggle('hidden');
+  });
+});
+
+// AJAX handlers for Archive/Disable/Restore
+
+document.querySelectorAll('.ajax-btn').forEach(button=>{
+  button.addEventListener('click', async e=>{
+    e.preventDefault();
+    const url = button.dataset.actionUrl;
+    const row = button.closest('tr');
+    const res = await fetch(url, {method:'POST', headers:{'X-CSRFToken': '{{ csrf_token }}','X-Requested-With':'XMLHttpRequest'}});
+    const data = await res.json();
+    if(data.success){
+      // update status cell
+      const cell = row.querySelector('.status-cell');
+      if(url.includes('archive')){
+        cell.innerHTML = '<span class="bg-gray-500 text-white text-xs px-2 py-1 rounded">Archived</span>';
+      } else if(url.includes('disable')){
+        cell.innerHTML = '<span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded">Disabled</span>';
+      } else if(url.includes('restore') || url.includes('reactivate')){
+        cell.innerHTML = '<span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded">Active</span>';
+      }
+    }
+  });
+});
+</script>
 {% endblock %}

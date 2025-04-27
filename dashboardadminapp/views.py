@@ -8,88 +8,63 @@ from django.urls import reverse
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
-from django.db.models import Max
 from django.contrib.auth.hashers import make_password
+from datetime import datetime
+from django.http import JsonResponse, HttpResponseNotAllowed
 
-
-# Dashboard view
+# Dashboard
 def dashboard_view(request):
     field_workers = UserProfile.objects.filter(role="User").count()
     admins = UserProfile.objects.filter(role="Admin").count()
     total_users = field_workers + admins
     logs = Log.objects.all().order_by('-timestamp')[:5]
-
+    today = datetime.now()
     return render(request, "dashboardadminapp/dashboard.html", {
         "field_workers": field_workers,
         "admins": admins,
         "total_users": total_users,
-        "logs": logs
+        "logs": logs,
+        "today": today,
     })
 
-
-# Users view
+# List active users
 def users_view(request):
-    users = UserProfile.objects.filter(is_archived=False)  # Fetch active users
-    active_users = users.filter(is_active=True).count()  # Count active users
-    disabled_users = users.filter(is_active=False).count()  # Count disabled users
-    admins = users.filter(role="Admin").count()  # Count Admin users
-    field_workers = users.filter(role="User").count()  # Count Field Worker users
+    users = UserProfile.objects.filter(is_archived=False)
+    context = {
+        "users": users,
+        "active_users": users.filter(is_active=True).count(),
+        "disabled_users": users.filter(is_active=False).count(),
+        "admins": users.filter(role="Admin").count(),
+        "field_workers": users.filter(role="User").count(),
+        "today": datetime.now(),
+    }
+    return render(request, "dashboardadminapp/users.html", context)
 
-    return render(request, "dashboardadminapp/users.html", {
-        "users": users,  # Pass all active users to the template
-        "active_users": active_users,
-        "disabled_users": disabled_users,
-        "admins": admins,
-        "field_workers": field_workers,
-    })
-
-def archived_users_view(request):
-    users = UserProfile.objects.filter(is_archived=True)  # Get only archived users
-
+# List archived users
+def archived_users(request):
+    users = UserProfile.objects.filter(is_archived=True)
+    today = datetime.now()
     return render(request, "dashboardadminapp/archived_user.html", {
-        "users": users
+        "users": users,
+        "today": today
     })
 
-
-# Generate next ID
-def generate_next_id():
-    # Retrieve the last user profile ordered by custom_user_id
-    last_user_profile = UserProfile.objects.order_by('-custom_user_id').first()
-    
-    if last_user_profile:
-        # Assuming the custom_user_id format is "25-2409-001", we need to handle the last part correctly
-        last_digits = int(last_user_profile.custom_user_id.split('-')[-1])
-        new_digits = last_digits + 1
-    else:
-        new_digits = 1
-    
-    # Ensure the new ID has 3 digits with leading zeros
-    return f"25-2409-{new_digits:03d}"
-
-
-# Add user view
+# Add new user
 def add_user(request):
-    if request.method == "POST":
-        first_name = request.POST.get("first_name")
-        last_name = request.POST.get("last_name")
-        email = request.POST.get("email")
-        password = request.POST.get("password")
-        role = request.POST.get("role")
+    if request.method=="POST":
+        first_name = request.POST["first_name"]
+        last_name = request.POST["last_name"]
+        email = request.POST["email"]
+        password = request.POST["password"]
+        role = request.POST["role"]
 
         if User.objects.filter(user_id=email).exists():
-            messages.error(request, "A user with this ID already exists.")
+            messages.error(request,"A user with this ID already exists.")
             return redirect("dashboardadminapp:add_user")
 
-        # Create User with hashed password
-        user = User.objects.create(
-            user_id=email, 
-            password=make_password(password)
-        )
-
-        # Create UserProfile linked to User
-        user_profile = UserProfile.objects.create(
+        user = User.objects.create(user_id=email, password=make_password(password))
+        UserProfile.objects.create(
             user=user,
-            custom_user_id=generate_next_id(),
             first_name=first_name,
             last_name=last_name,
             email=email,
@@ -97,90 +72,112 @@ def add_user(request):
             last_active=now(),
             is_active=True
         )
-
-        messages.success(request, "User added successfully!")
+        messages.success(request,"User added successfully!")
         return redirect("dashboardadminapp:users")
 
-    return render(request, "dashboardadminapp/add_user.html")
+    return render(request,"dashboardadminapp/add_user.html")
 
+# Edit user
+def edit_user(request, user_id):
+    profile = get_object_or_404(UserProfile, id=user_id)
+    if request.method=="POST":
+        profile.first_name = request.POST.get("first_name", profile.first_name)
+        profile.last_name  = request.POST.get("last_name", profile.last_name)
+        profile.email      = request.POST.get("email", profile.email)
+        profile.role       = request.POST.get("role", profile.role)
+        profile.save()
+        messages.success(request,"User updated successfully!")
+        return redirect("dashboardadminapp:users")
+    return render(request,"dashboardadminapp/edit_user.html", {"user": profile})
 
-# Roles view
+# Archive user (AJAX)
+@csrf_exempt
+def archive_user(request, user_id):
+    # fetch the profile (404 if missing)
+    profile = get_object_or_404(UserProfile, id=user_id)
+
+    # mark archived
+    profile.is_archived = True
+    profile.is_active   = False
+    profile.save()
+
+    # if it was an AJAX POST, return JSON
+    if request.method == "POST" and request.is_ajax():
+        return JsonResponse({"success": True})
+
+    # if it was a normal GET or non-AJAX POST, redirect back to list
+    if request.method in ("GET", "POST"):
+        return redirect('dashboardadminapp:users')
+
+    # anything else is truly invalid
+    return HttpResponseNotAllowed(["GET","POST"])
+
+# Disable user (AJAX)
+@csrf_exempt
+def disable_user(request, user_id):
+    # 1) fetch the profile or 404
+    profile = get_object_or_404(UserProfile, id=user_id)
+    # 2) toggle off
+    profile.is_active = False
+    profile.save()
+
+    # detect AJAX via header
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
+
+    # 3a) if AJAX POST, return JSON success
+    if request.method == "POST" and is_ajax:
+        return JsonResponse({"success": True})
+
+    # 3b) if normal GET or POST, redirect back to active users list
+    if request.method in ("GET", "POST"):
+        return redirect('dashboardadminapp:users')
+
+    # 4) anything else: method not allowed
+    return HttpResponseNotAllowed(["GET", "POST"])
+
+# Roles page
 def roles_view(request):
-    users = User.objects.all()  # Fetch all users
-    return render(request, 'dashboardadminapp/roles.html', {'users': users})
+    return render(request,'dashboardadminapp/roles.html', {
+        "users": User.objects.all(),
+        "today": datetime.now(),
+    })
 
-# Logs view
+# Assign roles (AJAX)
+def assign_roles(request):
+    if request.method=="POST":
+        data = json.loads(request.body)
+        role = data.get("role")
+        ids  = data.get("user_ids",[])
+        if role:
+            UserProfile.objects.filter(id__in=ids).update(role=role)
+            return JsonResponse({"success":True})
+        return JsonResponse({"success":False,"error":"No role specified"})
+    return JsonResponse({"success":False,"error":"Invalid method"})
+
+# Logs page
 def logs_view(request):
-    return render(request, "dashboardadminapp/logs.html")
+    return render(request,"dashboardadminapp/logs.html",{"today":datetime.now()})
 
-
-# Custom logout view
+# Logout
 def custom_logout(request):
     logout(request)
     return redirect(reverse('superadminloginapp:login'))
 
-
-# Archive user view
 @csrf_exempt
-def archive_user(request, user_id):
-    if request.method == "POST":
-        try:
-            user_profile = get_object_or_404(UserProfile, id=user_id)
-            user_profile.is_archived = True
-            user_profile.is_active = False
-            user_profile.save()
-            return JsonResponse({"success": True})
-        except Exception as e:
-            return JsonResponse({"success": False, "error": str(e)})
-    return JsonResponse({"success": False, "error": "Invalid request method."})
+def restore_user(request, user_id):
+    profile = get_object_or_404(UserProfile, id=user_id)
+    # Always perform the un-archive
+    profile.is_archived = False
+    profile.is_active   = True
+    profile.save()
 
+    # Detect AJAX by header
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
 
-# Archived users view
-def archived_users(request):
-    users = UserProfile.objects.filter(is_archived=True)
-    return render(request, 'dashboardadminapp/archived_users.html', {'users': users})
+    if request.method == "POST" and is_ajax:
+        return JsonResponse({"success": True})
 
-
-# Edit user view
-def edit_user(request, user_id):
-    user_profile = get_object_or_404(UserProfile, id=user_id)  
-    user = user_profile.user  # Get related User
-
-    if request.method == "POST":
-        first_name = request.POST.get("first_name", user_profile.first_name)
-        last_name = request.POST.get("last_name", user_profile.last_name)
-        email = request.POST.get("email", user_profile.email)
-        role = request.POST.get("role", user_profile.role)
-
-        # Update only UserProfile, since User has only `user_id` and `password`
-        user_profile.first_name = first_name
-        user_profile.last_name = last_name
-        user_profile.email = email
-        user_profile.role = role
-        user_profile.save()
-
-        messages.success(request, "User updated successfully!")
+    if request.method in ("GET", "POST"):
         return redirect('dashboardadminapp:users')
 
-    return render(request, 'dashboardadminapp/edit_user.html', {'user': user_profile})
-
-
-# Assign roles view
-def assign_roles(request):
-    if request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            user_ids = data.get("user_ids", [])
-            role = data.get("role")
-
-            if not role:
-                return JsonResponse({"success": False, "error": "No role specified."})
-
-            # Update users' roles
-            UserProfile.objects.filter(id__in=user_ids).update(role=role)
-
-            return JsonResponse({"success": True, "message": "Roles updated successfully."})
-        except Exception as e:
-            return JsonResponse({"success": False, "error": str(e)})
-
-    return JsonResponse({"success": False, "error": "Invalid request method."})
+    return HttpResponseNotAllowed(["GET", "POST"])
