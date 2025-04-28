@@ -103,15 +103,66 @@
                 <button class="p-3 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 text-white rounded-full shadow-lg hover:scale-110 transform transition-all duration-300 ease-in-out focus:outline-none dropdown-toggle">
                   <i class="fas fa-cogs text-xl"></i>
                 </button>
-                <div class="dropdown-menu hidden absolute right-0 mt-2 w-48 rounded-md border border-gray-300 bg-gray-200 z-50">
+                <div class="dropdown-menu hidden absolute right-0 mt-2 w-48 rounded-md border border-gray-300 bg-gray-100 z-50">
                   <div class="py-1">
-                    <a href="{% url 'dashboardadminapp:edit_user' user_profile.id %}" class="block px-4 py-2 text-sm text-gray-900 hover:bg-blue-100">Edit</a>
-                    <button data-action-url="{% url 'dashboardadminapp:archive_user' user_profile.id %}" class="ajax-btn block w-full text-left px-4 py-2 text-sm text-gray-900 hover:bg-blue-100">Archive</button>
-                    <button data-action-url="{% url 'dashboardadminapp:disable_user' user_profile.id %}" class="ajax-btn block w-full text-left px-4 py-2 text-sm text-gray-900 hover:bg-blue-100">Disable</button>
-                    <button data-action-url="{% url 'dashboardadminapp:restore_user' user_profile.id %}" class="ajax-btn block w-full text-left px-4 py-2 text-sm text-gray-900 hover:bg-blue-100">Reactivate</button>
-                  </div>
-                </div>
-              </div>
+                    <a href="{% url 'dashboardadminapp:edit_user' user_profile.id %}" 
+                       class="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-200 rounded-md transition">
+                      Edit
+                    </a>
+                
+                    <div class="relative group">
+                      <button 
+                        class="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-200 rounded-md transition"
+                        onclick="toggleConfirm(this)">
+                        Archive
+                      </button>
+                      <div class="confirm-box hidden absolute right-0 mt-2 w-60 p-4 bg-white border border-gray-300 rounded-md shadow z-50">
+                        <div class="flex items-center space-x-3">
+                          <div class="flex-shrink-0 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center font-bold text-lg">!</div>
+                          <span class="font-medium text-gray-700">Confirm archive?</span>
+                        </div>
+                        <div class="flex justify-end space-x-2 mt-4">
+                          <button class="cancel-btn px-3 py-1 border rounded-md hover:bg-gray-100">Cancel</button>
+                          <a href="{% url 'dashboardadminapp:archive_user' user_profile.id %}" class="px-3 py-1 bg-gray-800 text-white rounded-md hover:bg-gray-700">Confirm</a>
+                        </div>
+                      </div>
+                    </div>
+                
+                    <div class="relative group">
+                      <button 
+                        class="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-200 rounded-md transition"
+                        onclick="toggleConfirm(this)">
+                        Disable
+                      </button>
+                      <div class="confirm-box hidden absolute right-0 mt-2 w-60 p-4 bg-white border border-gray-300 rounded-md shadow z-50">
+                        <div class="flex items-center space-x-3">
+                          <div class="flex-shrink-0 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center font-bold text-lg">!</div>
+                          <span class="font-medium text-gray-700">Confirm disable?</span>
+                        </div>
+                        <div class="flex justify-end space-x-2 mt-4">
+                          <button class="cancel-btn px-3 py-1 border rounded-md hover:bg-gray-100">Cancel</button>
+                          <a href="{% url 'dashboardadminapp:disable_user' user_profile.id %}" class="px-3 py-1 bg-gray-800 text-white rounded-md hover:bg-gray-700">Confirm</a>
+                        </div>
+                      </div>
+                    </div>
+                
+                    <div class="relative group">
+                      <button 
+                        class="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-200 rounded-md transition"
+                        onclick="toggleConfirm(this)">
+                        Reactivate
+                      </button>
+                      <div class="confirm-box hidden absolute right-0 mt-2 w-60 p-4 bg-white border border-gray-300 rounded-md shadow z-50">
+                        <div class="flex items-center space-x-3">
+                          <div class="flex-shrink-0 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center font-bold text-lg">!</div>
+                          <span class="font-medium text-gray-700">Confirm reactivate?</span>
+                        </div>
+                        <div class="flex justify-end space-x-2 mt-4">
+                          <button class="cancel-btn px-3 py-1 border rounded-md hover:bg-gray-100">Cancel</button>
+                          <a href="{% url 'dashboardadminapp:restore_user' user_profile.id %}" class="px-3 py-1 bg-gray-800 text-white rounded-md hover:bg-gray-700">Confirm</a>
+                        </div>
+                      </div>
+                    </div>
             </td>
           </tr>
           {% endfor %}
@@ -122,63 +173,86 @@
 </div>
 
 <script>
-// dropdown toggle
-document.addEventListener('click', ()=> document.querySelectorAll('.dropdown-menu').forEach(m=>m.classList.add('hidden')));
-document.querySelectorAll('.dropdown-toggle').forEach(btn=>
-  btn.addEventListener('click', e=>{
-    e.stopPropagation();
-    btn.nextElementSibling.classList.toggle('hidden');
-  })
-);
-
-// "Select All" checkbox
-const headerCB = document.querySelector('thead input[type=checkbox]');
-const rowCBs = Array.from(document.querySelectorAll('tbody input[type=checkbox]'));
-if(headerCB){
-  headerCB.addEventListener('change', ()=>{
-    rowCBs.forEach(cb=>cb.checked = headerCB.checked);
-  });
-  rowCBs.forEach(cb=> cb.addEventListener('change', ()=>{
-    if(!cb.checked) headerCB.checked = false;
-    else if(rowCBs.every(r=>r.checked)) headerCB.checked = true;
-  }));
-}
-
-// AJAX Archive/Disable/Restore
-document.querySelectorAll('.ajax-btn').forEach(button=>
-  button.addEventListener('click', async e=>{
-    e.preventDefault();
-    const url = button.dataset.actionUrl;
-    const row = button.closest('tr');
-    const res = await fetch(url,{
-      method:'POST',
-      headers:{
-        'X-CSRFToken': '{{ csrf_token }}',
-        'X-Requested-With':'XMLHttpRequest'
-      }
-    });
-    const data = await res.json();
-    if(data.success){
-      const cell = row.querySelector('.status-cell');
-      if(url.includes('archive'))    cell.innerHTML = '<span class="bg-gray-500 text-white text-xs px-2 py-1 rounded">Archived</span>';
-      else if(url.includes('disable'))cell.innerHTML = '<span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded">Disabled</span>';
-      else                            cell.innerHTML = '<span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded">Active</span>';
+  // dropdown toggle
+  function toggleConfirm(button) {
+    document.querySelectorAll('.confirm-box').forEach(box => box.classList.add('hidden'));
+    const confirmBox = button.parentElement.querySelector('.confirm-box');
+    if (confirmBox) {
+      confirmBox.classList.toggle('hidden');
     }
-  })
-);
-
-// Filter buttons
-document.querySelectorAll('.filter-btn').forEach(btn=>
-  btn.addEventListener('click', ()=>{
-    const filter = btn.dataset.filter;
-    document.querySelectorAll('tbody tr').forEach(row=>{
-      const role   = row.querySelector('td:nth-child(4)').innerText.trim();
-      const status = row.querySelector('.status-cell span').innerText.trim().toLowerCase();
-      if(filter==='all')           row.style.display = '';
-      else if(filter==='disabled') row.style.display = (status==='disabled')? '' : 'none';
-      else                         row.style.display = (role===filter)? '' : 'none';
+  }
+  
+  // Cancel button inside confirmation
+  document.addEventListener('click', function(event) {
+    if (event.target.classList.contains('cancel-btn')) {
+      const confirmBox = event.target.closest('.confirm-box');
+      if (confirmBox) {
+        confirmBox.classList.add('hidden');
+      }
+    }
+  });
+  
+  // Dropdown open/close logic
+  document.addEventListener('click', () => 
+    document.querySelectorAll('.dropdown-menu').forEach(menu => menu.classList.add('hidden'))
+  );
+  document.querySelectorAll('.dropdown-toggle').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      btn.nextElementSibling.classList.toggle('hidden');
     });
-  })
-);
-</script>
+  });
+  
+  // "Select All" checkbox logic
+  const headerCB = document.querySelector('thead input[type=checkbox]');
+  const rowCBs = Array.from(document.querySelectorAll('tbody input[type=checkbox]'));
+  
+  if (headerCB) {
+    headerCB.addEventListener('change', () => {
+      rowCBs.forEach(cb => cb.checked = headerCB.checked);
+    });
+    rowCBs.forEach(cb => cb.addEventListener('change', () => {
+      if (!cb.checked) headerCB.checked = false;
+      else if (rowCBs.every(r => r.checked)) headerCB.checked = true;
+    }));
+  }
+  
+  // AJAX Archive/Disable/Restore (COMPLETED)
+  document.querySelectorAll('.ajax-btn').forEach(button => 
+    button.addEventListener('click', async e => {
+      e.preventDefault();
+      const url = button.dataset.actionUrl;
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': getCSRFToken(),
+            'Accept': 'application/json',
+          }
+        });
+        if (response.ok) {
+          location.reload();  // Reload page on success
+        } else {
+          alert('Something went wrong!');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Network error occurred!');
+      }
+    })
+  );
+  
+  // Helper to get CSRF token
+  function getCSRFToken() {
+    const cookies = document.cookie.split(';');
+    for (const cookie of cookies) {
+      const [name, value] = cookie.trim().split('=');
+      if (name === 'csrftoken') {
+        return decodeURIComponent(value);
+      }
+    }
+    return '';
+  }
+  </script>
+  
 {% endblock %}
