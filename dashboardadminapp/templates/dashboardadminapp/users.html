@@ -35,17 +35,14 @@
     <div class="p-4 border rounded text-center">
       <p class="text-sm text-gray-500">Super Admin</p>
       <p class="text-3xl font-bold text-green-600">{{ admins }}</p>
-      <p class="text-xs mt-1 text-gray-400">Previous Login: March 15, 2025</p>
     </div>
     <div class="p-4 border rounded text-center">
       <p class="text-sm text-gray-500">Admins</p>
       <p class="text-3xl font-bold text-green-600">{{ admins }}</p>
-      <p class="text-xs mt-1 text-gray-400">Last added: March 16, 2025</p>
     </div>
     <div class="p-4 border rounded text-center">
       <p class="text-sm text-gray-500">Field Workers</p>
       <p class="text-3xl font-bold text-green-600">{{ field_workers }}</p>
-      <p class="text-xs mt-1 text-gray-400">Last added: March 16, 2025</p>
     </div>
   </div>
 
@@ -62,10 +59,10 @@
     <div class="flex space-x-2 mb-4 text-sm font-medium">
       <button class="filter-btn px-2 py-1 rounded text-gray-700 hover:bg-gray-200" data-filter="all">View all</button>
       <button class="filter-btn px-2 py-1 rounded text-gray-700 hover:bg-gray-200" data-filter="Admin">Admin</button>
-      <button class="filter-btn px-2 py-1 rounded text-gray-700 hover:bg-gray-200" data-filter="User">Field Workers</button>
+      <button class="filter-btn px-2 py-1 rounded text-gray-700 hover:bg-gray-200" data-filter="Field Workers">Field Workers</button>
       <button class="filter-btn px-2 py-1 rounded text-gray-700 hover:bg-gray-200" data-filter="disabled">Disabled</button>
     </div>
-
+  
     <div class="bg-white border rounded shadow overflow-x-auto">
       <table class="w-full text-left text-sm">
         <thead class="sticky top-0 bg-gray-100 z-10">
@@ -82,7 +79,7 @@
         </thead>
         <tbody>
           {% for user_profile in users %}
-          <tr class="border-t">
+          <tr class="border-t user-row">
             <td class="p-3"><input type="checkbox" class="form-checkbox h-4 w-4 text-blue-600"></td>
             <td class="p-3">{{ user_profile.custom_user_id }}</td>
             <td class="p-3">{{ user_profile.last_active|date:"d M Y" }}</td>
@@ -105,15 +102,11 @@
                 </button>
                 <div class="dropdown-menu hidden absolute right-0 mt-2 w-48 rounded-md border border-gray-300 bg-gray-100 z-50">
                   <div class="py-1">
-                    <a href="{% url 'dashboardadminapp:edit_user' user_profile.id %}" 
-                       class="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-200 rounded-md transition">
+                    <a href="{% url 'dashboardadminapp:edit_user' user_profile.id %}" class="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-200 rounded-md transition">
                       Edit
                     </a>
-                
                     <div class="relative group">
-                      <button 
-                        class="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-200 rounded-md transition"
-                        onclick="toggleConfirm(this)">
+                      <button class="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-200 rounded-md transition" onclick="toggleConfirm(this)">
                         Archive
                       </button>
                       <div class="confirm-box hidden absolute right-0 mt-2 w-60 p-4 bg-white border border-gray-300 rounded-md shadow z-50">
@@ -127,11 +120,8 @@
                         </div>
                       </div>
                     </div>
-                
                     <div class="relative group">
-                      <button 
-                        class="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-200 rounded-md transition"
-                        onclick="toggleConfirm(this)">
+                      <button class="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-200 rounded-md transition" onclick="toggleConfirm(this)">
                         Disable
                       </button>
                       <div class="confirm-box hidden absolute right-0 mt-2 w-60 p-4 bg-white border border-gray-300 rounded-md shadow z-50">
@@ -145,11 +135,8 @@
                         </div>
                       </div>
                     </div>
-                
                     <div class="relative group">
-                      <button 
-                        class="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-200 rounded-md transition"
-                        onclick="toggleConfirm(this)">
+                      <button class="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-200 rounded-md transition" onclick="toggleConfirm(this)">
                         Reactivate
                       </button>
                       <div class="confirm-box hidden absolute right-0 mt-2 w-60 p-4 bg-white border border-gray-300 rounded-md shadow z-50">
@@ -163,96 +150,136 @@
                         </div>
                       </div>
                     </div>
-            </td>
-          </tr>
+                  </div>
+                </div>
+              </td>
+            </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
   </div>
-</div>
+  </div>  
 
 <script>
-  // dropdown toggle
-  function toggleConfirm(button) {
+ document.addEventListener('DOMContentLoaded', function() {
+  const filterButtons = document.querySelectorAll('.filter-btn');
+  const userRows = document.querySelectorAll('.user-row');
+
+  // Filter button logic
+  filterButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      const filter = this.getAttribute('data-filter');
+      
+      userRows.forEach(row => {
+        const role = row.querySelector('td:nth-child(4)').innerText.trim(); // Get the user role
+        const status = row.querySelector('td:nth-child(6)').innerText.trim(); // Get the status
+
+        // Show or hide the row based on the selected filter
+        if (filter === 'all' ||
+            (filter === 'Admin' && role === 'Admin') ||
+            (filter === 'Field Workers' && role === 'Field Workers') || // Match for Field Workers role
+            (filter === 'disabled' && status === 'Disabled')) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    });
+  });
+
+  // Dropdown toggle for confirmation box
+  window.toggleConfirm = function(button) {
+    // Hide any existing confirmation boxes
     document.querySelectorAll('.confirm-box').forEach(box => box.classList.add('hidden'));
-    const confirmBox = button.parentElement.querySelector('.confirm-box');
+    
+    // Show the current confirmation box if not already visible
+    const confirmBox = button.closest('.relative').querySelector('.confirm-box');
     if (confirmBox) {
       confirmBox.classList.toggle('hidden');
     }
   }
-  
-  // Cancel button inside confirmation
-  document.addEventListener('click', function(event) {
+
+  // Cancel button inside confirmation box
+  document.addEventListener('click', event => {
     if (event.target.classList.contains('cancel-btn')) {
-      const confirmBox = event.target.closest('.confirm-box');
-      if (confirmBox) {
-        confirmBox.classList.add('hidden');
-      }
+      event.target.closest('.confirm-box')?.classList.add('hidden');
     }
   });
-  
-  // Dropdown open/close logic
-  document.addEventListener('click', () => 
-    document.querySelectorAll('.dropdown-menu').forEach(menu => menu.classList.add('hidden'))
-  );
-  document.querySelectorAll('.dropdown-toggle').forEach(btn => {
-    btn.addEventListener('click', e => {
-      e.stopPropagation();
-      btn.nextElementSibling.classList.toggle('hidden');
+
+  // Close dropdown if clicked outside
+  document.addEventListener('click', function(event) {
+    if (!event.target.closest('.dropdown')) {
+      document.querySelectorAll('.dropdown-menu').forEach(menu => menu.classList.add('hidden'));
+    }
+  });
+
+  // Toggle dropdown menu visibility
+  document.querySelectorAll('.dropdown-toggle').forEach(button => {
+    button.addEventListener('click', function(event) {
+      event.stopPropagation();  // Prevent closing the dropdown when clicked inside
+      const menu = this.nextElementSibling;
+      menu.classList.toggle('hidden');
     });
   });
-  
-  // "Select All" checkbox logic
-  const headerCB = document.querySelector('thead input[type=checkbox]');
-  const rowCBs = Array.from(document.querySelectorAll('tbody input[type=checkbox]'));
-  
-  if (headerCB) {
-    headerCB.addEventListener('change', () => {
-      rowCBs.forEach(cb => cb.checked = headerCB.checked);
+
+  // "Select All" checkbox functionality
+  const headerCheckbox = document.querySelector('thead input[type=checkbox]');
+  const rowCheckboxes = document.querySelectorAll('tbody input[type=checkbox]');
+
+  if (headerCheckbox) {
+    // Select or deselect all checkboxes
+    headerCheckbox.addEventListener('change', () => {
+      rowCheckboxes.forEach(cb => cb.checked = headerCheckbox.checked);
     });
-    rowCBs.forEach(cb => cb.addEventListener('change', () => {
-      if (!cb.checked) headerCB.checked = false;
-      else if (rowCBs.every(r => r.checked)) headerCB.checked = true;
-    }));
+
+    // Update "Select All" checkbox based on row checkboxes
+    rowCheckboxes.forEach(cb => {
+      cb.addEventListener('change', () => {
+        headerCheckbox.checked = Array.from(rowCheckboxes).every(cb => cb.checked);
+      });
+    });
   }
-  
-  // AJAX Archive/Disable/Restore (COMPLETED)
-  document.querySelectorAll('.ajax-btn').forEach(button => 
-    button.addEventListener('click', async e => {
-      e.preventDefault();
+
+  // AJAX Archive/Disable/Restore actions
+  document.querySelectorAll('.ajax-btn').forEach(button => {
+    button.addEventListener('click', async event => {
+      event.preventDefault();
       const url = button.dataset.actionUrl;
+
       try {
         const response = await fetch(url, {
           method: 'POST',
           headers: {
-            'X-CSRFToken': getCSRFToken(),
+            'X-CSRFToken': getCookie('csrftoken'),
             'Accept': 'application/json',
-          }
+          },
         });
+
         if (response.ok) {
-          location.reload();  // Reload page on success
+          location.reload();  // Reload the page after success
         } else {
-          alert('Something went wrong!');
+          alert('Failed to process the action. Please try again.');
         }
       } catch (error) {
         console.error('Error:', error);
-        alert('Network error occurred!');
+        alert('An error occurred.');
       }
-    })
-  );
-  
+    });
+  });
+
   // Helper to get CSRF token
-  function getCSRFToken() {
-    const cookies = document.cookie.split(';');
-    for (const cookie of cookies) {
-      const [name, value] = cookie.trim().split('=');
-      if (name === 'csrftoken') {
-        return decodeURIComponent(value);
+  function getCookie(name) {
+    const cookies = document.cookie.split(';').map(cookie => cookie.trim());
+    for (let cookie of cookies) {
+      if (cookie.startsWith(name + '=')) {
+        return decodeURIComponent(cookie.substring(name.length + 1));
       }
     }
-    return '';
+    return null;
   }
+});
   </script>
   
+
 {% endblock %}
