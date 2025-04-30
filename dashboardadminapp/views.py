@@ -15,17 +15,23 @@ from django.http import JsonResponse, HttpResponseNotAllowed
 # Dashboard
 def dashboard_view(request):
     field_workers = UserProfile.objects.filter(role="User").count()
-    admins = UserProfile.objects.filter(role="Admin").count()
-    total_users = field_workers + admins
-    logs = Log.objects.all().order_by('-timestamp')[:5]
-    today = datetime.now()
+    admins        = UserProfile.objects.filter(role="Admin").count()
+    total_users   = field_workers + admins
+    logs          = Log.objects.all().order_by('-timestamp')[:5]
+    today         = datetime.now()
+
+    # define users for the template loop
+    users = UserProfile.objects.filter(is_archived=False)
+
     return render(request, "dashboardadminapp/dashboard.html", {
         "field_workers": field_workers,
         "admins": admins,
         "total_users": total_users,
         "logs": logs,
         "today": today,
+        "users": users,
     })
+
 
 # List active users
 def users_view(request):
@@ -147,8 +153,10 @@ def disable_user(request, user_id):
 
 # Roles page
 def roles_view(request):
-    return render(request,'dashboardadminapp/roles.html', {
-        "users": User.objects.all(),
+    # fetch the profiles so your template sees custom_user_id, can_classify, etc.
+    profiles = UserProfile.objects.all()
+    return render(request, 'dashboardadminapp/roles.html', {
+        "users": profiles,
         "today": datetime.now(),
     })
 

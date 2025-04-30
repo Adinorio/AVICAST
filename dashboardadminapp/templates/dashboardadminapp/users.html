@@ -56,11 +56,22 @@
       </div>
     </div>
     <!-- compact filter row -->
-    <div class="flex space-x-2 mb-4 text-sm font-medium">
-      <button class="filter-btn px-2 py-1 rounded text-gray-700 hover:bg-gray-200" data-filter="all">View all</button>
-      <button class="filter-btn px-2 py-1 rounded text-gray-700 hover:bg-gray-200" data-filter="Admin">Admin</button>
-      <button class="filter-btn px-2 py-1 rounded text-gray-700 hover:bg-gray-200" data-filter="Field Workers">Field Workers</button>
-      <button class="filter-btn px-2 py-1 rounded text-gray-700 hover:bg-gray-200" data-filter="disabled">Disabled</button>
+    <div class="flex justify-between items-center mb-4">
+      <!-- Filter Buttons -->
+      <div class="flex space-x-2 text-sm font-medium">
+        <button class="filter-btn px-2 py-1 rounded text-gray-700 hover:bg-gray-200" data-filter="all">View all</button>
+        <button class="filter-btn px-2 py-1 rounded text-gray-700 hover:bg-gray-200" data-filter="Admin">Admin</button>
+        <button class="filter-btn px-2 py-1 rounded text-gray-700 hover:bg-gray-200" data-filter="Field Workers">Field Workers</button>
+        <button class="filter-btn px-2 py-1 rounded text-gray-700 hover:bg-gray-200" data-filter="disabled">Disabled</button>
+      </div>
+    
+      <!-- Search Form -->
+      <form method="get" class="flex gap-2 items-center">
+        <input type="text" name="q" placeholder="Search..." value="{{ request.GET.q }}" class="border rounded px-2 py-1 w-64" id="searchInput">
+        <button type="submit" class="bg-blue-500 text-white px-4 py-1 rounded hover:bg-blue-600 transition">
+          Search
+        </button>
+      </form>
     </div>
   
     <div class="bg-white border rounded shadow overflow-x-auto">
@@ -98,7 +109,7 @@
             <td class="p-3">
               <div class="relative inline-block text-left dropdown">
                 <button class="p-3 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 text-white rounded-full shadow-lg hover:scale-110 transform transition-all duration-300 ease-in-out focus:outline-none dropdown-toggle">
-                  <i class="fas fa-cogs text-xl"></i>
+                  <i class="fas fa-cog"></i>
                 </button>
                 <div class="dropdown-menu hidden absolute right-0 mt-2 w-48 rounded-md border border-gray-300 bg-gray-100 z-50">
                   <div class="py-1">
@@ -279,6 +290,15 @@
     return null;
   }
 });
+const searchInput = document.getElementById('searchInput');
+  searchInput.addEventListener('input', () => {
+    const term = searchInput.value.toLowerCase();
+    document.querySelectorAll('.user-row').forEach(row => {
+      const id   = row.querySelector('td:nth-child(2)').innerText.toLowerCase();
+      const name = row.querySelector('td:nth-child(5)').innerText.toLowerCase();
+      row.style.display = (id.includes(term) || name.includes(term)) ? '' : 'none';
+    });
+  });
   </script>
   
 
