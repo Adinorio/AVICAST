@@ -189,7 +189,7 @@
         // Show or hide the row based on the selected filter
         if (filter === 'all' ||
             (filter === 'Admin' && role === 'Admin') ||
-            (filter === 'Field Workers' && role === 'Field Workers') || // Match for Field Workers role
+            (filter === 'Field Workers' && role === 'User') || // Match for Field Workers role
             (filter === 'disabled' && status === 'Disabled')) {
           row.style.display = '';
         } else {

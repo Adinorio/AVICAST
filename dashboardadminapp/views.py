@@ -153,11 +153,17 @@ def disable_user(request, user_id):
 
 # Roles page
 def roles_view(request):
-    # fetch the profiles so your template sees custom_user_id, can_classify, etc.
+    # Fetch the user profiles
     profiles = UserProfile.objects.all()
+    
+    # Get the count of all users
+    users_count = profiles.count()
+
+    # Pass the profiles and users_count to the template
     return render(request, 'dashboardadminapp/roles.html', {
         "users": profiles,
         "today": datetime.now(),
+        "users_count": users_count,  # Add the users count here
     })
 
 # Assign roles (AJAX)

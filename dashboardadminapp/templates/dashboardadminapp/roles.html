@@ -1,146 +1,188 @@
 {% extends 'base.html' %}
 {% block content %}
+<div class="bg-white min-h-screen p-4">
+    <!-- Top info cards -->
+    <div class="grid grid-cols-4 gap-4">
+      <!-- User ID Card -->
+      <div class="bg-yellow-50 p-4 rounded shadow border border-yellow-200">
+        <p class="text-xs text-gray-500">User ID</p>
+        <p class="text-xl font-bold text-gray-800 break-all">{{ request.session.user_id }}</p>
+      </div>
+      <!-- Member Since -->
+      <div class="bg-purple-50 p-4 rounded shadow border border-purple-200">
+        <p class="text-xs text-gray-500">Member Since</p>
+        <p class="text-lg font-semibold text-gray-800">{{ today|date:"F d, Y" }}</p>
+      </div>
+      <!-- Password Change -->
+      <div class="bg-green-50 p-4 rounded shadow border border-green-200">
+        <p class="text-xs text-gray-500">Password</p>
+        {% if user.password_changed_at %}
+          <p class="text-sm text-gray-800">Last changed: {{ user.password_changed_at|date:"F d, Y" }}</p>
+        {% else %}
+          <p class="text-sm text-gray-800">No password change recorded</p>
+        {% endif %}
+      </div>
+      <!-- Department Address -->
+      <div class="bg-orange-50 p-4 rounded shadow border border-orange-200">
+        <p class="text-xs text-gray-500">Department Address</p>
+        <p class="text-sm text-gray-800">Commercial Complex, Cabahug St, Cadiz City</p>
+      </div>
+    </div>
+<!-- Stats Cards -->
+<!-- Stats Cards -->
+<div class="grid grid-cols-3 gap-4 mt-8">
+    <div class="p-4 border rounded text-center">
+        <p class="text-sm text-gray-500">Bird Classifications</p>
+        <p class="text-3xl font-bold text-green-600">{{ classification_count }}</p>
+    </div>
+    <div class="p-4 border rounded text-center">
+        <p class="text-sm text-gray-500">Migratory Bird Census</p>
+        <p class="text-3xl font-bold text-blue-600">{{ census_count }}</p>
+    </div>
+    <div class="p-4 border rounded text-center">
+        <p class="text-sm text-gray-500">Bird Inventory</p>
+        <p class="text-3xl font-bold text-indigo-600">{{ inventory_count }}</p>
+    </div>
+</div>
 
-<div class="bg-white min-h-screen p-6 rounded-lg shadow-md">
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-        <div class="bg-green-50 p-4 rounded-lg shadow-sm border border-green-200">
-            <p class="text-sm text-gray-500 font-medium">Bird Classification</p>
-            <p class="text-2xl font-semibold text-green-600">{{ classification_count }}</p>
-        </div>
-        <div class="bg-blue-50 p-4 rounded-lg shadow-sm border border-blue-200">
-            <p class="text-sm text-gray-500 font-medium">Migratory Bird Census</p>
-            <p class="text-2xl font-semibold text-blue-600">{{ census_count }}</p>
-        </div>
-        <div class="bg-indigo-50 p-4 rounded-lg shadow-sm border border-indigo-200">
-            <p class="text-sm text-gray-500 font-medium">Bird Inventory</p>
-            <p class="text-2xl font-semibold text-indigo-600">{{ inventory_count }}</p>
+<!-- User Management -->
+<div class="mt-10">
+    <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-semibold text-gray-800">All Users ({{ users_count }})</h2>
+        <div class="flex space-x-2 text-sm font-medium">
+            <button class="filter-btn px-2 py-1 rounded text-gray-700 hover:bg-gray-200" data-filter="all">View all</button>
+            <button class="filter-btn px-2 py-1 rounded text-gray-700 hover:bg-gray-200" data-filter="Admin">Admin</button>
+            <button class="filter-btn px-2 py-1 rounded text-gray-700 hover:bg-gray-200" data-filter="Field Workers">Field Workers</button>
+            <button class="filter-btn px-2 py-1 rounded text-gray-700 hover:bg-gray-200" data-filter="disabled">Disabled</button>
+          </div>
+            <div class="relative">
+                <input type="text" placeholder="Search" onkeyup="filterTable(this.value)"
+                    class="w-48 border border-gray-300 rounded-md shadow-sm text-sm pl-3 pr-10 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500" />
+                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+            </div>
+            <button class="text-sm text-gray-600 hover:text-blue-600" onclick="resetFilters()">Reset</button>
         </div>
     </div>
 
-    <div>
-        <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-semibold text-gray-800">All Users ({{ users_count }})</h2>
-            <div class="flex items-center space-x-4">
-                <div>
-                    <button class="filter-btn text-sm text-gray-600 hover:text-blue-600 focus:outline-none" data-filter="all">View all</button>
-                    <button class="filter-btn text-sm text-gray-600 hover:text-blue-600 focus:outline-none" data-filter="Admin">Admin</button>
-                    <button class="filter-btn text-sm text-gray-600 hover:text-blue-600 focus:outline-none" data-filter="Field Workers">Field Workers</button>
-                    <button class="filter-btn text-sm text-gray-600 hover:text-blue-600 focus:outline-none" data-filter="disabled">Disabled</button>
-                </div>
-                <div class="relative">
-                    <input type="text" class="w-48 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Search" onkeyup="filterTable(this.value)">
-                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                    </div>
-                </div>
-                <button class="text-sm text-gray-600 hover:text-blue-600 focus:outline-none" onclick="resetFilters()">Reset</button>
-            </div>
-        </div>
-
-        <div class="overflow-x-auto bg-white border rounded-lg shadow-sm">
-            <table id="usersTable" class="w-full text-left text-sm">
-                <thead class="bg-gray-100 sticky top-0">
-                    <tr>
-                        <th class="p-3 font-semibold text-gray-700">
-                            <input id="selectAll" type="checkbox" class="form-checkbox h-4 w-4 text-blue-600">
-                        </th>
-                        <th class="p-3 font-semibold text-gray-700">User ID</th>
-                        <th class="p-3 font-semibold text-gray-700">Full Name</th>
-                        <th class="p-3 font-semibold text-gray-700">User Role</th>
-                        <th class="p-3 font-semibold text-gray-700">BC</th>
-                        <th class="p-3 font-semibold text-gray-700">MGC</th>
-                        <th class="p-3 font-semibold text-gray-700">BI</th>
-                        <th class="p-3 font-semibold text-gray-700">Select</th>
-                        <th class="p-3 font-semibold text-gray-700">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for user_profile in users %}
-                    <tr class="border-t user-row">
-                        <td class="p-3">
-                            <input type="checkbox" class="rowCheckbox form-checkbox h-4 w-4 text-blue-600">
-                        </td>
-                        <td class="p-3">{{ user_profile.custom_user_id }}</td>
-                        <td class="p-3">{{ user_profile.first_name }} {{ user_profile.last_name }}</td>
-                        <td class="p-3">{{ user_profile.role }}</td>
-                        <td class="p-3">
-                            <input type="checkbox" class="form-checkbox h-4 w-4 text-blue-600" disabled {% if user_profile.can_classify %}checked{% endif %}>
-                        </td>
-                        <td class="p-3">
-                            <input type="checkbox" class="form-checkbox h-4 w-4 text-blue-600" disabled {% if user_profile.can_census %}checked{% endif %}>
-                        </td>
-                        <td class="p-3">
-                            <input type="checkbox" class="form-checkbox h-4 w-4 text-blue-600" disabled {% if user_profile.can_inventory %}checked{% endif %}>
-                        </td>
-                        <td class="p-3">
-                            <input type="checkbox" class="form-checkbox h-4 w-4 text-blue-600 select-checkbox">
-                        </td>
-                        <td class="p-3 relative">
-                            <div class="relative inline-block text-left dropdown">
-                                <button class="p-2 bg-blue-500 text-white rounded-full shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 dropdown-toggle">
-                                    <i class="fas fa-cog"></i>
-                                </button>
-                                <div class="dropdown-menu hidden absolute right-0 mt-2 w-48 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 z-10">
-                                    <div class="py-1" role="menu">
-                                        <a href="{% url 'dashboardadminapp:edit_user' user_profile.id %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Edit</a>
-                                        <a href="{% url 'dashboardadminapp:archive_user' user_profile.id %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Archive</a>
-                                        <a href="{% url 'dashboardadminapp:disable_user' user_profile.id %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Disable</a>
-                                    </div>
+    <!-- Users Table -->
+    <div class="overflow-x-auto bg-white border rounded-lg shadow-sm">
+        <table id="usersTable" class="w-full text-sm text-left">
+            <thead class="bg-gray-100 sticky top-0 z-10">
+                <tr>
+                    <th class="p-3 font-semibold text-gray-700">
+                        <input id="selectAll" type="checkbox" class="form-checkbox h-4 w-4 text-blue-600" />
+                    </th>
+                    <th class="p-3 font-semibold text-gray-700">User ID</th>
+                    <th class="p-3 font-semibold text-gray-700">Full Name</th>
+                    <th class="p-3 font-semibold text-gray-700">User Role</th>
+                    <th class="p-3 font-semibold text-gray-700">BC</th>
+                    <th class="p-3 font-semibold text-gray-700">MGC</th>
+                    <th class="p-3 font-semibold text-gray-700">BI</th>
+                    <th class="p-3 font-semibold text-gray-700">Select</th>
+                    <th class="p-3 font-semibold text-gray-700">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user_profile in users %}
+                <tr class="border-t user-row">
+                    <td class="p-3">
+                        <input type="checkbox" class="rowCheckbox form-checkbox h-4 w-4 text-blue-600" />
+                    </td>
+                    <td class="p-3">{{ user_profile.custom_user_id }}</td>
+                    <td class="p-3">{{ user_profile.first_name }} {{ user_profile.last_name }}</td>
+                    <td class="p-3">{{ user_profile.role }}</td>
+                    <td class="p-3">
+                        <input type="checkbox" class="form-checkbox h-4 w-4 text-blue-600" disabled {% if user_profile.can_classify %}checked{% endif %} />
+                    </td>
+                    <td class="p-3">
+                        <input type="checkbox" class="form-checkbox h-4 w-4 text-blue-600" disabled {% if user_profile.can_census %}checked{% endif %} />
+                    </td>
+                    <td class="p-3">
+                        <input type="checkbox" class="form-checkbox h-4 w-4 text-blue-600" disabled {% if user_profile.can_inventory %}checked{% endif %} />
+                    </td>
+                    <td class="p-3">
+                        <input type="checkbox" class="form-checkbox h-4 w-4 text-blue-600 select-checkbox" />
+                    </td>
+                    <td class="p-3 relative">
+                        <div class="relative inline-block text-left dropdown">
+                            <button class="p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 dropdown-toggle">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                            <div class="dropdown-menu hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-20">
+                                <div class="py-1">
+                                    <a href="{% url 'dashboardadminapp:edit_user' user_profile.id %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Edit</a>
+                                    <a href="{% url 'dashboardadminapp:archive_user' user_profile.id %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Archive</a>
+                                    <a href="{% url 'dashboardadminapp:disable_user' user_profile.id %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Disable</a>
                                 </div>
                             </div>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr><td colspan="9" class="p-4 text-center text-gray-500">No users found.</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" class="p-4 text-center text-gray-500">No users found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // Select All
         const selectAll = document.getElementById('selectAll');
-        const rowCheckboxes = document.querySelectorAll('.rowCheckbox');
+        const checkboxes = document.querySelectorAll('.rowCheckbox');
+
         selectAll.addEventListener('change', () => {
-            rowCheckboxes.forEach(cb => cb.checked = selectAll.checked);
+            checkboxes.forEach(cb => cb.checked = selectAll.checked);
         });
 
-        // Dropdown toggles
-        document.querySelectorAll('.dropdown-toggle').forEach(toggle => {
-            toggle.addEventListener('click', e => {
+        document.querySelectorAll('.dropdown-toggle').forEach(btn => {
+            btn.addEventListener('click', e => {
                 e.stopPropagation();
-                const menu = toggle.closest('.dropdown').querySelector('.dropdown-menu');
-                document.querySelectorAll('.dropdown-menu').forEach(m => { if(m!==menu) m.classList.add('hidden'); });
+                const menu = btn.closest('.dropdown').querySelector('.dropdown-menu');
+                document.querySelectorAll('.dropdown-menu').forEach(m => {
+                    if (m !== menu) m.classList.add('hidden');
+                });
                 menu.classList.toggle('hidden');
             });
         });
-        window.addEventListener('click', () => document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.add('hidden')));
 
-        // Filtering
-        const filterBtns = document.querySelectorAll('.filter-btn');
-        filterBtns.forEach(btn => btn.addEventListener('click', () => {
-            const f = btn.dataset.filter;
-            document.querySelectorAll('#usersTable tbody tr').forEach(row => {
-                const role = row.children[3].innerText.trim();
-                const active = row.children[0].children[0].checked;
-                row.style.display = (f==='all'|| (f==='Admin'&&role==='Admin')|| (f==='Field Workers'&&role==='User')|| (f==='disabled'&&!active)) ? '' : 'none';
+        window.addEventListener('click', () => {
+            document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.add('hidden'));
+        });
+
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const filter = btn.dataset.filter;
+                document.querySelectorAll('#usersTable tbody tr').forEach(row => {
+                    const role = row.children[3].innerText.trim();
+                    const active = row.children[0].children[0].checked;
+                    row.style.display = (
+                        filter === 'all' ||
+                        (filter === 'Admin' && role === 'Admin') ||
+                        (filter === 'Field Workers' && role === 'User') ||
+                        (filter === 'disabled' && !active)
+                    ) ? '' : 'none';
+                });
             });
-        }));
+        });
     });
 
-    function filterTable(val) {
-        const term = val.toLowerCase();
+    function filterTable(value) {
+        const term = value.toLowerCase();
         document.querySelectorAll('#usersTable tbody tr').forEach(row => {
-            const text = row.innerText.toLowerCase();
-            row.style.display = text.includes(term)? '':'none';
+            row.style.display = row.innerText.toLowerCase().includes(term) ? '' : 'none';
         });
     }
+
     function resetFilters() {
-        document.querySelectorAll('.filter-btn').forEach(btn => btn.click());
-        document.querySelector('#usersTable tbody').querySelectorAll('tr').forEach(r=>r.style.display='');
+        document.querySelectorAll('#usersTable tbody tr').forEach(row => row.style.display = '');
         document.querySelector('input[placeholder="Search"]').value = '';
     }
 </script>

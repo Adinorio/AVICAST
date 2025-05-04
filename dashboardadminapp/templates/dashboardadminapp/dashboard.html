@@ -1,52 +1,50 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<!-- Top info cards -->
-<div class="grid grid-cols-4 gap-4">
-  <!-- User ID -->
-  <div class="bg-yellow-50 p-4 rounded shadow border border-yellow-200">
-    <p class="text-xs text-gray-500">User ID</p>
-    <p class="text-xl font-bold text-gray-800 break-all">{{ request.session.user_id }}</p>
+<div class="bg-white min-h-screen p-4">
+  <!-- Top info cards -->
+  <div class="grid grid-cols-4 gap-4">
+    <!-- User ID Card -->
+    <div class="bg-yellow-50 p-4 rounded shadow border border-yellow-200">
+      <p class="text-xs text-gray-500">User ID</p>
+      <p class="text-xl font-bold text-gray-800 break-all">{{ request.session.user_id }}</p>
+    </div>
+    <!-- Member Since -->
+    <div class="bg-purple-50 p-4 rounded shadow border border-purple-200">
+      <p class="text-xs text-gray-500">Member Since</p>
+      <p class="text-lg font-semibold text-gray-800">{{ today|date:"F d, Y" }}</p>
+    </div>
+    <!-- Password Change -->
+    <div class="bg-green-50 p-4 rounded shadow border border-green-200">
+      <p class="text-xs text-gray-500">Password</p>
+      {% if user.password_changed_at %}
+        <p class="text-sm text-gray-800">Last changed: {{ user.password_changed_at|date:"F d, Y" }}</p>
+      {% else %}
+        <p class="text-sm text-gray-800">No password change recorded</p>
+      {% endif %}
+    </div>
+    <!-- Department Address -->
+    <div class="bg-orange-50 p-4 rounded shadow border border-orange-200">
+      <p class="text-xs text-gray-500">Department Address</p>
+      <p class="text-sm text-gray-800">Commercial Complex, Cabahug St, Cadiz City</p>
+    </div>
   </div>
 
-  <!-- Member Since -->
-  <div class="bg-purple-50 p-4 rounded shadow border border-purple-200">
-    <p class="text-xs text-gray-500">Member Since</p>
-    <p class="text-lg font-semibold text-gray-800">{{ today|date:"F d, Y" }}</p>
+  <!-- Role counts -->
+  <div class="grid grid-cols-3 gap-4 mt-8">
+    <div class="p-4 border rounded text-center">
+      <p class="text-sm text-gray-500">Super Admin</p>
+      <p class="text-3xl font-bold text-green-600">{{ admins }}</p>
+    </div>
+    <div class="p-4 border rounded text-center">
+      <p class="text-sm text-gray-500">Admins</p>
+      <p class="text-3xl font-bold text-green-600">{{ admins }}</p>
+    </div>
+    <div class="p-4 border rounded text-center">
+      <p class="text-sm text-gray-500">Field Workers</p>
+      <p class="text-3xl font-bold text-green-600">{{ field_workers }}</p>
+    </div>
   </div>
-
-  <!-- Password Changed -->
-  <div class="bg-green-50 p-4 rounded shadow border border-green-200">
-    <p class="text-xs text-gray-500">Password</p>
-    {% if user.password_changed_at %}
-      <p class="text-sm text-gray-800">Last changed: {{ user.password_changed_at|date:"F d, Y" }}</p>
-    {% else %}
-      <p class="text-sm text-gray-800">No password change recorded</p>
-    {% endif %}
-  </div>
-
-  <!-- Department Address -->
-  <div class="bg-orange-50 p-4 rounded shadow border border-orange-200">
-    <p class="text-xs text-gray-500">Department Address</p>
-    <p class="text-sm text-gray-800">Commercial Complex, Cabahug St, Cadiz City</p>
-  </div>
-</div>
-
-<!-- Role counts -->
-<div class="grid grid-cols-3 gap-4 mt-8">
-  <div class="p-4 border rounded text-center">
-    <p class="text-sm text-gray-500">Super Admin</p>
-    <p class="text-3xl font-bold text-green-600">{{ admins }}</p>
-  </div>
-  <div class="p-4 border rounded text-center">
-    <p class="text-sm text-gray-500">Admins</p>
-    <p class="text-3xl font-bold text-green-600">{{ admins }}</p>
-  </div>
-  <div class="p-4 border rounded text-center">
-    <p class="text-sm text-gray-500">Field Workers</p>
-    <p class="text-3xl font-bold text-green-600">{{ field_workers }}</p>
-  </div>
-</div>
 
 <!-- Logs Table -->
 <div class="mt-8">
@@ -92,7 +90,7 @@
             <!-- Dropdown Settings -->
             <div class="relative inline-block text-left dropdown">
               <button class="p-3 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 text-white rounded-full shadow-lg hover:scale-110 transform transition-all duration-300 ease-in-out focus:outline-none dropdown-toggle">
-                <i class="fas fa-cogs text-xl"></i>
+                <i class="fas fa-cog"></i>
               </button>
 
               <!-- Updated Dropdown Menu with Border, Gray Background, and Proper Z-Index -->

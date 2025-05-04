@@ -41,3 +41,5 @@ def generate_user_id():
     else:
         n = 1
     return f"25-2409-{n:03d}"
+
+
