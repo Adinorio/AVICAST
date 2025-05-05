@@ -23,7 +23,7 @@
     <div class="dashboard-box">
       <h2>🦜 List of Birds</h2>
       <p>View detailed bird species descriptions.</p>
-      <a href="#" class="btn" onclick="showLoading(event)">View Birds List</a>
+      <a href="{% url 'admindashboard:bird_list' %}" class="btn" onclick="showLoading(event)">View Birds List</a>
     </div>
   </div>
 {% endblock %}

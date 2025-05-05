@@ -25,4 +25,44 @@ class AdminUser(models.Model):
         if not AdminUser.objects.filter(ID_number=default_id).exists():
             AdminUser.objects.create(ID_number=default_id, password=hashed_password)
 
+
+class Family(models.Model):
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    is_archived = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.name
+
+class Species(models.Model):
+    family = models.ForeignKey(Family, on_delete=models.CASCADE, related_name='species')
+    name = models.CharField(max_length=255)
+    scientific_name = models.CharField(max_length=255)
+    iucn_status = models.CharField(max_length=50)
+    is_archived = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.name
+### forms.py
+from django import forms
+from .models import Family, Species
+
+class FamilyForm(forms.ModelForm):
+    class Meta:
+        model = Family
+        fields = ['name', 'description']
+        widgets = {
+            'name': forms.TextInput(attrs={'class':'form-control','placeholder':'Family Name'}),
+            'description': forms.Textarea(attrs={'class':'form-control','placeholder':'Description','rows':2}),
+        }
+
+class SpeciesForm(forms.ModelForm):
+    class Meta:
+        model = Species
+        fields = ['name','scientific_name','iucn_status']
+        widgets = {
+            'name': forms.TextInput(attrs={'class':'form-control','placeholder':'Species Name'}),
+            'scientific_name': forms.TextInput(attrs={'class':'form-control','placeholder':'Scientific Name'}),
+            'iucn_status': forms.TextInput(attrs={'class':'form-control','placeholder':'IUCN Status'}),
+        }
 # Create your models here.

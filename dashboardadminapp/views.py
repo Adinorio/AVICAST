@@ -205,3 +205,34 @@ def restore_user(request, user_id):
         return redirect('dashboardadminapp:users')
 
     return HttpResponseNotAllowed(["GET", "POST"])
+
+def forgot_password_request(request):
+    if request.method == "POST":
+        # pull the ID they typed in
+        user_id = request.POST.get("user_id", "").strip()
+        try:
+            profile = UserProfile.objects.get(custom_user_id=user_id)
+        except UserProfile.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Unknown user ID."}, status=404)
+
+        # create a log entry
+        Log.objects.create(
+            event=f"{profile.first_name} {profile.last_name} is requesting a change of password."
+        )
+
+        # respond success → your notifications page will pick it up
+        return JsonResponse({"success": True})
+    return HttpResponseNotAllowed(["POST"])
+
+def notifications_view(request):
+    # all logs, most recent first
+    logs = Log.objects.all().order_by('-timestamp')
+
+    # for simplicity we treat every log as “unread” unless you build a read‑flag
+    return render(request, "dashboardadminapp/notifications.html", {
+        "logs": logs,
+    })
+
+def settings_view(request):
+    # you can flesh this out later
+    return render(request, "dashboardadminapp/settings.html")

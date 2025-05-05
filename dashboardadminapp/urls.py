@@ -23,4 +23,12 @@ urlpatterns = [
     
     # Logout
     path('logout/', views.custom_logout, name='logout'),
+    path(
+      "forgot-password/",
+      views.forgot_password_request,
+      name="forgot_password"
+    ),
+    path("notifications/", views.notifications_view, name="notifications"),
+    path("settings/", views.settings_view, name="settings"),    # implement this view
+    path("logout/", views.custom_logout, name="logout"),
 ]

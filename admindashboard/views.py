@@ -5,6 +5,11 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import logout
 from ultralytics import YOLO
+from django.shortcuts import render, redirect, get_object_or_404
+from django.views.decorators.http import require_POST
+from .models import Family, Species
+from .forms import FamilyForm, SpeciesForm
+from django.http import JsonResponse
 
 # Load the YOLO model pretrained (or fine-tuned) for migratory birds.
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -55,3 +60,46 @@ def process_bird_image(request):
         return JsonResponse({'detections': detections})
 
     return JsonResponse({'error': 'Invalid request'}, status=400)
+
+def bird_list(request):
+    families = Family.objects.filter(is_archived=False)
+    family_form = FamilyForm()
+    species_form = SpeciesForm()
+    return render(request, 'admindashboard/bird_list.html', {
+        'families': families,
+        'family_form': family_form,
+        'species_form': species_form,
+    })
+
+@require_POST
+def add_family(request):
+    form = FamilyForm(request.POST)
+    if form.is_valid():
+        form.save()
+    return redirect('birds:bird_list')
+
+@require_POST
+def add_species(request, family_id):
+    family = get_object_or_404(Family, id=family_id)
+    form = SpeciesForm(request.POST)
+    if form.is_valid():
+        sp = form.save(commit=False)
+        sp.family = family
+        sp.save()
+        data = {'id': sp.id, 'name': sp.name, 'scientific_name': sp.scientific_name}
+        return JsonResponse({'success': True, 'species': data})
+    return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+
+@require_POST
+def toggle_family_archive(request, family_id):
+    fam = get_object_or_404(Family, id=family_id)
+    fam.is_archived = not fam.is_archived
+    fam.save()
+    return JsonResponse({'success': True, 'archived': fam.is_archived})
+
+@require_POST
+def toggle_species_archive(request, species_id):
+    sp = get_object_or_404(Species, id=species_id)
+    sp.is_archived = not sp.is_archived
+    sp.save()
+    return JsonResponse({'success': True, 'archived': sp.is_archived})
