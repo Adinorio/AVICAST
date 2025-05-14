@@ -1,0 +1,11 @@
+# Chinese Egret Detection Dataset Configuration
+path: dataset  # dataset root dir
+train: images/train  # train images (relative to 'path')
+val: images/val  # val images (relative to 'path')
+
+# Classes
+names:
+  0: chinese_egret  # class names
+
+# Number of classes
+nc: 1  # number of classes 

@@ -13,7 +13,8 @@ from django.http import JsonResponse
 
 # Load the YOLO model pretrained (or fine-tuned) for migratory birds.
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-model_path = os.path.join(BASE_DIR, "models", "yolov8x.pt")
+# Update the model path to use the latest trained weights
+model_path = os.path.join(BASE_DIR, "runs", "detect", "train4", "weights", "best.pt")
 
 model = YOLO(model_path)
 
@@ -41,7 +42,7 @@ def process_bird_image(request):
                 temp_file.write(chunk)
         
         # Run inference with YOLO v8 on the temporary image file.
-        results = model(temp_path)
+        results = model(temp_path, conf=0.5, iou=0.8)
         
         # Process results
         detections = []

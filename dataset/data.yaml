@@ -1,0 +1,12 @@
+names:
+- chinese_egret
+nc: 1
+roboflow:
+  license: CC BY 4.0
+  project: chinese-egret-detection
+  url: https://universe.roboflow.com/bird-census-management-test/chinese-egret-detection/dataset/3
+  version: 3
+  workspace: bird-census-management-test
+test: test/images
+train: train/images
+val: ../val/images

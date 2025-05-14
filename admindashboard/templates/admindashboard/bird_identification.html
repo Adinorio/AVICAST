@@ -230,18 +230,13 @@ identifyBtn.addEventListener('click', function() {
           sumConfidence += det.confidence;
         });
         const avgConfidence = sumConfidence / totalBirds;
-        
-        html += `<p><strong>Total Birds Detected:</strong> ${totalBirds}</p>`;
+        // Show only summary info for Chinese Egret
+        html += `<p><strong>Total Chinese Egrets Detected:</strong> ${totalBirds}</p>`;
+        html += `<p><strong>Species Type:</strong> Chinese Egret</p>`;
+        html += `<p><strong>Scientific Name:</strong> <em>Egretta eulophotes</em></p>`;
         html += `<p><strong>Average Confidence:</strong> ${(avgConfidence * 100).toFixed(2)}%</p>`;
-        
-        // Display details of each detection
-        data.detections.forEach(det => {
-          html += `<p><strong>Species:</strong> ${det.class} <br>
-                  <strong>Confidence:</strong> ${(det.confidence * 100).toFixed(2)}% <br>
-                  <strong>Bounding Box:</strong> ${det.coordinates}</p>`;
-        });
       } else {
-        html = "<p>No detections were made.</p>";
+        html = "<p>No Chinese Egrets were detected.</p>";
       }
       resultBox.innerHTML = html;
     }
