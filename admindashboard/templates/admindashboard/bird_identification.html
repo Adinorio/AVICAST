@@ -1,0 +1,368 @@
+{% extends "admindashboard/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+  <!-- Back Button -->
+  <button onclick="window.location.href='/admindashboard/dashboard/';" class="btn">Back</button>
+  
+  <!-- Drag & Drop Box -->
+  <div class="dashboard-box" id="drop-area">
+    <p>Drag and drop a file here or click to select</p>
+    <input type="file" id="fileElem" accept="image/*" style="display:none">
+    <label class="button" for="fileElem">Select file</label>
+  </div>
+  
+  <!-- Two-Column Container for Preview and Result -->
+  <div id="columns-container">
+    <!-- Left Column: File Preview -->
+    <div class="dashboard-box column" id="preview-container">
+      <h3>File Preview:</h3>
+      <div id="gallery"></div>
+    </div>
+    
+    <!-- Right Column: Result -->
+    <div class="dashboard-box column" id="result-container">
+      <h3>Result:</h3>
+      <div id="result-box">
+        <!-- Processed result will be displayed here -->
+      </div>
+    </div>
+  </div>
+  
+  <!-- Identify Button -->
+  <div class="button-container">
+    <button id="identifyBtn" class="btn" disabled>Identify</button>
+  </div>
+</div>
+
+<!-- Modal for full image preview -->
+<div id="modal" class="modal">
+  <span id="modalClose" class="modal-close">&times;</span>
+  <div class="modal-content">
+    <!-- The enlarged image will be inserted here -->
+    <img id="modalImage" src="" alt="Full Image Preview">
+  </div>
+</div>
+
+<script>
+// DOM element references
+const dropArea = document.getElementById('drop-area');
+const fileInput = document.getElementById('fileElem');
+const gallery = document.getElementById('gallery');
+const identifyBtn = document.getElementById('identifyBtn');
+const resultBox = document.getElementById('result-box');
+
+// Modal elements
+const modal = document.getElementById('modal');
+const modalImage = document.getElementById('modalImage');
+const modalClose = document.getElementById('modalClose');
+
+let currentImage = null;
+let currentImageDataUrl = null;  // store the image data URL for redrawing on canvas
+
+// Prevent default drag behaviors
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+  dropArea.addEventListener(eventName, preventDefaults, false);
+  document.body.addEventListener(eventName, preventDefaults, false);
+});
+function preventDefaults(e) {
+  e.preventDefault();
+  e.stopPropagation();
+}
+
+// Highlight drop area when file is dragged over it
+['dragenter', 'dragover'].forEach(eventName => {
+  dropArea.addEventListener(eventName, () => dropArea.classList.add('highlight'), false);
+});
+['dragleave', 'drop'].forEach(eventName => {
+  dropArea.addEventListener(eventName, () => dropArea.classList.remove('highlight'), false);
+});
+
+// Handle dropped files
+dropArea.addEventListener('drop', handleDrop, false);
+function handleDrop(e) {
+  const dt = e.dataTransfer;
+  const files = dt.files;
+  handleFiles(files);
+}
+
+// Also handle files selected via the file input
+fileInput.addEventListener('change', (e) => {
+  handleFiles(e.target.files);
+});
+
+function handleFiles(files) {
+  // Clear previous previews and results if needed
+  gallery.innerHTML = '';
+  resultBox.innerHTML = '';
+  currentImage = null;
+  currentImageDataUrl = null;
+  disableIdentify();
+
+  Array.from(files).forEach(file => {
+    if (!file.type.startsWith('image/')) return;
+    currentImage = file;
+    previewFile(file);
+  });
+  
+  if (currentImage) enableIdentify();
+}
+
+function previewFile(file) {
+  const reader = new FileReader();
+  reader.readAsDataURL(file);
+  reader.onloadend = function() {
+    currentImageDataUrl = reader.result;  // save the data URL for future use
+    
+    // Create an image object so we can determine its dimensions
+    const img = new Image();
+    img.src = currentImageDataUrl;
+    img.onload = function() {
+      // Create a canvas element with the image dimensions
+      const canvas = document.createElement('canvas');
+      canvas.id = 'previewCanvas';
+      canvas.width = img.width;
+      canvas.height = img.height;
+      canvas.style.maxWidth = '100%';
+      canvas.style.display = 'block';
+      canvas.style.margin = '0 auto 10px';
+      
+      const ctx = canvas.getContext('2d');
+      // Draw the uploaded image onto the canvas
+      ctx.drawImage(img, 0, 0);
+      
+      // Attach an event listener on canvas to allow clicking for a full preview
+      canvas.addEventListener('click', function() {
+        // Set the modal image source to a copy of the canvas data URL
+        modalImage.src = canvas.toDataURL();
+        modal.style.display = 'block';
+      });
+      
+      // Clear previous content and append this canvas to gallery
+      gallery.innerHTML = '';
+      gallery.appendChild(canvas);
+    }
+  }
+}
+
+function enableIdentify() {
+  identifyBtn.disabled = false;
+  identifyBtn.classList.remove('disabled');
+}
+function disableIdentify() {
+  identifyBtn.disabled = true;
+  identifyBtn.classList.add('disabled');
+}
+
+// Close modal when clicking on the close button or outside the image
+modalClose.onclick = function() {
+  modal.style.display = 'none';
+}
+window.onclick = function(e) {
+  if (e.target == modal) {
+    modal.style.display = 'none';
+  }
+}
+
+// Identify button event - using AJAX to call the Django view running YOLOv8
+identifyBtn.addEventListener('click', function() {
+  if (!currentImage) return;
+  
+  // Display a loading message
+  resultBox.innerHTML = '<p>Processing image with YOLOv8...</p>';
+  disableIdentify();
+  
+  // Create FormData to send the image file
+  const formData = new FormData();
+  formData.append('image', currentImage);
+  
+  // Make a POST request to the API endpoint
+  fetch('/admindashboard/api/process_bird_image/', {
+    method: 'POST',
+    body: formData,
+  })
+  .then(response => response.json())
+  .then(data => {
+    // Check for any error messages sent by the backend
+    if(data.error) {
+      resultBox.innerHTML = '<p>Error processing image.</p>';
+    } else {
+      // Get the canvas element and its context
+      const canvas = document.getElementById('previewCanvas');
+      if (canvas && currentImageDataUrl) {
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        img.src = currentImageDataUrl;
+        img.onload = function() {
+          // Clear canvas and redraw the original image
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0);
+          // Loop through detections and draw each bounding box
+          data.detections.forEach(det => {
+            // Expected coordinates: [x1, y1, x2, y2]
+            let [x1, y1, x2, y2] = det.coordinates;
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = 'red';
+            ctx.font = "16px Arial";
+            ctx.fillStyle = 'red';
+            ctx.beginPath();
+            ctx.rect(x1, y1, x2 - x1, y2 - y1);
+            ctx.stroke();
+            const label = `${det.class} (${(det.confidence * 100).toFixed(1)}%)`;
+            ctx.fillText(label, x1, y1 > 15 ? y1 - 5 : y1 + 15);
+          });
+          // Attach click event to the updated canvas for full preview again
+          canvas.addEventListener('click', function() {
+            modalImage.src = canvas.toDataURL();
+            modal.style.display = 'block';
+          });
+        }
+      }
+      
+      // Build and display the HTML containing detection results in the right column
+      let html = '';
+      if (data.detections && data.detections.length > 0) {
+        // Calculate total number of detections and average confidence
+        const totalBirds = data.detections.length;
+        let sumConfidence = 0;
+        data.detections.forEach(det => {
+          sumConfidence += det.confidence;
+        });
+        const avgConfidence = sumConfidence / totalBirds;
+        // Show only summary info for Chinese Egret
+        html += `<p><strong>Total Chinese Egrets Detected:</strong> ${totalBirds}</p>`;
+        html += `<p><strong>Species Type:</strong> Chinese Egret</p>`;
+        html += `<p><strong>Scientific Name:</strong> <em>Egretta eulophotes</em></p>`;
+        html += `<p><strong>Average Confidence:</strong> ${(avgConfidence * 100).toFixed(2)}%</p>`;
+      } else {
+        html = "<p>No Chinese Egrets were detected.</p>";
+      }
+      resultBox.innerHTML = html;
+    }
+    enableIdentify();
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    resultBox.innerHTML = '<p>Error processing image.</p>';
+    enableIdentify();
+  });
+});
+</script>
+
+<style>
+/* General container styling */
+.container {
+  width: 80%;
+  margin: 0 auto;
+  font-family: Arial, sans-serif;
+}
+
+/* Back button styling */
+.btn {
+  padding: 10px 20px;
+  margin: 10px 0;
+  background-color: #007bff;
+  border: none;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Dashboard-box styling for drag and drop and column boxes */
+.dashboard-box {
+  border: 2px dashed #ccc;
+  border-radius: 20px;
+  padding: 20px;
+  transition: border-color 0.3s ease;
+  margin-top: 20px;
+}
+.dashboard-box.highlight {
+  border-color: purple;
+}
+
+/* File selection button styling */
+.button {
+  display: inline-block;
+  padding: 8px 16px;
+  margin-top: 10px;
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.button:hover {
+  background-color: #0056b3;
+}
+
+/* Two-Column Container */
+#columns-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  margin-top: 30px;
+  flex-wrap: wrap;
+}
+.column {
+  flex: 1;
+  min-width: 300px;
+  box-sizing: border-box;
+}
+
+/* Gallery (Preview Images) Styling */
+#gallery {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Center the Identify Button */
+.button-container {
+  text-align: center;
+  margin-top: 30px;
+}
+
+/* Result container styling */
+#result-box {
+  padding: 40px;
+  border: 150px;
+  border-radius: 8px;
+  min-height: 150px;
+}
+
+/* Modal styling */
+.modal {
+  display: none; 
+  position: fixed; 
+  z-index: 1000; 
+  left: 0;
+  top: 0;
+  width: 100%; 
+  height: 100%; 
+  overflow: auto; 
+  background-color: rgba(0, 0, 0, 0.8);
+}
+.modal-content {
+  margin: 5% auto; 
+  display: block;
+  max-width: 90%;
+}
+.modal img {
+  width: 100%;
+  height: auto;
+}
+.modal-close {
+  position: absolute;
+  top: 20px;
+  right: 35px;
+  color: #fff;
+  font-size: 40px;
+  font-weight: bold;
+  cursor: pointer;
+}
+</style>
+{% endblock %}

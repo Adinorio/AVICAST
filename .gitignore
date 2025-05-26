@@ -1,0 +1,53 @@
+# Python virtual environment
+Lib/
+venv/
+env/
+.env/
+
+# Large model files and dependencies
+models/
+*.pt
+*.dll
+*.lib
+*.so
+*.dylib
+
+# PyTorch specific
+torch/
+torch_cuda.dll
+cudnn_cnn_infer64_8.dll
+dnnl.lib
+cublasLt64_11.dll
+cusolver64_11.dll
+cufft64_10.dll
+cusparse64_11.dll
+torch_cpu.dll
+cusolverMg64_11.dll
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo 
