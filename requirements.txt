@@ -1,18 +1,3 @@
 # Core Django and database
 Django>=5.1.7
 mysqlclient>=2.2.0
-
-# ML and computer vision
-ultralytics==8.0.196
-torch>=2.0.0
-torchvision>=0.15.0
-opencv-python>=4.7.0
-numpy>=1.24.0
-Pillow>=9.5.0
-tqdm>=4.65.0
-PyYAML>=6.0
-roboflow>=1.1.53
-
-# Django extra apps/tools
-django-tailwind>=3.7.0
-django-browser-reload>=1.12.0 
