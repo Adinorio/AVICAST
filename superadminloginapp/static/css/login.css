@@ -1,0 +1,246 @@
+body {
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+    min-height: 100vh;
+    font-family: 'Inter', Arial, sans-serif;
+    background: #262222;
+    overflow: hidden;
+    position: relative;
+}
+
+.bg-image {
+    position: absolute;
+    width: 2000px;
+    height: 1499px;
+    left: -80px;
+    top: -450px;
+    background: url('../images/Bird_Background.jpg') no-repeat center center;
+    background-size: cover;
+    z-index: 1;
+}
+
+.login-card-figma {
+    position: absolute;
+    width: 646.19px;
+    height: 760px;
+    left: 1186px;
+    top: 150px;
+    background: #2A2B30;
+    opacity: 0.9;
+    box-shadow: 0px 8.39px 8.48px -1.68px rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(67.42px);
+    border-radius: 36.4px;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.logo-title-row {
+    position: absolute;
+    width: 548.64px;
+    height: 163.64px;
+    left: 31px;
+    top: 25px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+.logo-figma {
+    width: 163.64px;
+    height: 163.64px;
+    opacity: 0.7;
+    margin-top: 20px;
+    margin-right: 20px;
+    box-sizing: border-box;
+}
+
+.title-col-figma {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.avicast-title-figma {
+    font-family: 'Inter', Arial, sans-serif;
+    font-style: regular;
+    font-weight: 700;
+    font-size: 71.78px;
+    line-height: 87px;
+    color: #F3F3F3;
+    margin-bottom: 0px;
+    margin-top: 0px;
+    margin-left: 20px;
+    letter-spacing: 0.5px;
+}
+
+.line-figma {
+    width: 360px;
+    border-bottom: 1.68px solid #DFDFDF;
+    margin-top: -8px;
+    margin-bottom: 16px;
+}
+
+.subtitle-figma {
+    font-family: 'Inter', Arial, sans-serif;
+    font-style: normal;
+    font-weight: 400;
+    font-size: 16.78px;
+    line-height: 20px;
+    color: #e0e0e0;
+    margin-bottom: 0px;
+    margin-top: -10px;
+    margin-left: 6px;
+    opacity: 0.85;
+}
+
+.form-section-figma {
+    position: absolute;
+    left: 48px;
+    top: 235px;
+    width: 553.87px;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+}
+
+.form-label-figma {
+    font-family: 'Inter', Arial, sans-serif;
+    font-style: normal;
+    font-weight: 500;
+    font-size: 22.66px;
+    line-height: 27px;
+    color: #DFDFDF;
+    margin-bottom: 6px;
+    margin-top: 18px;
+    box-sizing: border-box;
+}
+
+.input-card-figma {
+    width: 553.87px;
+    height: 60px;
+    background: #7B7F84;
+    opacity: 0.4;
+    border: 0.84px solid #A0A0A0;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    backdrop-filter: blur(42.33px);
+    box-sizing: border-box;
+    justify-content: center;
+}
+
+.input-field-figma {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #fff;
+    font-size: 21.17px;
+    padding-left: 24px;
+    padding-right: 24px;
+    width: 100%;
+    height: 100%;
+    font-family: 'Inter', Arial, sans-serif;
+    box-sizing: border-box;
+}
+
+.input-field-figma::placeholder {
+    color: #e0e0e0;
+    opacity: 1;
+    font-weight: 400;
+    font-size: 21.17px;
+    letter-spacing: 0.5px;
+}
+
+.forgot-password-figma {
+    color: #3875E8;
+    font-size: 17.39px;
+    font-weight: 500;
+    text-decoration: none;
+    margin-bottom: 20px;
+    margin-top: 6px;
+    margin-left: 10px;
+    display: inline-block;
+    font-family: 'Inter', Arial, sans-serif;
+    align-self: flex-start;
+    padding-left: 2px;
+}
+
+.line-figma-2 {
+    width: 553.87px;
+    border-bottom: 0.84px solid #D0D0D0;
+    margin: 12px 0 12px 0;
+}
+
+.login-btn-box-figma {
+    width: 553.87px;
+    height: 55px;
+    background: #41454F;
+    opacity: 0.6;
+    border: 1.68px solid #4E4E4E;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+    margin-top: 20px;
+    box-sizing: border-box;
+}
+
+.login-btn-figma {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 20.22px;
+    font-weight: 600;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    letter-spacing: 1px;
+    font-family: 'Inter', Arial, sans-serif;
+    box-sizing: border-box;
+}
+
+.bird-info {
+    position: absolute;
+    width: 887px;
+    left: 235px;
+    top: 700px;
+    font-size: 35px;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: -0.05em;
+    z-index: 2;
+    line-height: 42px;
+}
+
+@media (max-width: 1200px) {
+    .login-card-figma {
+        width: 95vw;
+        min-width: 320px;
+        right: 0;
+        padding: 16px;
+    }
+    .logo-title-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .title-col-figma, .form-section-figma, .subtitle-figma {
+        width: 90vw;
+        min-width: 220px;
+    }
+    .bird-info {
+        width: 80vw;
+        left: 10vw;
+    }
+}
