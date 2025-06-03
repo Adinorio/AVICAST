@@ -3,6 +3,18 @@
 
 {% block content %}
 <div class="container">
+  <!-- Model Info and Error Display -->
+  {% if model_in_use %}
+    <div style="margin-bottom: 16px; padding: 10px; background: #e6f7ff; border: 1px solid #91d5ff; border-radius: 6px; color: #0050b3;">
+      <strong>Model in use:</strong> {{ model_in_use }}
+    </div>
+  {% endif %}
+  {% if model_load_error %}
+    <div style="margin-bottom: 16px; padding: 10px; background: #fff1f0; border: 1px solid #ffa39e; border-radius: 6px; color: #a8071a;">
+      <strong>Error:</strong> {{ model_load_error }}
+    </div>
+  {% endif %}
+  
   <!-- Back Button -->
   <button onclick="window.location.href='/admindashboard/dashboard/';" class="btn">Back</button>
   
@@ -186,7 +198,8 @@ identifyBtn.addEventListener('click', function() {
   .then(data => {
     // Check for any error messages sent by the backend
     if(data.error) {
-      resultBox.innerHTML = '<p>Error processing image.</p>';
+      // Show the actual error message from the backend
+      resultBox.innerHTML = `<p style='color:red;'><strong>Error:</strong> ${data.error}</p>`;
     } else {
       // Get the canvas element and its context
       const canvas = document.getElementById('previewCanvas');

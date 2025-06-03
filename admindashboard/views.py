@@ -1,10 +1,10 @@
 import os
+import sys
 import tempfile
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import logout
-from ultralytics import YOLO
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
 from .models import Family, Species
@@ -14,9 +14,40 @@ from django.http import JsonResponse
 # Load the YOLO model pretrained (or fine-tuned) for migratory birds.
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Update the model path to use the latest trained weights
-model_path = os.path.join(BASE_DIR, "runs", "detect", "train4", "weights", "best.pt")
+model_path = os.path.join(BASE_DIR, "models", "yolov8x.pt")
 
-model = YOLO(model_path)
+# Model selection logic
+custom_model_path = os.path.join(BASE_DIR, "runs", "detect", "train4", "weights", "best.pt")
+default_model_path = os.path.join(BASE_DIR, "models", "yolov8x.pt")
+
+model = None
+model_load_error = None
+model_in_use = None
+
+if os.path.exists(custom_model_path):
+    model_path = custom_model_path
+    model_in_use = "Custom-trained model (Chinese Egret)"
+elif os.path.exists(default_model_path):
+    model_path = default_model_path
+    model_in_use = "Base YOLOv8x model (generic)"
+else:
+    model_path = None
+    model_load_error = (
+        f"No model file found. Please provide either a custom-trained model at '{custom_model_path}' "
+        f"or a base model at '{default_model_path}'. See the README for instructions."
+    )
+
+if model_path and not model_load_error:
+    try:
+        from ultralytics import YOLO
+        model = YOLO(model_path)
+    except ImportError:
+        model_load_error = (
+            "The 'ultralytics' package is not installed. If you only want to run inference, make sure you installed only the required packages. "
+            "If you want to train or update the model, install training dependencies with: pip install -r requirements-train.txt"
+        )
+    except Exception as e:
+        model_load_error = f"Error loading YOLO model: {str(e)}"
 
 def dashboard_view(request):
     return render(request, "admindashboard/dashboard.html")
@@ -26,11 +57,13 @@ def logout_view(request):
     return redirect('superadminloginapp:login')
 
 def bird_identification_view(request):
-    # Renders the bird identification page.
-    return render(request, "admindashboard/bird_identification.html")
+    # Renders the bird identification page, passing model info for frontend display.
+    return render(request, "admindashboard/bird_identification.html", {"model_in_use": model_in_use, "model_load_error": model_load_error})
 
 @csrf_exempt
 def process_bird_image(request):
+    if model_load_error:
+        return JsonResponse({'error': model_load_error}, status=500)
     if request.method == 'POST' and request.FILES.get('image'):
         # Get image file from request
         image_file = request.FILES['image']
@@ -40,10 +73,12 @@ def process_bird_image(request):
             temp_path = temp_file.name
             for chunk in image_file.chunks():
                 temp_file.write(chunk)
-        
-        # Run inference with YOLO v8 on the temporary image file.
-        results = model(temp_path, conf=0.5, iou=0.8)
-        
+        try:
+            # Run inference with YOLO v8 on the temporary image file.
+            results = model(temp_path, conf=0.5, iou=0.8)
+        except Exception as e:
+            os.remove(temp_path)
+            return JsonResponse({'error': f'Error during model inference: {str(e)}'}, status=500)
         # Process results
         detections = []
         for result in results:
@@ -53,13 +88,10 @@ def process_bird_image(request):
                     'confidence': float(box.conf[0]),  # Confidence score
                     'coordinates': box.xyxy[0].tolist()  # Bounding box coordinates
                 })
-        
         # Clean up temporary file
         os.remove(temp_path)
-
         # Return JSON response with detections
         return JsonResponse({'detections': detections})
-
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
 def bird_list(request):
