@@ -48,6 +48,7 @@ source venv/bin/activate
 
 4. Set up the database:
    - Create a MySQL database
+```
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -58,6 +59,7 @@ DATABASES = {
         'PORT': '3306',
     }
 }
+```
    # Edit .env with your database settings
    ```
    - Run migrations:
