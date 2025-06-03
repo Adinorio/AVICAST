@@ -86,14 +86,14 @@ coverage.xml
 **/migrations/__pycache__/
 **/migrations/*.pyc
 
-# Ignore Python virtual environments and site-packages
-AVICAST_WEB_311/Lib/
+# Ignore all virtual environments and site-packages
+AVICAST_WEB_311/
 venv/
 env/
 ENV/
 .venv/
 
-# Ignore model files and training outputs (entire folders)
+# Ignore model files, datasets, and training outputs
 models/
 runs/
 dataset/
@@ -103,7 +103,7 @@ dataset/
 *.pth
 *.h5
 
-# Ignore large archives and datasets
+# Ignore large archives
 *.zip
 *.tar.gz
 *.tar
