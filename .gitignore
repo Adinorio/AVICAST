@@ -1,12 +1,8 @@
-# Byte-compiled / optimized / DLL files
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
-
-# C extensions
 *.so
-
-# Distribution / packaging
 .Python
 build/
 develop-eggs/
@@ -19,9 +15,60 @@ lib64/
 parts/
 sdist/
 var/
+wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+
+# Virtual Environment
+venv/
+ENV/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment variables
+.env
+.env.local
+
+# Model files and data
+*.pt
+*.pth
+*.weights
+*.onnx
+*.engine
+runs/
+datasets/
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.mp4
+*.avi
+
+# Database
+*.sql
+*.sqlite3
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
 
 # Virtual environments
 env/
@@ -30,81 +77,39 @@ ENV/
 .venv/
 env.bak/
 venv.bak/
+AVICAST_WEB_311/
 
-# pipenv
-Pipfile.lock
-
-# Pyre type checker
-.pyre/
-
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-media/
-staticfiles/
-
-# If you use Django's collectstatic:
-static/
-
-# dotenv environment variables file
+# Environment variables
 .env
 
-# VS Code
+# IDE
 .vscode/
-
-# PyCharm
 .idea/
 
-# macOS
+# OS
 .DS_Store
-
-# Windows
 Thumbs.db
 ehthumbs.db
 Desktop.ini
 
-# Test coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-.hypothesis/
-.pytest_cache/
-
-# MySQL/MariaDB dumps (if you ever export)
+# Database
 *.sql
 *.sql.gz
 
-# Ignore migration cache files, but not migration scripts
+# Migrations
 **/migrations/__pycache__/
 **/migrations/*.pyc
 
-# Ignore all virtual environments and site-packages
-AVICAST_WEB_311/
-venv/
-env/
-ENV/
-.venv/
-
-# Ignore model files, datasets, and training outputs
+# Model files and datasets
 models/
-runs/
-dataset/
-
-# Ignore model file types
-*.pt
-*.pth
 *.h5
 
-# Ignore large archives
+# Archives
 *.zip
 *.tar.gz
 *.tar
-*.7z 
+*.7z
+
+# Keep these files
+!models/trained_model.pt
+!models/README.md 

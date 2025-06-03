@@ -10,6 +10,18 @@ from django.views.decorators.http import require_POST
 from .models import Family, Species
 from .forms import FamilyForm, SpeciesForm
 from django.http import JsonResponse
+import torch
+from ultralytics.nn.tasks import DetectionModel
+from ultralytics.nn.modules.conv import Conv, Concat
+from ultralytics.nn.modules.block import C2f, SPPF, Bottleneck
+from ultralytics.nn.modules.head import Detect
+from torch.nn.modules.container import Sequential, ModuleList
+from torch.nn.modules.conv import Conv2d
+from torch.nn.modules.batchnorm import BatchNorm2d
+from torch.nn.modules.activation import SiLU
+from torch.nn.modules.upsampling import Upsample
+from torch.nn.modules.pooling import MaxPool2d
+from torch.nn.modules.linear import Linear
 
 # Load the YOLO model pretrained (or fine-tuned) for migratory birds.
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -40,11 +52,30 @@ else:
 if model_path and not model_load_error:
     try:
         from ultralytics import YOLO
-        model = YOLO(model_path)
+        # Add all required safe globals for model loading
+        torch.serialization.add_safe_globals([
+            DetectionModel,
+            Conv,
+            Concat,
+            C2f,
+            SPPF,
+            Bottleneck,
+            Detect,
+            Sequential,
+            ModuleList,
+            Conv2d,
+            BatchNorm2d,
+            SiLU,
+            Upsample,
+            MaxPool2d,
+            Linear
+        ])
+        # Load model with weights_only=True for security
+        model = YOLO(model_path, task='detect')
     except ImportError:
         model_load_error = (
             "The 'ultralytics' package is not installed. If you only want to run inference, make sure you installed only the required packages. "
-            "If you want to train or update the model, install training dependencies with: pip install -r requirements-train.txt"
+            "If you want to train or update the model, install training dependencies with: pip install -r requirements-dev.txt"
         )
     except Exception as e:
         model_load_error = f"Error loading YOLO model: {str(e)}"

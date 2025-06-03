@@ -1,6 +1,7 @@
 from django.db import models
-from django.db import models
 from django.contrib.auth.hashers import make_password
+from django import forms
+from django.utils import timezone
 
 class AdminUser(models.Model):
     ID_number = models.CharField(max_length=50, unique=True)
@@ -25,11 +26,15 @@ class AdminUser(models.Model):
         if not AdminUser.objects.filter(ID_number=default_id).exists():
             AdminUser.objects.create(ID_number=default_id, password=hashed_password)
 
+    def __str__(self):
+        return self.ID_number
 
 class Family(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     is_archived = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.name
@@ -40,9 +45,23 @@ class Species(models.Model):
     scientific_name = models.CharField(max_length=255)
     iucn_status = models.CharField(max_length=50)
     is_archived = models.BooleanField(default=False)
+    image = models.ImageField(upload_to='species_images/', null=True, blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.name
+
+class BirdDetection(models.Model):
+    species = models.ForeignKey(Species, on_delete=models.CASCADE, related_name='detections')
+    image = models.ImageField(upload_to='detection_images/')
+    confidence = models.FloatField()
+    detection_date = models.DateTimeField(default=timezone.now)
+    coordinates = models.JSONField()  # Store bounding box coordinates
+
+    def __str__(self):
+        return f"{self.species.name} - {self.detection_date}"
+
 ### forms.py
 from django import forms
 from .models import Family, Species
@@ -59,10 +78,11 @@ class FamilyForm(forms.ModelForm):
 class SpeciesForm(forms.ModelForm):
     class Meta:
         model = Species
-        fields = ['name','scientific_name','iucn_status']
+        fields = ['name','scientific_name','iucn_status','image']
         widgets = {
             'name': forms.TextInput(attrs={'class':'form-control','placeholder':'Species Name'}),
             'scientific_name': forms.TextInput(attrs={'class':'form-control','placeholder':'Scientific Name'}),
             'iucn_status': forms.TextInput(attrs={'class':'form-control','placeholder':'IUCN Status'}),
+            'image': forms.FileInput(attrs={'class': 'form-control'}),
         }
 # Create your models here.
