@@ -84,4 +84,27 @@ coverage.xml
 
 # Ignore migration cache files, but not migration scripts
 **/migrations/__pycache__/
-**/migrations/*.pyc 
+**/migrations/*.pyc
+
+# Ignore Python virtual environments and site-packages
+AVICAST_WEB_311/Lib/
+venv/
+env/
+ENV/
+.venv/
+
+# Ignore model files and training outputs (entire folders)
+models/
+runs/
+dataset/
+
+# Ignore model file types
+*.pt
+*.pth
+*.h5
+
+# Ignore large archives and datasets
+*.zip
+*.tar.gz
+*.tar
+*.7z 
