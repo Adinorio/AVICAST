@@ -13,7 +13,7 @@ from django.http import JsonResponse
 import torch
 from ultralytics.nn.tasks import DetectionModel
 from ultralytics.nn.modules.conv import Conv, Concat
-from ultralytics.nn.modules.block import C2f, SPPF, Bottleneck
+from ultralytics.nn.modules.block import C2f, SPPF, Bottleneck, DFL
 from ultralytics.nn.modules.head import Detect
 from torch.nn.modules.container import Sequential, ModuleList
 from torch.nn.modules.conv import Conv2d
@@ -36,6 +36,48 @@ model = None
 model_load_error = None
 model_in_use = None
 
+def setup_model_loading():
+    """Setup safe globals for model loading based on PyTorch version."""
+    try:
+        # Get PyTorch version
+        torch_version = torch.__version__
+        major_version = int(torch_version.split('.')[0])
+        minor_version = int(torch_version.split('.')[1])
+
+        # Define all required safe globals
+        safe_globals = [
+            DetectionModel,
+            Conv,
+            Concat,
+            C2f,
+            SPPF,
+            Bottleneck,
+            DFL,
+            Detect,
+            Sequential,
+            ModuleList,
+            Conv2d,
+            BatchNorm2d,
+            SiLU,
+            Upsample,
+            MaxPool2d,
+            Linear
+        ]
+
+        # For PyTorch 2.6 and above
+        if major_version >= 2 and minor_version >= 6:
+            if hasattr(torch.serialization, 'add_safe_globals'):
+                torch.serialization.add_safe_globals(safe_globals)
+            else:
+                # Fallback for older PyTorch versions
+                import warnings
+                warnings.warn("PyTorch version doesn't support add_safe_globals. Using alternative loading method.")
+                return False
+        return True
+    except Exception as e:
+        print(f"Error setting up model loading: {str(e)}")
+        return False
+
 if os.path.exists(custom_model_path):
     model_path = custom_model_path
     model_in_use = "Custom-trained model (Chinese Egret)"
@@ -52,26 +94,17 @@ else:
 if model_path and not model_load_error:
     try:
         from ultralytics import YOLO
-        # Add all required safe globals for model loading
-        torch.serialization.add_safe_globals([
-            DetectionModel,
-            Conv,
-            Concat,
-            C2f,
-            SPPF,
-            Bottleneck,
-            Detect,
-            Sequential,
-            ModuleList,
-            Conv2d,
-            BatchNorm2d,
-            SiLU,
-            Upsample,
-            MaxPool2d,
-            Linear
-        ])
-        # Load model with weights_only=True for security
-        model = YOLO(model_path, task='detect')
+        
+        # Setup model loading with safe globals
+        use_safe_globals = setup_model_loading()
+        
+        # Load model with appropriate settings
+        if use_safe_globals:
+            model = YOLO(model_path, task='detect')
+        else:
+            # Fallback method for older PyTorch versions
+            model = YOLO(model_path, task='detect', weights_only=False)
+            
     except ImportError:
         model_load_error = (
             "The 'ultralytics' package is not installed. If you only want to run inference, make sure you installed only the required packages. "

@@ -20,6 +20,14 @@ wheels/
 .installed.cfg
 *.egg
 
+# Python cache files
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+.Python
+*.so
+
 # Django
 *.log
 local_settings.py
@@ -32,6 +40,10 @@ staticfiles/
 venv/
 ENV/
 env/
+.venv/
+env.bak/
+venv.bak/
+AVICAST_WEB_311/
 
 # IDE
 .idea/
@@ -69,40 +81,15 @@ logs/
 # OS
 .DS_Store
 Thumbs.db
-
-# Virtual environments
-env/
-venv/
-ENV/
-.venv/
-env.bak/
-venv.bak/
-AVICAST_WEB_311/
-
-# Environment variables
-.env
-
-# IDE
-.vscode/
-.idea/
-
-# OS
-.DS_Store
-Thumbs.db
 ehthumbs.db
 Desktop.ini
-
-# Database
-*.sql
-*.sql.gz
 
 # Migrations
 **/migrations/__pycache__/
 **/migrations/*.pyc
-
-# Model files and datasets
-models/
-*.h5
+# Keep migration Python files
+!**/migrations/*.py
+!**/migrations/__init__.py
 
 # Archives
 *.zip
