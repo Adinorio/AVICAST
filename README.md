@@ -48,9 +48,16 @@ source venv/bin/activate
 
 4. Set up the database:
    - Create a MySQL database
-   - Copy `.env.example` to `.env` and update database credentials:
-   ```bash
-   cp .env.example .env
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'admin5.0_db',
+        'USER': 'root',
+        'PASSWORD': 'root',
+        'HOST': '127.0.0.1',
+        'PORT': '3306',
+    }
+}
    # Edit .env with your database settings
    ```
    - Run migrations:
@@ -110,6 +117,7 @@ If you encounter any issues:
    - Ensure PyTorch and CUDA are properly installed
    - Check if model files exist in correct locations
    - Verify model file permissions
+   - https://drive.google.com/drive/folders/1xgaO4Ntb0zNHbXZdZwKgza9AL0xpnjVq?usp=drive_link
 
 2. Database Issues:
    - Check database connection settings in `.env`
