@@ -28,6 +28,18 @@ wheels/
 .Python
 *.so
 
+# Specific app cache files
+dashboardadminapp/__pycache__/
+dashboardadminapp/**/__pycache__/
+superadmin/__pycache__/
+superadmin/**/__pycache__/
+superadminloginapp/__pycache__/
+superadminloginapp/**/__pycache__/
+theme/__pycache__/
+theme/**/__pycache__/
+admindashboard/__pycache__/
+admindashboard/**/__pycache__/
+
 # Django
 *.log
 local_settings.py
