@@ -40,6 +40,14 @@ theme/**/__pycache__/
 admindashboard/__pycache__/
 admindashboard/**/__pycache__/
 
+# Migration cache files
+**/migrations/__pycache__/
+**/migrations/*.pyc
+**/migrations/*.pyo
+**/migrations/*.pyd
+!**/migrations/*.py
+!**/migrations/__init__.py
+
 # Django
 *.log
 local_settings.py
@@ -95,13 +103,6 @@ logs/
 Thumbs.db
 ehthumbs.db
 Desktop.ini
-
-# Migrations
-**/migrations/__pycache__/
-**/migrations/*.pyc
-# Keep migration Python files
-!**/migrations/*.py
-!**/migrations/__init__.py
 
 # Archives
 *.zip
