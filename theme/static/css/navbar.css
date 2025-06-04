@@ -1,0 +1,270 @@
+/* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Your new navigation styles will go here */
+
+:root {
+  --sidebar-bg: #2A2B30;
+  --nav-selected-bg: #404358;
+  --text-primary: #DFDFDF;
+  --text-secondary: #EBEBEB;
+  --text-selected: #E6EFFF;
+  --icon-inactive: #BBBBBC;
+  --badge-bg: #FF472E;
+  --divider-color: #324054;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+}
+
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 357.11px;
+  height: 100vh;
+  background: var(--sidebar-bg);
+  padding: 52px 24.7991px 24.7991px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 143.83px;
+  box-sizing: border-box;
+  z-index: 1000;
+}
+
+.sidebar__logo-container {
+  width: 307.51px;
+  height: 37px;
+  padding: 9.91963px;
+  display: flex;
+  align-items: center;
+  gap: 14.88px;
+  box-sizing: border-box;
+}
+
+.sidebar__logo-text {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 36px;
+  line-height: 30px;
+  color: var(--text-primary);
+  width: 287.67px;
+  height: 31px;
+  display: block;
+}
+
+.sidebar__nav {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  width: 307.51px;
+  display: flex;
+  flex-direction: column;
+  gap: 14.88px;
+}
+
+/* Remove default button styles for nav items */
+.sidebar__nav-item {
+  background: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  text-align: left;
+  width: 307.51px;
+  height: 54.76px;
+  border-radius: 4.95982px;
+  display: flex;
+  align-items: center;
+  padding-left: 14.8794px;
+  gap: 19.84px;
+  transition: background 0.2s;
+  font: inherit;
+}
+
+.sidebar__nav-item:focus-visible {
+  outline: 2px solid var(--text-selected);
+  outline-offset: 2px;
+}
+
+.sidebar__nav-item--active {
+  background: var(--nav-selected-bg);
+}
+
+/* Notification badge: hidden by default, shown with --show class, right-justified */
+.sidebar__icon-container {
+  width: 24.8px;
+  height: 24.8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.sidebar__icon {
+  font-size: 24.8px;
+  width: 24.8px;
+  height: 24.8px;
+  color: var(--icon-inactive);
+  transition: color 0.2s;
+}
+
+.sidebar__nav-item--active .sidebar__icon {
+  color: var(--text-selected);
+}
+
+/* Ensure label and badge never overlap */
+.sidebar__label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 19.8393px;
+  line-height: 25px;
+  color: var(--text-secondary);
+  width: 233.11px;
+  height: 25px;
+  display: flex;
+  align-items: center;
+}
+
+.sidebar__nav-item--active .sidebar__label {
+  color: var(--text-selected);
+}
+
+.sidebar__divider {
+  width: 247.99px;
+  height: 2.48px;
+  background: var(--divider-color);
+  margin: 0 auto;
+  border-radius: 1.24px;
+}
+
+.sidebar__icon-container--relative {
+  position: relative;
+}
+
+/* Notification badge: hidden by default, shown with --show class, right-justified */
+.sidebar__badge {
+  display: none;
+  position: absolute;
+  right: -48px; /* further right to avoid overlap */
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24.8px;
+  height: 24.8px;
+  background: var(--badge-bg);
+  border-radius: 50%;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Inter', sans-serif;
+  font-size: 14.8794px;
+  font-weight: 400;
+  color: #fff;
+  line-height: 20px;
+  text-align: center;
+  z-index: 2;
+}
+
+.sidebar__badge--show {
+  display: flex;
+}
+
+.sidebar__bottom {
+  width: 307.51px;
+  display: flex;
+  flex-direction: column;
+  gap: 14.88px;
+}
+
+.sidebar__nav--bottom {
+  margin-bottom: 0;
+  gap: 0;
+}
+
+.sidebar__profile {
+  width: 307.51px;
+  height: 66px;
+  display: flex;
+  align-items: center;
+  padding: 14.8794px 14.8794px 14.8794px 6px;
+  gap: 9.92px;
+  box-sizing: border-box;
+}
+
+.sidebar__avatar {
+  width: 59px;
+  height: 59px;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.sidebar__avatar--profile {
+  /* Set your avatar image path here. Replace the URL below with the correct static path in production. */
+  background-image: url('/static/images/TranspaCENRO.png');
+}
+
+.sidebar__profile-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4.96px;
+  width: 217.71px;
+  height: 42.96px;
+  justify-content: center;
+}
+
+.sidebar__username {
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  font-size: 14.8794px;
+  line-height: 20px;
+  color: var(--text-secondary);
+  width: 217.71px;
+  height: 20px;
+}
+
+.sidebar__role {
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  font-size: 14.8794px;
+  line-height: 17px;
+  color: var(--icon-inactive);
+  width: 217.71px;
+  height: 18px;
+}
+
+/* Main content area next to sidebar */
+.main-content {
+  margin-left: 357.11px;
+  width: calc(100vw - 357.11px);
+  min-height: 100vh;
+  background: #f8f9fa;
+  box-sizing: border-box;
+  padding: 32px;
+}
+
+@media (max-width: 900px) {
+  .sidebar {
+    width: 100vw;
+    height: auto;
+    position: relative;
+    padding: 24px;
+    gap: 40px;
+  }
+  .main-content {
+    margin-left: 0;
+    width: 100vw;
+    padding: 16px;
+  }
+} 
