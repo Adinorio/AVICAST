@@ -1,45 +1,4 @@
-{% extends 'base.html' %}
-
+{% extends "base.html" %}
 {% block content %}
-<div class="bg-white min-h-screen p-6">
-  <h2 class="text-2xl font-semibold mb-4">Archived Users</h2>
-
-  <div class="overflow-x-auto bg-white border rounded shadow">
-    <table class="w-full text-left text-sm">
-      <thead class="bg-gray-100">
-        <tr>
-          <th class="p-3">User ID</th>
-          <th class="p-3">Full Name</th>
-          <th class="p-3">Role</th>
-          <th class="p-3">Last Active</th>
-          <th class="p-3">Actions</th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-gray-200">
-        {% for user in users %}
-        <tr class="hover:bg-gray-50">
-          <td class="p-3">{{ user.custom_user_id }}</td>
-          <td class="p-3">{{ user.first_name }} {{ user.last_name }}</td>
-          <td class="p-3">{{ user.role }}</td>
-          <td class="p-3">{{ user.last_active|date:"F d, Y" }}</td>
-          <td class="p-3 space-x-2">
-            <form method="post" action="{% url 'dashboardadminapp:restore_user' user.id %}" class="inline">
-              {% csrf_token %}
-              <button type="submit" class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600">Restore</button>
-            </form>
-            <form method="post" action="{% url 'dashboardadminapp:disable_user' user.id %}" class="inline">
-              {% csrf_token %}
-              <button type="submit" class="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600">Disable</button>
-            </form>
-          </td>
-        </tr>
-        {% empty %}
-        <tr>
-          <td colspan="5" class="p-4 text-center text-gray-500">No archived users found.</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</div>
+<!-- New archived users interface will be implemented here -->
 {% endblock %}

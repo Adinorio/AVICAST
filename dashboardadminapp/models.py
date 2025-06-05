@@ -2,6 +2,8 @@ from django.db import models
 from superadminloginapp.models import User
 from django.db.models import Max
 
+# New models will be implemented here
+
 class Log(models.Model):
     event = models.CharField(max_length=255)
     timestamp = models.DateTimeField(auto_now_add=True)
@@ -18,8 +20,6 @@ class UserProfile(models.Model):
     email = models.EmailField(unique=True)
     role = models.CharField(max_length=50)
     last_active = models.DateTimeField(null=True, blank=True)
-    is_active = models.BooleanField(default=True)
-    is_archived = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
         # On initial save, assign a custom_user_id based on numeric PK

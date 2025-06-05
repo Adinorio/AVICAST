@@ -19,18 +19,18 @@
         </div>
         <!-- Navigation -->
         <ul class="sidebar__nav">
-            <li><button type="button" class="sidebar__nav-item sidebar__nav-item--active" data-nav="dashboard" aria-label="Dashboard" tabindex="0">
+            <li><a href="{% url 'dashboardadminapp:dashboard' %}" class="sidebar__nav-item {% if request.resolver_match.url_name == 'dashboard' %}sidebar__nav-item--active{% endif %}" data-nav="dashboard" aria-label="Dashboard" tabindex="0">
                 <span class="sidebar__icon-container">
                     <i class="fas fa-home sidebar__icon"></i>
                 </span>
                 <span class="sidebar__label">Dashboard</span>
-            </button></li>
-            <li><button type="button" class="sidebar__nav-item" data-nav="user-management" aria-label="User Management" tabindex="0">
+            </a></li>
+            <li><a href="{% url 'dashboardadminapp:users' %}" class="sidebar__nav-item {% if request.resolver_match.url_name == 'users' %}sidebar__nav-item--active{% endif %}" data-nav="user-management" aria-label="User Management" tabindex="0">
                 <span class="sidebar__icon-container">
-                    <i class="fas fa-th sidebar__icon"></i>
+                    <i class="fas fa-users sidebar__icon"></i>
                 </span>
                 <span class="sidebar__label">User Management</span>
-            </button></li>
+            </a></li>
             <li><button type="button" class="sidebar__nav-item" data-nav="assignment" aria-label="Assignment" tabindex="0">
                 <span class="sidebar__icon-container">
                     <i class="fas fa-chart-line sidebar__icon"></i>
@@ -85,30 +85,51 @@
 <script>
 // Sidebar nav item selection logic
 const navItems = Array.from(document.querySelectorAll('.sidebar__nav-item'));
+let isTyping = false;
+
+// Check if user is typing in an input or textarea
+document.addEventListener('focusin', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) {
+        isTyping = true;
+    }
+});
+
+document.addEventListener('focusout', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) {
+        isTyping = false;
+    }
+});
+
+// Handle click events
 navItems.forEach(item => {
-    item.addEventListener('click', function() {
-        navItems.forEach(i => i.classList.remove('sidebar__nav-item--active'));
-        this.classList.add('sidebar__nav-item--active');
-        this.focus();
+    item.addEventListener('click', function(e) {
+        if (this.tagName === 'BUTTON') {
+            e.preventDefault();
+            // Remove active class from all items
+            navItems.forEach(i => i.classList.remove('sidebar__nav-item--active'));
+            // Add active class to clicked item
+            this.classList.add('sidebar__nav-item--active');
+            this.focus();
+        }
     });
 });
 
-// Keyboard navigation (up/down arrows)
+// Keyboard navigation (up/down arrows and enter)
 document.addEventListener('keydown', function(e) {
-    // Only run if not typing in an input or textarea
-    const active = document.activeElement;
-    if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) {
-        return;
-    }
+    if (isTyping) return; // Don't handle navigation if user is typing
+
     const current = document.querySelector('.sidebar__nav-item--active');
     if (!current) return;
+
     let idx = navItems.indexOf(current);
+    
     if (e.key === 'ArrowDown') {
         e.preventDefault();
         let nextIdx = idx;
         do {
             nextIdx = (nextIdx + 1) % navItems.length;
         } while (navItems[nextIdx].offsetParent === null && nextIdx !== idx);
+        
         navItems.forEach(i => i.classList.remove('sidebar__nav-item--active'));
         navItems[nextIdx].classList.add('sidebar__nav-item--active');
         navItems[nextIdx].focus();
@@ -118,10 +139,29 @@ document.addEventListener('keydown', function(e) {
         do {
             prevIdx = (prevIdx - 1 + navItems.length) % navItems.length;
         } while (navItems[prevIdx].offsetParent === null && prevIdx !== idx);
+        
         navItems.forEach(i => i.classList.remove('sidebar__nav-item--active'));
         navItems[prevIdx].classList.add('sidebar__nav-item--active');
         navItems[prevIdx].focus();
+    } else if (e.key === 'Enter' && current.tagName === 'A') {
+        e.preventDefault();
+        current.click();
     }
+});
+
+// Add hover effect
+navItems.forEach(item => {
+    item.addEventListener('mouseenter', function() {
+        if (!this.classList.contains('sidebar__nav-item--active')) {
+            this.style.backgroundColor = 'rgba(64, 67, 88, 0.5)';
+        }
+    });
+
+    item.addEventListener('mouseleave', function() {
+        if (!this.classList.contains('sidebar__nav-item--active')) {
+            this.style.backgroundColor = '';
+        }
+    });
 });
 </script>
 </body>
