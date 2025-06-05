@@ -13,21 +13,21 @@
 
   <!-- Welcome Card -->
   <section class="users-welcome-card">
-    <h2 class="users-welcome-card__title">Welcome</h2>
-    <p class="users-welcome-card__subtitle">A quick summary of the user management system of Avicast.</p>
+    <h2 class="users-welcome-card__title">User Management<span class="users-count-badge">5</span></h2>
+    <p class="users-welcome-card__subtitle">Manage your team members and their account permissions here.</p>
   </section>
 
   <!-- Stats Cards -->
   <div class="users-stats-container">
     <div class="users-stat-card users-stat-card--admin">
-      <span class="users-stat-card__label">Total active admins</span>
+      <span class="users-stat-card__label">Most recently added User ID</span>
       <div class="users-stat-card__inner">
         <span class="users-stat-card__value">0</span>
         <!-- TODO: replace with {{ total_active_admins }} -->
       </div>
     </div>
     <div class="users-stat-card users-stat-card--field">
-      <span class="users-stat-card__label">Total active field workers</span>
+      <span class="users-stat-card__label">Daily active users</span>
       <div class="users-stat-card__inner">
         <span class="users-stat-card__value">0</span>
         <!-- TODO: replace with {{ total_active_fieldworkers }} -->
@@ -38,8 +38,15 @@
   <!-- Users Table -->
   <section class="users-table">
     <div class="users-table__header">
-      <h2 class="users-table__title">Users Management</h2>
-      <span class="users-table__recent">All users</span>
+      <div class="users-table__controls">
+        <div class="users-table__search">
+          <input type="text" placeholder="Search">
+        </div>
+        <div class="users-table__buttons">
+          <button class="users-table__filter-button">Filters</button>
+          <button class="users-table__add-user-button">+ Add User</button>
+        </div>
+      </div>
     </div>
     <div class="users-table__container">
       <div class="users-table__bg">
@@ -47,12 +54,12 @@
           <thead>
             <tr>
               <th class="users-table__th">User ID <span class="sort-icon">&#8597;</span></th>
-              <th class="users-table__th">Last Active <span class="sort-icon">&#8597;</span></th>
+              <th class="users-table__th">Date Created <span class="sort-icon">&#8597;</span></th>
               <th class="users-table__th">User Role <span class="sort-icon">&#8597;</span></th>
               <th class="users-table__th">Full Name <span class="sort-icon">&#8597;</span></th>
               <th class="users-table__th">Status <span class="sort-icon">&#8597;</span></th>
+              <th class="users-table__th">Last Updated <span class="sort-icon">&#8597;</span></th>
               <th class="users-table__th">Action <span class="sort-icon">&#8597;</span></th>
-              <th class="users-table__th">OS <span class="sort-icon">&#8597;</span></th>
             </tr>
           </thead>
           <tbody>
@@ -63,8 +70,8 @@
               <td class="users-table__td">Field Worker</td>
               <td class="users-table__td">James Galillie Noceja</td>
               <td class="users-table__td"><span class="users-status-pill users-status-pill--inactive">—</span></td>
-              <td class="users-table__td">Log in</td>
-              <td class="users-table__td">Windows</td>
+              <td class="users-table__td">03/17/25</td>
+              <td class="users-table__td"><span class="settings-icon">⚙️</span></td>
             </tr>
             {% endfor %}
           </tbody>
@@ -72,5 +79,12 @@
       </div>
     </div>
   </section>
+
+  <!-- Pagination -->
+  <div class="users-pagination">
+    <button class="users-pagination__button users-pagination__button--prev">< Previous page</button>
+    <span class="users-pagination__page-number">1</span>
+    <button class="users-pagination__button users-pagination__button--next">Next page ></button>
+  </div>
 </div>
 {% endblock %}
