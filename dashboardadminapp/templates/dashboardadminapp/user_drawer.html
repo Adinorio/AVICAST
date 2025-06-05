@@ -1,0 +1,60 @@
+<div id="userDrawer" class="user-drawer">
+  <div class="user-drawer__header">
+    <h2 class="user-drawer__title">Create user</h2>
+    <button class="user-drawer__close-button">&times;</button>
+  </div>
+  <div class="user-drawer__body">
+    <!-- Role Selection -->
+    <div class="user-drawer__form-group">
+      <label for="userRole">Role <span class="validation-text">(required)</span></label>
+      <select id="userRole">
+        <option value="">Select role</option>
+        <!-- Options will be populated dynamically -->
+      </select>
+    </div>
+
+    <!-- First Name -->
+    <div class="user-drawer__form-group">
+      <label for="firstName">First name <span class="validation-text">(required)</span></label>
+      <input type="text" id="firstName" placeholder="Required field">
+    </div>
+
+    <!-- Last Name -->
+    <div class="user-drawer__form-group">
+      <label for="lastName">Last name <span class="validation-text">(required)</span></label>
+      <input type="text" id="lastName" placeholder="Required field">
+    </div>
+
+    <!-- Password -->
+    <div class="user-drawer__form-group">
+      <label for="password">Password <span class="validation-text">(required)</span></label>
+      <div class="password-input-container">
+        <input type="password" id="password" placeholder="Enter password">
+        <span class="password-toggle-icon">👁️</span>
+      </div>
+    </div>
+
+    <!-- Confirm Password -->
+    <div class="user-drawer__form-group">
+      <label for="confirmPassword">Confirm password <span class="validation-text">(password must match)</span></label>
+      <div class="password-input-container">
+        <input type="password" id="confirmPassword" placeholder="Repeat password">
+        <span class="password-toggle-icon">👁️</span>
+      </div>
+    </div>
+
+    <div class="user-drawer__alert">
+      <span class="alert-icon">⚠️</span>
+      <span class="alert-text">Check required fields before proceeding.</span>
+    </div>
+
+    <!-- Buttons -->
+    <div class="user-drawer__buttons">
+      <button id="createAccountButton" class="user-drawer__create-account-button">Create account</button>
+      <button class="user-drawer__cancel-button">Cancel</button>
+    </div>
+
+  </div>
+</div>
+
+<div id="drawerOverlay" class="drawer-overlay"></div> 

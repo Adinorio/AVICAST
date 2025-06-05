@@ -38,14 +38,12 @@
   <!-- Users Table -->
   <section class="users-table">
     <div class="users-table__header">
-      <div class="users-table__controls">
-        <div class="users-table__search">
-          <input type="text" placeholder="Search">
-        </div>
-        <div class="users-table__buttons">
-          <button class="users-table__filter-button">Filters</button>
-          <button class="users-table__add-user-button">+ Add User</button>
-        </div>
+      <div class="users-table__search">
+        <input type="text" placeholder="Search">
+      </div>
+      <div class="users-table__buttons">
+        <button class="users-table__filter-button">Filters</button>
+        <button id="addUserButton" class="users-table__add-user-button">+ Add User</button>
       </div>
     </div>
     <div class="users-table__container">
@@ -87,4 +85,113 @@
     <button class="users-pagination__button users-pagination__button--next">Next page ></button>
   </div>
 </div>
+
+{% include 'dashboardadminapp/user_drawer.html' %}
+
+<script>
+  const addUserButton = document.getElementById('addUserButton');
+  const userDrawer = document.getElementById('userDrawer');
+  const drawerOverlay = document.getElementById('drawerOverlay');
+  const closeDrawerButton = userDrawer.querySelector('.user-drawer__close-button');
+  const cancelDrawerButton = userDrawer.querySelector('.user-drawer__cancel-button');
+  const createAccountButton = userDrawer.querySelector('#createAccountButton');
+
+  const roleInput = userDrawer.querySelector('#userRole');
+  const firstNameInput = userDrawer.querySelector('#firstName');
+  const lastNameInput = userDrawer.querySelector('#lastName');
+  const passwordInput = userDrawer.querySelector('#password');
+  const confirmPasswordInput = userDrawer.querySelector('#confirmPassword');
+
+  const requiredRoleText = roleInput.closest('.user-drawer__form-group').querySelector('.validation-text');
+  const requiredFirstNameText = firstNameInput.closest('.user-drawer__form-group').querySelector('.validation-text');
+  const requiredLastNameText = lastNameInput.closest('.user-drawer__form-group').querySelector('.validation-text');
+  const requiredPasswordText = passwordInput.closest('.user-drawer__form-group').querySelector('.validation-text');
+  const passwordMatchText = confirmPasswordInput.closest('.user-drawer__form-group').querySelector('.validation-text');
+  
+  const drawerAlert = userDrawer.querySelector('.user-drawer__alert');
+
+  const passwordToggleIcons = userDrawer.querySelectorAll('.password-toggle-icon');
+
+  function openDrawer() {
+    userDrawer.style.right = '0';
+    drawerOverlay.style.display = 'block';
+    // Hide validation messages when opening the drawer
+    hideValidationMessages();
+  }
+
+  function closeDrawer() {
+    userDrawer.style.right = '-500px'; // Assuming the drawer width is 500px
+    drawerOverlay.style.display = 'none';
+    // Optional: Clear form fields when closing
+    // resetForm();
+  }
+
+  function hideValidationMessages() {
+    requiredRoleText.style.display = 'none';
+    requiredFirstNameText.style.display = 'none';
+    requiredLastNameText.style.display = 'none';
+    requiredPasswordText.style.display = 'none';
+    passwordMatchText.style.display = 'none';
+    drawerAlert.style.display = 'none';
+  }
+
+  function validateForm(event) {
+    let isValid = true;
+    hideValidationMessages();
+
+    if (roleInput.value.trim() === '') {
+      requiredRoleText.style.display = 'inline';
+      isValid = false;
+    }
+
+    if (firstNameInput.value.trim() === '') {
+      requiredFirstNameText.style.display = 'inline';
+      isValid = false;
+    }
+
+    if (lastNameInput.value.trim() === '') {
+      requiredLastNameText.style.display = 'inline';
+      isValid = false;
+    }
+
+    if (passwordInput.value.trim() === '') {
+      requiredPasswordText.style.display = 'inline';
+      isValid = false;
+    }
+
+    if (confirmPasswordInput.value.trim() === '' || confirmPasswordInput.value !== passwordInput.value) {
+      passwordMatchText.style.display = 'inline';
+      isValid = false;
+    }
+
+    if (!isValid) {
+      drawerAlert.style.display = 'flex'; // Show the alert message
+      event.preventDefault(); // Prevent form submission
+    }
+
+    return isValid;
+  }
+
+  addUserButton.addEventListener('click', openDrawer);
+  closeDrawerButton.addEventListener('click', closeDrawer);
+  cancelDrawerButton.addEventListener('click', closeDrawer);
+  drawerOverlay.addEventListener('click', closeDrawer);
+
+  createAccountButton.addEventListener('click', validateForm);
+
+  passwordToggleIcons.forEach(icon => {
+    icon.addEventListener('click', () => {
+      const passwordInput = icon.previousElementSibling;
+      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordInput.setAttribute('type', type);
+      // Optionally change icon here based on type
+    });
+  });
+
+  // Optional: Add input event listeners for real-time validation feedback
+  // For example:
+  // roleInput.addEventListener('input', validateForm);
+
+</script>
+
 {% endblock %}

@@ -18,6 +18,15 @@
   --button-bg: #F0F0F0;
   --button-text: #000000;
   --pagination-text: #C5C5C5;
+  --drawer-bg: #373943;
+  --drawer-input-bg: #2F333A;
+  --drawer-input-border: #D1D1D1;
+  --drawer-text-color: #F7F7F7;
+  --drawer-placeholder-color: #CBCBCB;
+  --drawer-cancel-button-color: #F7F7F7;
+  --drawer-create-button-bg: #595D64;
+  --drawer-create-button-text: #FFFFFF;
+  --validation-red: #BA4444;
 }
 
 .users-dashboard {
@@ -166,8 +175,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 20px 0 20px;
-  margin-bottom: 10px;
+  padding: 41px 15px 0 15px;
+  margin-bottom: -23px;
 }
 
 .users-table__controls {
@@ -200,7 +209,6 @@
 .users-table__buttons {
   display: flex;
   gap: 10px;
-  margin-left: auto;
 }
 
 .users-table__filter-button,
@@ -297,7 +305,7 @@
   border-bottom: 1.33px solid var(--gray-divider);
 }
 
-.users-table__content th:nth-child(1), .users-table__content td:nth-child(1) { width: 140px; }
+.users-table__content th:nth-child(1), .users-table__content td:nth-child(1) { width: 141px; }
 .users-table__content th:nth-child(2), .users-table__content td:nth-child(2) { width: 220px; }
 .users-table__content th:nth-child(3), .users-table__content td:nth-child(3) { width: 140px; }
 .users-table__content th:nth-child(4), .users-table__content td:nth-child(4) { width: 220px; }
@@ -359,6 +367,189 @@
 
 .users-pagination__page-number {
   font-weight: 600;
+}
+
+/* Drawer styles */
+.user-drawer {
+  position: fixed;
+  top: 0;
+  right: -565px;
+  width: 500px;
+  height: 100%;
+  background: var(--drawer-bg);
+  box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.4);
+  transition: right 0.3s ease-in-out;
+  z-index: 1000;
+  padding: 30px 40px;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+.user-drawer__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.user-drawer__title {
+  font-size: 31.564px;
+  font-weight: 600;
+  color: var(--white);
+  line-height: 1.4;
+}
+
+.user-drawer__close-button {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: var(--white);
+  cursor: pointer;
+  padding: 0;
+}
+
+.user-drawer__form-group {
+  margin-bottom: 20px;
+}
+
+.user-drawer__form-group label {
+  display: block;
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--drawer-text-color);
+  margin-bottom: 8px;
+}
+
+.user-drawer__form-group input[type="text"],
+.user-drawer__form-group input[type="password"],
+.user-drawer__form-group select {
+  width: 100%;
+  height: 47px;
+  background: var(--drawer-input-bg);
+  border: 1.12729px solid var(--drawer-input-border);
+  border-radius: 5.63644px;
+  padding: 0 15px;
+  font-size: 16.649px;
+  color: var(--drawer-placeholder-color);
+  box-sizing: border-box;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: 40px;
+}
+
+.user-drawer__form-group input[type="password"] {
+  padding-right: 40px;
+}
+
+.user-drawer__form-group input::placeholder {
+  color: var(--drawer-placeholder-color);
+  opacity: 1;
+}
+
+.user-drawer__alert {
+  display: flex;
+  align-items: center;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  color: var(--drawer-text-color);
+  font-size: 16.8px;
+}
+
+.user-drawer__alert .alert-icon {
+  margin-right: 10px;
+  color: var(--validation-red);
+}
+
+.user-drawer__alert .alert-text {
+  color: var(--validation-red);
+}
+
+.user-drawer__buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 30px;
+}
+
+.user-drawer__cancel-button,
+.user-drawer__create-account-button {
+  height: 47px;
+  border-radius: 5.63644px;
+  padding: 0 20px;
+  cursor: pointer;
+  font-size: 16.649px;
+  font-weight: 500;
+  width: 100%;
+}
+
+.user-drawer__cancel-button {
+  background: none;
+  border: 1px solid var(--drawer-input-border);
+  color: var(--drawer-cancel-button-color);
+}
+
+.user-drawer__create-account-button {
+  background: var(--drawer-create-button-bg);
+  border: none;
+  color: var(--drawer-create-button-text);
+}
+
+/* Overlay styles */
+.drawer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  display: none;
+}
+
+/* Password input container for positioning the icon */
+.password-input-container {
+  position: relative;
+  width: 100%;
+}
+
+.password-input-container input[type="password"],
+.password-input-container input[type="text"] {
+  width: 100%;
+  height: 47px;
+  background: var(--drawer-input-bg);
+  border: 1.12729px solid var(--drawer-input-border);
+  border-radius: 5.63644px;
+  padding: 0 15px;
+  padding-right: 40px;
+  font-size: 16.649px;
+  color: var(--drawer-placeholder-color);
+  box-sizing: border-box;
+}
+
+.password-toggle-icon {
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #8F9094;
+  font-size: 20px;
+}
+
+/* Add a custom dropdown arrow */
+.user-drawer__form-group select {
+  background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20fill%3D%22%23909195%22%20d%3D%22M5%206l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E');
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+  background-size: 12px;
+}
+
+.validation-text {
+  color: var(--validation-red);
+  font-size: 14px;
+  margin-left: 5px;
+  display: none;
 }
 
 @media (max-width: 1600px) {
