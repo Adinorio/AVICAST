@@ -5,9 +5,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Avicast Dashboard</title>
+    <title>{% block title %}Avicast Dashboard{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'admindashboard/css/AppStyle.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
 
@@ -24,11 +25,12 @@
             <i class="fas fa-times close-btn" onclick="toggleSidebar()"></i>
         </div>
         <ul class="menu">
+            <li><a href="{% url 'admindashboard:dashboard' %}" onclick="showLoading(event)"><i class="fas fa-home"></i> Dashboard</a></li>
             <li><a href="{% url 'admindashboard:bird_list' %}" onclick="showLoading(event)"><i class="fas fa-dove"></i> Birds List</a></li>
             <li><a href="{% url 'admindashboard:bird_identification' %}" onclick="showLoading(event)"><i class="fas fa-search"></i> Birds Identification</a></li>
             <li><a href="#" onclick="showLoading(event)"><i class="fas fa-map-marker-alt"></i> Sites</a></li>
             <li><a href="#" onclick="showLoading(event)"><i class="fas fa-chart-bar"></i> Statistical Reports</a></li>
-            <li><a href="#" onclick="showLoading(event)"><i class="fas fa-question-circle"></i> Help</a></li>
+            <li><a href="{% url 'admindashboard:help' %}" onclick="showLoading(event)"><i class="fas fa-question-circle"></i> Help</a></li>
             <li class="logout"><a href="#" onclick="confirmLogout(event)"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
         </ul>
     </aside>
@@ -85,7 +87,7 @@
             // Ask the user for confirmation before logging out
             if (confirm("Are you sure you want to log out?")) {
                 // If the user confirms, redirect to logout URL (Django view)
-                window.location.href = "{% url 'dashboardadminapp:logout' %}";  // Make sure the URL is correct
+                window.location.href = "{% url 'admindashboard:logout_view' %}";
             }
         }
     </script>

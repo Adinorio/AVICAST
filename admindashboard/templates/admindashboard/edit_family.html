@@ -1,0 +1,25 @@
+{% extends 'admindashboard/base.html' %}
+{% load static %}
+
+{% block title %}Edit Family - Admin Dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'admindashboard/css/bird_list.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="text-center">Edit Bird Family</h2>
+    
+    <div class="family-card">
+        <form method="post" action="{% url 'admindashboard:edit_family' family.id %}">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="text-end mt-3">
+                <a href="{% url 'admindashboard:bird_list' %}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-modern">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %} 

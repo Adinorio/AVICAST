@@ -1,0 +1,139 @@
+.help-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: #ffffff;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.back-btn-container {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1000;
+}
+
+.back-btn {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    background: #ffffff;
+    border: 2px solid #007bff;
+    color: #007bff;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.back-btn:hover {
+    background: #007bff;
+    color: #ffffff;
+    transform: scale(1.05);
+}
+
+.help-container h1 {
+    color: #2c3e50;
+    text-align: center;
+    margin-bottom: 2rem;
+    font-size: 2.5rem;
+    border-bottom: 3px solid #007bff;
+    padding-bottom: 1rem;
+}
+
+.help-section {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    transition: transform 0.3s ease;
+    border-left: 4px solid #007bff;
+}
+
+.help-section:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+.help-section h2 {
+    color: #007bff;
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.help-section p {
+    color: #495057;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+.help-section ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.help-section ul li {
+    margin-bottom: 0.8rem;
+    padding-left: 1.5rem;
+    position: relative;
+    color: #495057;
+}
+
+.help-section ul li:before {
+    content: "•";
+    color: #007bff;
+    position: absolute;
+    left: 0;
+    font-weight: bold;
+}
+
+.contact-info {
+    background: #e9ecef;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-top: 3rem;
+    text-align: center;
+}
+
+.contact-info h2 {
+    color: #007bff;
+    margin-bottom: 1rem;
+}
+
+.contact-info p {
+    margin: 0.5rem 0;
+    color: #495057;
+}
+
+.contact-info a {
+    color: #007bff;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.contact-info a:hover {
+    color: #0056b3;
+    text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+    .help-container {
+        margin: 1rem;
+        padding: 1rem;
+    }
+
+    .help-container h1 {
+        font-size: 2rem;
+    }
+
+    .back-btn-container {
+        top: 10px;
+        left: 10px;
+    }
+} 
