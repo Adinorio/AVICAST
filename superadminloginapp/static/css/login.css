@@ -17,7 +17,8 @@ body {
     left: 0;
     top: 0;
     background: url('../images/Bird_Background.jpg') no-repeat center center;
-    background-size: cover;
+    background-size: 110% auto;
+    background-position: 40% bottom;
     z-index: 1;
 }
 
@@ -162,7 +163,7 @@ body {
 .bird-info {
     position: fixed;
     bottom: 4.5vh;
-    left: 3vw;
+    left: 5vw;
     max-width: 28.125vw;
     color: #fff;
     font-size: 1.125vw;
@@ -238,7 +239,7 @@ body {
     }
 
     .bird-info {
-        font-size: 1.5vw;  /* Keeping the current responsive size */
+        font-size: 2.0vw;  /* Keeping the current responsive size */
     }
 }
 
@@ -487,7 +488,8 @@ body {
 
     .bird-info {
         bottom: 10.5vh;
-        max-width: 65.625vw;
-        font-size: 2.625vw;
+        left: 3vw;
+        max-width: 25vw;
+        font-size: 0.8vw;
     }
 }
