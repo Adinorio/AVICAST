@@ -78,13 +78,17 @@ def setup_model_loading():
         return False
 
 # Check which model file exists and set the path accordingly
+print("Checking for model files...")  # Debug log
 if custom_model_path.exists():
+    print(f"Found custom model at: {custom_model_path}")  # Debug log
     model_path = str(custom_model_path)
     model_in_use = "Custom-trained model (Chinese Egret)"
 elif default_model_path.exists():
+    print(f"Found default model at: {default_model_path}")  # Debug log
     model_path = str(default_model_path)
     model_in_use = "Base YOLOv8x model (generic)"
 else:
+    print("No model files found!")  # Debug log
     model_path = None
     model_load_error = (
         f"No model file found. Please provide either a custom-trained model at '{custom_model_path}' "
@@ -93,38 +97,44 @@ else:
 
 if model_path and not model_load_error:
     try:
+        print("Attempting to import YOLO...")  # Debug log
         from ultralytics import YOLO
         
         # Setup model loading with safe globals
+        print("Setting up model loading...")  # Debug log
         use_safe_globals = setup_model_loading()
         
         # Load model with appropriate settings
+        print(f"Loading model from: {model_path}")  # Debug log
         if use_safe_globals:
             model = YOLO(model_path, task='detect')
         else:
             # Fallback method for older PyTorch versions
             model = YOLO(model_path, task='detect', weights_only=False)
+        print("Model loaded successfully!")  # Debug log
             
-    except ImportError:
+    except ImportError as e:
+        print(f"Import error: {str(e)}")  # Debug log
         model_load_error = (
             "The 'ultralytics' package is not installed. If you only want to run inference, make sure you installed only the required packages. "
             "If you want to train or update the model, install training dependencies with: pip install -r requirements-dev.txt"
         )
     except Exception as e:
+        print(f"Error loading model: {str(e)}")  # Debug log
         model_load_error = f"Error loading YOLO model: {str(e)}"
 
-def dashboard(request):
+def dashboard_view(request):
     """Main dashboard view"""
     return render(request, 'admindashboard/dashboard.html')
 
 def logout_view(request):
     """Logout view"""
     logout(request)
-    return redirect('login')
+    return redirect('superadminloginapp:login')
 
 def bird_identification_view(request):
     """Bird identification view (legacy name)"""
-    return render(request, 'admindashboard/bird_identification.html')
+    return render(request, 'admindashboard/bird_identification.html', {"model_in_use": model_in_use, "model_load_error": model_load_error})
 
 def identify_bird(request):
     """Bird identification view (new name)"""
@@ -132,27 +142,34 @@ def identify_bird(request):
 
 @csrf_exempt
 def process_bird_image(request):
+    print("Starting image processing...")  # Debug log
     if model_load_error:
+        print(f"Model load error: {model_load_error}")  # Debug log
         return JsonResponse({'error': model_load_error}, status=500)
+    
     if request.method == 'POST' and request.FILES.get('image'):
+        print("Received POST request with image")  # Debug log
         # Get image file and selected model from request
         image_file = request.FILES['image']
         selected_model = request.POST.get('model', 'chinese_egret')
+        print(f"Selected model: {selected_model}")  # Debug log
         
         # Create a temporary file to store the uploaded image
         with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as temp_file:
             temp_path = temp_file.name
             for chunk in image_file.chunks():
                 temp_file.write(chunk)
+        print(f"Saved image to temporary file: {temp_path}")  # Debug log
+        
         try:
+            print("Starting model inference...")  # Debug log
             # Run inference with YOLO v8 on the temporary image file
-            # Note: In a production environment, you would load different models based on the selection
-            # For now, we'll use the same model but filter results based on the selected species
-            results = model(temp_path, conf=0.5, iou=0.8)
+            results = model(temp_path, conf=0.25, iou=0.4)
+            print(f"Model inference complete. Results: {results}")  # Debug log
             
             # Map model values to class names
             model_to_class = {
-                'chinese_egret': 'Chinese Egret',
+                'chinese_egret': 'chinese_egret',
                 'whiskered_tern': 'Whiskered Tern',
                 'great_knot': 'Great Knot'
             }
@@ -160,8 +177,10 @@ def process_bird_image(request):
             # Process results and filter by selected species
             detections = []
             for result in results:
+                print(f"Processing result: {result}")  # Debug log
                 for box in result.boxes:
                     class_name = result.names[int(box.cls[0])]
+                    print(f"Detected class: {class_name}")  # Debug log
                     # Only include detections for the selected species
                     if class_name == model_to_class[selected_model]:
                         detections.append({
@@ -170,7 +189,10 @@ def process_bird_image(request):
                             'coordinates': box.xyxy[0].tolist()
                         })
             
+            print(f"Final detections: {detections}")  # Debug log
+            
         except Exception as e:
+            print(f"Error during processing: {str(e)}")  # Debug log
             os.remove(temp_path)
             return JsonResponse({'error': f'Error during model inference: {str(e)}'}, status=500)
             
@@ -178,6 +200,8 @@ def process_bird_image(request):
         os.remove(temp_path)
         # Return JSON response with detections
         return JsonResponse({'detections': detections})
+    
+    print("Invalid request received")  # Debug log
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
 def bird_list(request):

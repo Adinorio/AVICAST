@@ -6,6 +6,7 @@
   <!-- Model Info and Error Display -->
   <div style="margin-bottom: 16px; padding: 10px; background: #e6f7ff; border: 1px solid #91d5ff; border-radius: 6px; color: #0050b3;">
     <strong>Model in use:</strong>
+    <span id="currentModel">Chinese Egret</span>
     <select id="modelSelect" class="model-select" style="margin-left: 10px; padding: 4px 8px; border: 1px solid #91d5ff; border-radius: 4px; background: white; color: #0050b3;">
       <option value="chinese_egret">Chinese Egret</option>
       <option value="whiskered_tern">Whiskered Tern</option>
@@ -19,7 +20,7 @@
   </div>
   
   <!-- Back Button -->
-  <button <a href="{% url 'admindashboard:bird_identification' %}" onclick="showLoading(event)"> class="btn">Back</button>
+  <a href="{% url 'admindashboard:bird_identification' %}" class="btn" onclick="showLoading(event)">Back</a>
   
   <!-- Drag & Drop Box -->
   <div class="dashboard-box" id="drop-area">
@@ -69,6 +70,12 @@ const identifyBtn = document.getElementById('identifyBtn');
 const resultBox = document.getElementById('result-box');
 const modelSelect = document.getElementById('modelSelect');
 const currentModelSpan = document.getElementById('currentModel');
+
+// Loading function
+function showLoading(event) {
+  // Optional: Add loading state handling here
+  return true; // Allow the link to proceed
+}
 
 // Modal elements
 const modal = document.getElementById('modal');
