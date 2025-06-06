@@ -31,6 +31,12 @@
                 </span>
                 <span class="sidebar__label">User Management</span>
             </a></li>
+            <li><a href="{% url 'dashboardadminapp:roles' %}" class="sidebar__nav-item {% if request.resolver_match.url_name == 'roles' %}sidebar__nav-item--active{% endif %}" data-nav="roles" aria-label="Roles" tabindex="0">
+                <span class="sidebar__icon-container">
+                    <i class="fas fa-user-tag sidebar__icon"></i>
+                </span>
+                <span class="sidebar__label">Roles</span>
+            </a></li>
             <li><button type="button" class="sidebar__nav-item" data-nav="assignment" aria-label="Assignment" tabindex="0">
                 <span class="sidebar__icon-container">
                     <i class="fas fa-chart-line sidebar__icon"></i>

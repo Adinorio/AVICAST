@@ -38,12 +38,12 @@ body {
   width: 357px !important;
   height: 100vh;
   background: var(--sidebar-bg);
-  padding: 52px 24.7991px 24.7991px;
+  padding: 42px 15px 24.7991px 15px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 143.83px;
+  gap: 10px;
   box-sizing: border-box;
   z-index: 1000;
   transition: transform var(--transition-speed) ease;
@@ -228,14 +228,15 @@ body {
 }
 
 .sidebar__profile {
-  width: 100% !important;
   height: 66px;
   display: flex;
   align-items: center;
-  padding: 14.8794px 14.8794px 14.8794px 6px;
+  padding: 14.8794px 6px 14.8794px 6px;
   gap: 9.92px;
   box-sizing: border-box;
   transition: background var(--transition-speed) ease;
+  margin-bottom: 0;
+  flex-shrink: 0;
 }
 
 .sidebar__profile:hover {
@@ -267,9 +268,11 @@ body {
   display: flex;
   flex-direction: column;
   gap: 4.96px;
-  width: 100% !important;
-  height: 42.96px;
+  flex-grow: 1;
+  width: 0;
+  height: auto;
   justify-content: center;
+  min-width: 0;
 }
 
 .sidebar__username {
@@ -278,9 +281,11 @@ body {
   font-size: 14.8794px;
   line-height: 20px;
   color: var(--text-secondary);
-  width: 100% !important;
-  height: 20px;
+  height: auto;
   user-select: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .sidebar__role {
@@ -289,7 +294,8 @@ body {
   font-size: 14.8794px;
   line-height: 17px;
   color: var(--icon-inactive);
-  width: 100% !important;
+  width: 100%;
+  height: auto;
   user-select: none;
 }
 

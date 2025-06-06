@@ -1,3 +1,4 @@
+from pathlib import Path
 import os
 import sys
 import tempfile
@@ -23,14 +24,12 @@ from torch.nn.modules.upsampling import Upsample
 from torch.nn.modules.pooling import MaxPool2d
 from torch.nn.modules.linear import Linear
 
-# Load the YOLO model pretrained (or fine-tuned) for migratory birds.
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-# Update the model path to use the latest trained weights
-model_path = os.path.join(BASE_DIR, "models", "yolov8x.pt")
+# Get the base directory of the project
+BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Model selection logic
-custom_model_path = os.path.join(BASE_DIR, "runs", "detect", "train4", "weights", "best.pt")
-default_model_path = os.path.join(BASE_DIR, "models", "yolov8x.pt")
+# Update the model paths to use Path objects
+custom_model_path = BASE_DIR / "runs" / "detect" / "train4" / "weights" / "best.pt"
+default_model_path = BASE_DIR / "models" / "yolov8x.pt"
 
 model = None
 model_load_error = None
@@ -78,11 +77,12 @@ def setup_model_loading():
         print(f"Error setting up model loading: {str(e)}")
         return False
 
-if os.path.exists(custom_model_path):
-    model_path = custom_model_path
+# Check which model file exists and set the path accordingly
+if custom_model_path.exists():
+    model_path = str(custom_model_path)
     model_in_use = "Custom-trained model (Chinese Egret)"
-elif os.path.exists(default_model_path):
-    model_path = default_model_path
+elif default_model_path.exists():
+    model_path = str(default_model_path)
     model_in_use = "Base YOLOv8x model (generic)"
 else:
     model_path = None

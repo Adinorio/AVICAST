@@ -1,4 +1,293 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+{% load static %}
+
 {% block content %}
-<!-- New roles management interface will be implemented here -->
+<link rel="stylesheet" href="{% static 'css/roles.css' %}">
+<div class="roles-dashboard">
+  <!-- Breadcrumb -->
+  <div class="roles-breadcrumb">
+    <span class="roles-breadcrumb__text">User Management System</span>
+    <span class="roles-breadcrumb__separator">&gt;</span>
+    <span class="roles-breadcrumb__text">Assignment</span>
+  </div>
+
+  <!-- Assignment Card -->
+  <section class="roles-title-card">
+    <h2 class="roles-title-card__title">Assignment</h2>
+    <p class="roles-title-card__subtitle">Access role assignments of users accessibility in the main system.</p>
+  </section>
+
+  <!-- Permissions Content -->
+  <section class="roles-permissions-card">
+    <div class="roles-tabs">
+      <button class="roles-tabs__button roles-tabs__button--active">Admin</button>
+      <button class="roles-tabs__button">Field Workers</button>
+    </div>
+
+    <div class="roles-info-text">
+      <i class="fas fa-info-circle"></i> Admins have view and edit access to all features of the system by default.<br/>
+      Every member gets basic permissions and functionality by default. You can customize settings for all members<br/>
+      or make local adjustments for individual users in their profiles.
+    </div>
+
+    <div id="adminPermissions" class="roles-permissions-content">
+      <div class="roles-permissions-header">
+        <h3 class="roles-permissions-header__title">Permissions</h3>
+        <button class="roles-permissions-header__restore-button">Restore default</button>
+      </div>
+
+      <div class="roles-permissions-list">
+        <!-- Permission Rows -->
+        <div class="roles-permission-row">
+          <div class="roles-permission-item">
+            <span class="roles-permission-item__label">1. View ...</span>
+            <div class="roles-permission-item__toggle">
+                <div class="toggle-switch">
+                    <input type="checkbox" id="toggle1" class="toggle-switch__checkbox">
+                    <label for="toggle1" class="toggle-switch__label">
+                        <span class="toggle-switch__inner"></span>
+                        <span class="toggle-switch__switch"></span>
+                    </label>
+                </div>
+            </div>
+          </div>
+          <div class="roles-permission-item">
+            <span class="roles-permission-item__label">1.1 Update ...</span>
+            <div class="roles-permission-item__toggle">
+                <div class="toggle-switch">
+                    <input type="checkbox" id="toggle2" class="toggle-switch__checkbox">
+                    <label for="toggle2" class="toggle-switch__label">
+                        <span class="toggle-switch__inner"></span>
+                        <span class="toggle-switch__switch"></span>
+                    </label>
+                </div>
+                <i class="fas fa-info-circle"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="roles-permission-row">
+          <div class="roles-permission-item">
+            <span class="roles-permission-item__label">2. View ...</span>
+            <div class="roles-permission-item__toggle">
+                <div class="toggle-switch">
+                    <input type="checkbox" id="toggle3" class="toggle-switch__checkbox">
+                    <label for="toggle3" class="toggle-switch__label">
+                        <span class="toggle-switch__inner"></span>
+                        <span class="toggle-switch__switch"></span>
+                    </label>
+                </div>
+            </div>
+          </div>
+          <div class="roles-permission-item">
+            <span class="roles-permission-item__label">2.1 Generate ...</span>
+            <div class="roles-permission-item__toggle">
+                <div class="toggle-switch">
+                    <input type="checkbox" id="toggle4" class="toggle-switch__checkbox">
+                    <label for="toggle4" class="toggle-switch__label">
+                            <span class="toggle-switch__inner"></span>
+                            <span class="toggle-switch__switch"></span>
+                        </label>
+                    </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="roles-permission-row">
+              <div class="roles-permission-item">
+                <span class="roles-permission-item__label">3. View ...</span>
+                <div class="roles-permission-item__toggle">
+                    <div class="toggle-switch">
+                        <input type="checkbox" id="toggle5" class="toggle-switch__checkbox">
+                        <label for="toggle5" class="toggle-switch__label">
+                            <span class="toggle-switch__inner"></span>
+                            <span class="toggle-switch__switch"></span>
+                        </label>
+                    </div>
+                </div>
+              </div>
+              <div class="roles-permission-item">
+                <span class="roles-permission-item__label">4. View ...</span>
+                <div class="roles-permission-item__toggle">
+                    <div class="toggle-switch">
+                        <input type="checkbox" id="toggle6" class="toggle-switch__checkbox">
+                        <label for="toggle6" class="toggle-switch__label">
+                            <span class="toggle-switch__inner"></span>
+                            <span class="toggle-switch__switch"></span>
+                        </label>
+                    </div>
+                </div>
+              </div>
+            </div>
+
+             <div class="roles-permission-row">
+              <div class="roles-permission-item">
+                <span class="roles-permission-item__label">5. View ...</span>
+                <div class="roles-permission-item__toggle">
+                    <div class="toggle-switch">
+                        <input type="checkbox" id="toggle7" class="toggle-switch__checkbox">
+                        <label for="toggle7" class="toggle-switch__label">
+                            <span class="toggle-switch__inner"></span>
+                            <span class="toggle-switch__switch"></span>
+                        </label>
+                    </div>
+                </div>
+              </div>
+              <div class="roles-permission-item">
+                <span class="roles-permission-item__label">6. View ...</span>
+                <div class="roles-permission-item__toggle">
+                    <div class="toggle-switch">
+                        <input type="checkbox" id="toggle8" class="toggle-switch__checkbox">
+                        <label for="toggle8" class="toggle-switch__label">
+                            <span class="toggle-switch__inner"></span>
+                            <span class="toggle-switch__switch"></span>
+                        </label>
+                    </div>
+                </div>
+              </div>
+            </div>
+            <!-- Add more permission items here -->
+          </div>
+        </div>
+    </div>
+
+    <div id="fieldWorkerPermissions" class="roles-permissions-content" style="display: none;">
+      <div class="roles-permissions-header">
+        <h3 class="roles-permissions-header__title">Permissions</h3>
+        <button class="roles-permissions-header__restore-button">Restore default</button>
+      </div>
+
+      <div class="roles-permissions-list">
+        <!-- Permission Rows for Field Workers (example, duplicate of Admin for now) -->
+        <div class="roles-permission-row">
+          <div class="roles-permission-item">
+            <span class="roles-permission-item__label">Field 1. View ...</span>
+            <div class="roles-permission-item__toggle">
+                <div class="toggle-switch">
+                    <input type="checkbox" id="toggle9" class="toggle-switch__checkbox">
+                    <label for="toggle9" class="toggle-switch__label">
+                        <span class="toggle-switch__inner"></span>
+                        <span class="toggle-switch__switch"></span>
+                    </label>
+                </div>
+            </div>
+          </div>
+          <div class="roles-permission-item">
+            <span class="roles-permission-item__label">Field 1.1 Update ...</span>
+            <div class="roles-permission-item__toggle">
+                <div class="toggle-switch">
+                    <input type="checkbox" id="toggle10" class="toggle-switch__checkbox">
+                    <label for="toggle10" class="toggle-switch__label">
+                        <span class="toggle-switch__inner"></span>
+                        <span class="toggle-switch__switch"></span>
+                    </label>
+                </div>
+                <i class="fas fa-info-circle"></i>
+            </div>
+          </div>
+        </div>
+         <div class="roles-permission-row">
+          <div class="roles-permission-item">
+            <span class="roles-permission-item__label">Field 2. View ...</span>
+            <div class="roles-permission-item__toggle">
+                <div class="toggle-switch">
+                    <input type="checkbox" id="toggle11" class="toggle-switch__checkbox">
+                    <label for="toggle11" class="toggle-switch__label">
+                        <span class="toggle-switch__inner"></span>
+                        <span class="toggle-switch__switch"></span>
+                    </label>
+                </div>
+            </div>
+          </div>
+          <div class="roles-permission-item">
+            <span class="roles-permission-item__label">Field 2.1 Generate ...</span>
+            <div class="roles-permission-item__toggle">
+                <div class="toggle-switch">
+                    <input type="checkbox" id="toggle12" class="toggle-switch__checkbox">
+                    <label for="toggle12" class="toggle-switch__label">
+                            <span class="toggle-switch__inner"></span>
+                            <span class="toggle-switch__switch"></span>
+                        </label>
+                    </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const tabs = document.querySelectorAll('.roles-tabs__button');
+    const permissionContents = document.querySelectorAll('.roles-permissions-content');
+
+    console.log('Tabs found:', tabs.length); // Log the number of tabs found
+    console.log('Permission content sections found:', permissionContents.length); // Log the number of content sections found
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', function() {
+        console.log('Tab clicked:', this.textContent.trim()); // Log which tab was clicked
+
+        // Remove active class from all tabs
+        tabs.forEach(t => t.classList.remove('roles-tabs__button--active'));
+        console.log('Removed active class from all tabs');
+
+        // Hide all permission contents and remove active class
+        permissionContents.forEach(content => {
+          content.style.display = 'none';
+          content.classList.remove('active');
+        });
+        console.log('Hid all permission content sections');
+
+        // Show the content corresponding to the clicked tab and add active class
+        const tabText = this.textContent.trim();
+        let targetId = '';
+        if (tabText === 'Admin') {
+          targetId = 'adminPermissions';
+        } else if (tabText === 'Field Workers') {
+          targetId = 'fieldWorkerPermissions';
+        }
+        console.log('Target content ID:', targetId); // Log the target ID
+
+        const targetContent = document.getElementById(targetId);
+        if (targetContent) {
+          console.log('Target content found:', targetContent.id); // Log the found target content
+          targetContent.style.display = 'block';
+          targetContent.classList.add('active');
+          console.log('Set display to block and added active class to', targetContent.id);
+        } else {
+          console.log('Target content not found for ID:', targetId); // Log if target content is not found
+        }
+      });
+    });
+
+    // Initially show the Admin permissions
+    const adminTab = document.querySelector('.roles-tabs__button--active');
+    if (adminTab) {
+        console.log('Initial active tab found:', adminTab.textContent.trim());
+        // Use the same logic as the click handler to determine the initial content
+        const tabText = adminTab.textContent.trim();
+        let initialTargetId = '';
+        if (tabText === 'Admin') {
+          initialTargetId = 'adminPermissions';
+        } else if (tabText === 'Field Workers') {
+          initialTargetId = 'fieldWorkerPermissions';
+        }
+        
+        const targetContent = document.getElementById(initialTargetId);
+        if (targetContent) {
+          console.log('Initially showing content for ID:', targetContent.id);
+          targetContent.style.display = 'block';
+          targetContent.classList.add('active');
+        } else {
+            console.log('Initial target content not found for ID:', initialTargetId);
+        }
+    }
+  });
+</script>
+
 {% endblock %}
