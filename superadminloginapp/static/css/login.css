@@ -23,8 +23,8 @@ body {
 
 .login-card-figma {
     position: fixed;
-    width: 22vw;
-    max-width: 450px;
+    width: 30vw;
+    max-width: 600px;
     height: auto;
     right: 5%;
     top: 50%;
@@ -35,7 +35,7 @@ body {
     backdrop-filter: blur(67px);
     border-radius: 20px;
     z-index: 2;
-    padding: 1.5vw;
+    padding: 2.5vw;
     box-sizing: border-box;
 }
 
@@ -43,12 +43,12 @@ body {
     display: flex;
     align-items: center;
     gap: 15px;
-    margin-bottom: 40px;
+    margin-bottom: 50px;
 }
 
 .logo-figma {
-    width: 80px;
-    height: 80px;
+    width: 100px;
+    height: 100px;
     object-fit: contain;
     opacity: 0.7;
 }
@@ -59,7 +59,7 @@ body {
 }
 
 .avicast-title-figma {
-    font-size: 36px;
+    font-size: 45px;
     font-weight: 700;
     color: #F3F3F3;
     margin: 0;
@@ -69,36 +69,36 @@ body {
 .line-figma {
     width: 100%;
     border-bottom: 2px solid #DFDFDF;
-    margin: 8px 0;
+    margin: 10px 0;
 }
 
 .subtitle-figma {
-    font-size: 14px;
+    font-size: 17.5px;
     color: #e0e0e0;
     opacity: 0.85;
-    margin-top: 5px;
+    margin-top: 8px;
 }
 
 .form-section-figma {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 25px;
 }
 
 .form-label-figma {
-    font-size: 16px;
+    font-size: 20px;
     font-weight: 500;
     color: #DFDFDF;
-    margin-bottom: -15px;
+    margin-bottom: -18px;
 }
 
 .input-card-figma {
     width: 100%;
-    height: 45px;
+    height: 56.25px;
     background: rgba(123, 127, 132, 0.4);
     border: 1px solid #A0A0A0;
     border-radius: 8px;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
 }
 
 .input-field-figma {
@@ -108,8 +108,8 @@ body {
     border: none;
     outline: none;
     color: #fff;
-    font-size: 15px;
-    padding: 0 15px;
+    font-size: 18.75px;
+    padding: 0 20px;
     box-sizing: border-box;
 }
 
@@ -120,21 +120,21 @@ body {
 
 .forgot-password-figma {
     color: #3875E8;
-    font-size: 14px;
+    font-size: 17.5px;
     text-decoration: none;
     align-self: flex-start;
-    margin: -10px 0 15px 0;
+    margin: -12px 0 18px 0;
 }
 
 .line-figma-2 {
     width: 100%;
     border-bottom: 1px solid rgba(208, 208, 208, 0.3);
-    margin: 5px 0 20px 0;
+    margin: 8px 0 25px 0;
 }
 
 .login-btn-box-figma {
     width: 100%;
-    height: 45px;
+    height: 56.25px;
     background: rgba(65, 69, 79, 0.6);
     border: 1px solid #4E4E4E;
     border-radius: 8px;
@@ -146,7 +146,7 @@ body {
     background: none;
     border: none;
     color: #fff;
-    font-size: 16px;
+    font-size: 20px;
     font-weight: 600;
     cursor: pointer;
     letter-spacing: 1px;
@@ -155,15 +155,15 @@ body {
 .error {
     color: #ff6b6b;
     text-align: center;
-    font-size: 18px;
-    margin-top: 15px;
+    font-size: 22.5px;
+    margin-top: 18px;
 }
 
 .bird-info {
     position: fixed;
-    bottom: 8vh;
+    bottom: 6vh;
     left: 3vw;
-    max-width: 40vw;
+    max-width: 37.5vw;
     color: #fff;
     font-size: 1.5vw;
     font-weight: 500;
