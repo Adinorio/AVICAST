@@ -112,4 +112,7 @@ Desktop.ini
 
 # Keep these files
 !models/trained_model.pt
-!models/README.md 
+!models/README.md
+!/superadminloginapp/static/images/Bird_Background.jpg
+
+# Add any other necessary exclusion rules here 
