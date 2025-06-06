@@ -1,0 +1,75 @@
+{% extends "admindashboard/base.html" %}
+{% load static %}
+
+{% block title %}Next Steps - Image Processing{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'admindashboard/css/image_processing_next.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="tab-bar">
+        <a href="{% url 'admindashboard:image_processing' %}" class="tab">Upload</a>
+        <a href="{% url 'admindashboard:image_processing_next' %}" class="tab active">Process Data</a>
+        <a href="{% url 'admindashboard:review_dashboard' %}" class="tab">Review</a>
+    </div>
+    <h1 class="page-title"><i class="fas fa-tasks"></i> Next Steps: Review & Process Your Images</h1>
+    <div class="summary" id="summary">
+        <!-- JS will populate summary -->
+    </div>
+    <div class="batch-progress-container" id="batch-progress-container" style="display:none;">
+        <span class="batch-progress-label">Batch Progress:</span>
+        <div class="batch-progress-bar">
+            <div class="batch-progress-bar-inner" id="batch-progress-bar-inner"></div>
+        </div>
+        <span id="batch-progress-text">0/0</span>
+    </div>
+    <div class="filter-bar" id="filter-bar">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="processing">Processing</button>
+        <button class="filter-btn" data-filter="completed">Completed</button>
+        <button class="filter-btn" data-filter="error">Error</button>
+    </div>
+    <div class="file-list-section">
+        <table class="file-list-table" id="file-list-table">
+            <thead>
+                <tr>
+                    <th>Thumbnail</th>
+                    <th>Filename</th>
+                    <th>Status</th>
+                    <th>AI Results</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="file-list-body">
+                <!-- JS will populate rows here -->
+            </tbody>
+        </table>
+    </div>
+    <div class="batch-actions" id="batch-actions">
+        <button class="batch-action-btn" id="retryAllBtn">Retry All Failed</button>
+    </div>
+    <div class="pagination" id="pagination"></div>
+    <div class="next-actions">
+        <button class="upload-btn" id="uploadMoreBtn">Upload More Images</button>
+        <button class="upload-btn primary" id="startProcessingBtn">Start Processing</button>
+        <button class="review-btn" id="reviewDashboardBtn">Go to Review Dashboard</button>
+    </div>
+</div>
+<!-- Modal for image preview -->
+<div id="modal" class="modal">
+    <span id="modalClose" class="modal-close">&times;</span>
+    <div class="modal-content">
+        <img id="modalImage" src="" alt="Full Image Preview">
+    </div>
+</div>
+<!-- Modal for AI details -->
+<div id="aiModal" class="modal">
+    <span id="aiModalClose" class="modal-close">&times;</span>
+    <div class="modal-content">
+        <div id="aiModalContent"></div>
+    </div>
+</div>
+<script src="{% static 'admindashboard/js/image_processing_next.js' %}"></script>
+{% endblock %} 

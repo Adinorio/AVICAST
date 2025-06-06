@@ -386,3 +386,60 @@ body.no-scroll {
     opacity: 1;
     pointer-events: auto;
 }
+
+/* --- Roboflow-inspired Upload Area --- */
+.upload-area {
+  border: 2.5px dashed #a259ff;
+  background: rgba(30, 25, 40, 0.98);
+  border-radius: 18px;
+  padding: 48px 24px 32px 24px;
+  margin: 32px auto 0 auto;
+  max-width: 420px;
+  min-height: 260px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+  transition: border-color 0.3s, background 0.2s;
+  cursor: pointer;
+}
+.upload-area.highlight {
+  border-color: #fff;
+  background: rgba(60, 40, 90, 0.98);
+}
+.upload-icon {
+  font-size: 3.5em;
+  color: #a259ff;
+  margin-bottom: 18px;
+  text-shadow: 0 2px 12px #000a;
+}
+.upload-text {
+  color: #e0e0e0;
+  font-size: 1.18em;
+  margin-bottom: 10px;
+  text-align: center;
+}
+.upload-text span {
+  color: #a259ff;
+  font-weight: 600;
+  font-size: 1em;
+}
+.upload-btn {
+  background: #a259ff;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 32px;
+  font-size: 1.08em;
+  font-weight: 600;
+  margin-top: 10px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px #0007;
+  transition: background 0.2s;
+  display: inline-block;
+}
+.upload-btn:hover {
+  background: #7c3aed;
+}
+/* Remove old .button style if present */
+.button { background: none; color: inherit; border: none; box-shadow: none; }

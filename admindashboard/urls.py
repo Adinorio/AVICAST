@@ -18,4 +18,7 @@ urlpatterns = [
     path('edit-family/<int:family_id>/', views.edit_family, name='edit_family'),
     path('edit-species/<int:species_id>/', views.edit_species, name='edit_species'),
     path('help/', views.help_view, name='help'),
+    path('image-processing/', views.image_processing_view, name='image_processing'),
+    path('image-processing-next/', views.image_processing_next_view, name='image_processing_next'),
+    path('review-dashboard/', views.review_dashboard_view, name='review_dashboard'),
 ]

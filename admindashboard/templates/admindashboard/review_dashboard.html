@@ -1,0 +1,57 @@
+{% extends "admindashboard/base.html" %}
+{% load static %}
+
+{% block title %}Review Dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'admindashboard/css/review_dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="tab-bar">
+        <a href="{% url 'admindashboard:image_processing' %}" class="tab">Upload</a>
+        <a href="{% url 'admindashboard:image_processing_next' %}" class="tab">Process Data</a>
+        <a href="{% url 'admindashboard:review_dashboard' %}" class="tab active">Review</a>
+    </div>
+    <h1 class="page-title"><i class="fas fa-clipboard-check"></i> Review Dashboard</h1>
+    <div class="review-summary">Review and approve or reject processed images below.</div>
+    <div class="review-table-section">
+        <table class="review-table">
+            <thead>
+                <tr>
+                    <th>Thumbnail</th>
+                    <th>Filename</th>
+                    <th>Status</th>
+                    <th>AI Results</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><img src="https://via.placeholder.com/48" alt="thumb"></td>
+                    <td>bird1.jpg</td>
+                    <td><span class="status completed"><i class="fas fa-check-circle status-icon"></i>Completed</span></td>
+                    <td><span class="ai-results clickable">Birds: 5, Confidence: 92.1%</span></td>
+                    <td>
+                        <button class="approve-btn">Approve</button>
+                        <button class="reject-btn">Reject</button>
+                        <button class="override-btn">Override</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td><img src="https://via.placeholder.com/48" alt="thumb"></td>
+                    <td>bird2.png</td>
+                    <td><span class="status error"><i class="fas fa-times-circle status-icon"></i>Error</span></td>
+                    <td><span class="ai-results">Processing failed</span></td>
+                    <td>
+                        <button class="approve-btn" disabled>Approve</button>
+                        <button class="reject-btn">Reject</button>
+                        <button class="override-btn">Override</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %} 
