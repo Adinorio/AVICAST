@@ -20,14 +20,14 @@
   <!-- Stats Cards -->
   <div class="stats-container">
     <div class="stat-card stat-card--admin">
-      <span class="stat-card__label">Total Roles</span>
+      <span class="stat-card__label">No. of admins</span>
       <div class="stat-card__inner">
         <span class="stat-card__value">0</span>
         <!-- TODO: replace with {{ total_roles }} -->
       </div>
     </div>
     <div class="stat-card stat-card--field">
-      <span class="stat-card__label">Active Permissions</span>
+      <span class="stat-card__label">No. of field workers</span>
       <div class="stat-card__inner">
         <span class="stat-card__value">0</span>
         <!-- TODO: replace with {{ total_permissions }} -->
@@ -38,34 +38,26 @@
   <!-- Roles Table -->
   <section class="roles-table">
     <div class="roles-table__header">
-      <h2 class="roles-table__title">Roles List</h2>
-      <span class="roles-table__recent">All available roles</span>
+      <h2 class="roles-table__title">Permissions</h2>
+      <div class="roles-table__filter-buttons">
+        <span class="roles-table__filter-btn roles-table__filter-btn--admin">Admin</span>
+        <span class="roles-table__filter-btn roles-table__filter-btn--field">Field worker</span>
+      </div>
     </div>
     <div class="roles-table__table-container">
       <div class="roles-table__table-bg">
         <table class="roles-table__table">
           <thead>
             <tr>
-              <th class="roles-table__th">Role ID <span class="sort-icon">&#8597;</span></th>
-              <th class="roles-table__th">Role Name <span class="sort-icon">&#8597;</span></th>
-              <th class="roles-table__th">Description <span class="sort-icon">&#8597;</span></th>
-              <th class="roles-table__th">Users Count <span class="sort-icon">&#8597;</span></th>
-              <th class="roles-table__th">Status <span class="sort-icon">&#8597;</span></th>
-              <th class="roles-table__th">Actions <span class="sort-icon">&#8597;</span></th>
+              <th class="roles-table__th">Accessibility </th>
+              <th class="roles-table__th">Options </th>
             </tr>
           </thead>
           <tbody>
             {% for i in '12345'|make_list %}
             <tr>
               <td class="roles-table__td">ROLE-{{ forloop.counter }}</td>
-              <td class="roles-table__td">Admin</td>
-              <td class="roles-table__td">Full system access</td>
               <td class="roles-table__td">5</td>
-              <td class="roles-table__td"><span class="status-pill status-pill--active">Active</span></td>
-              <td class="roles-table__td">
-                <button class="action-btn action-btn--edit">Edit</button>
-                <button class="action-btn action-btn--delete">Delete</button>
-              </td>
             </tr>
             {% endfor %}
           </tbody>

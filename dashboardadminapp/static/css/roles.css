@@ -168,6 +168,36 @@
   color: #E7E7E7;
 }
 
+.roles-table__filter-buttons {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.roles-table__filter-btn {
+  font-size: 20px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 4px;
+}
+
+.roles-table__filter-btn:hover {
+  text-decoration: underline;
+}
+
+.roles-table__filter-btn--active {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.roles-table__filter-btn--admin {
+  color: var(--white);
+}
+
+.roles-table__filter-btn--field {
+  color: #E7E7E7;
+}
+
 .roles-table__table-container {
   width: 98%;
   margin: 24px auto 0 auto;
@@ -241,10 +271,6 @@
 
 .roles-table__table th:nth-child(1), .roles-table__table td:nth-child(1) { width: 120px; }
 .roles-table__table th:nth-child(2), .roles-table__table td:nth-child(2) { width: 150px; }
-.roles-table__table th:nth-child(3), .roles-table__table td:nth-child(3) { width: 300px; }
-.roles-table__table th:nth-child(4), .roles-table__table td:nth-child(4) { width: 120px; }
-.roles-table__table th:nth-child(5), .roles-table__table td:nth-child(5) { width: 100px; }
-.roles-table__table th:nth-child(6), .roles-table__table td:nth-child(6) { width: 150px; }
 
 .status-pill {
   display: inline-block;
