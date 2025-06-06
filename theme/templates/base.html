@@ -44,14 +44,14 @@
                 <span class="sidebar__label">History</span>
             </a></li>
             <li class="sidebar__divider"></li>
-            <li><button type="button" class="sidebar__nav-item" data-nav="notifications" aria-label="Notifications" tabindex="0">
+            <li><a href="{% url 'dashboardadminapp:notifications' %}" class="sidebar__nav-item" data-nav="notifications" aria-label="Notifications" tabindex="0">
                 <span class="sidebar__icon-container sidebar__icon-container--relative">
                     <i class="fas fa-bell sidebar__icon"></i>
                     <!-- Badge is hidden by default, shown with sidebar__badge--show -->
                     <span class="sidebar__badge" aria-label="Notifications" title="Notifications"></span>
                 </span>
                 <span class="sidebar__label">Notifications</span>
-            </button></li>
+            </a></li>
             <li><button type="button" class="sidebar__nav-item" data-nav="settings" aria-label="Settings" tabindex="0">
                 <span class="sidebar__icon-container">
                     <i class="fas fa-cog sidebar__icon"></i>

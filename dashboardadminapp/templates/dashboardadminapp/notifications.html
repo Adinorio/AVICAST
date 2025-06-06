@@ -1,53 +1,63 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
-<div class="p-6 space-y-6">
-  <div class="flex justify-between items-center mb-4">
-    <h1 class="text-xl font-semibold">Notifications</h1>
-    <button class="text-sm text-blue-600 hover:underline"
-            onclick="markAllRead()">Mark all as read</button>
-  </div>
+<link rel="stylesheet" href="{% static 'css/notifications.css' %}">
 
-  <!-- Tabs -->
-  <div class="flex space-x-2 mb-4">
-    <button class="px-4 py-2 bg-white rounded-lg shadow-sm">All <span class="ml-1 text-gray-500">({{ logs|length }})</span></button>
-    <button class="px-4 py-2 text-gray-500">Read <span class="ml-1 text-gray-400">(0)</span></button>
-    <button class="px-4 py-2 text-gray-500">Archived <span class="ml-1 text-gray-400">(0)</span></button>
-  </div>
-
-  <!-- Notification list -->
-  <div class="space-y-4">
-    {% for log in logs %}
-      <div class="bg-white rounded-lg p-4 flex justify-between items-start shadow">
-        <div class="flex items-center">
-          <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-gray-600 mr-3">
-            {{ log.event|slice:":2"|upper }}
-          </div>
-          <div>
-            <p class="text-sm">
-              {{ log.event }}
-            </p>
-            <div class="mt-2 space-x-2">
-              <form method="post" action="{% url 'dashboardadminapp:handle_change' %}" class="inline">
-                {% csrf_token %}
-                <input type="hidden" name="log_id" value="{{ log.id }}">
-                <button class="px-3 py-1 text-sm bg-blue-600 text-white rounded">Change now</button>
-              </form>
-              <button class="px-3 py-1 text-sm border rounded">Decline</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    {% empty %}
-      <p class="text-gray-500">No notifications.</p>
-    {% endfor %}
-  </div>
+<!-- Breadcrumb -->
+<div class="breadcrumb">
+  <span class="breadcrumb__text">System</span>
+  <span class="breadcrumb__separator">&gt;</span>
+  <span class="breadcrumb__text">Notifications</span>
 </div>
 
-<script>
-  function markAllRead() {
-    // you could call an AJAX endpoint here to flag them read
-    alert("All marked read (you'll implement this)");
-  }
-</script>
+<div class="dashboard">
+    <!-- Page Title and Mark All Read -->
+    <div class="welcome-card">
+        <h2 class="welcome-card__title">Notifications</h2>
+        <p class="welcome-card__subtitle">View and manage your system notifications here.</p>
+        <span class="welcome-card__mark-read">Mark all as read</span>
+    </div>
+
+    <!-- Notification List -->
+    <div class="notifications-list roles-table">
+        <div class="roles-table__table-bg">
+            <!-- Tabs within the dark card -->
+            <div class="notifications-tabs-in-card">
+                <button class="notifications-filter-button">All <span class="notification-count">0</span></button>{# TODO: replace 0 with actual count #}
+                <button class="notifications-filter-button">Read <span class="notification-count">0</span></button>{# TODO: replace 0 with actual count #}
+                <button class="notifications-filter-button">Archived <span class="notification-count">0</span></button>{# TODO: replace 0 with actual count #}
+            </div>
+
+            <div class="notification-item">
+                <div class="notification-item__avatar">JG</div>
+                <div class="notification-item__content">
+                    <p class="notification-item__text">James Galillie Noceja is requesting a <strong>change of password</strong>.</p>
+                    <div class="notification-item__actions">
+                        <button class="action-btn action-btn--edit">Change now</button>
+                        <button class="action-btn action-btn--delete">Decline</button>
+                    </div>
+                </div>
+                <div class="notification-item__meta">
+                    <span class="notification-item__time">15h</span>
+                    <span class="notification-item__more">...</span>
+                </div>
+            </div>
+             <div class="notification-item">
+                <div class="notification-item__avatar">JI</div>
+                <div class="notification-item__content">
+                    <p class="notification-item__text">Jefferson Inere is requesting a change of password.</p>
+                    <div class="notification-item__status">
+                        Finished
+                    </div>
+                </div>
+                <div class="notification-item__meta">
+                    <span class="notification-item__time">15h</span>
+                    <span class="notification-item__more">...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
