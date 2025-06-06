@@ -2,7 +2,7 @@ body {
     margin: 0;
     padding: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: url('../images/vincent-van-zalinge-SzcO_chuZoE-unsplash.jpg') no-repeat center center fixed;
+    background: linear-gradient(rgba(10,10,20,0.7), rgba(10,10,20,0.7)), url('../images/vincent-van-zalinge-SzcO_chuZoE-unsplash.jpg') no-repeat center center fixed;
     background-size: cover;
     color: #e0f7fa;
     min-height: 100vh;
@@ -44,15 +44,15 @@ body {
 .sidebar {
     width: 280px;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(10px);
+    background: rgba(10, 10, 20, 0.92);
+    backdrop-filter: blur(12px);
     color: #E0F7FA;
     display: flex;
     flex-direction: column;
     position: fixed;
     top: 0;
     left: -280px;
-    box-shadow: 3px 0 15px rgba(0, 0, 0, 0.4);
+    box-shadow: 3px 0 24px rgba(0,0,0,0.6);
     z-index: 100;
     transition: left 0.5s ease;
 }
@@ -99,12 +99,13 @@ body {
     display: block;
     padding: 20px 30px;
     text-decoration: none;
-    color: #E0F7FA;
+    color: #e0f7fa;
     transition: background 0.4s ease, transform 0.3s ease;
     border-radius: 10px;
     margin: 10px 20px;
-    font-size: 17px;
+    font-size: 1.08em;
     font-weight: 500;
+    letter-spacing: 0.01em;
     display: flex;
     align-items: center;
 }
@@ -114,7 +115,8 @@ body {
 }
 
 .menu li a:hover, .menu li.active a {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(0, 188, 212, 0.18);
+    color: #00bcd4;
     transform: translateX(8px);
 }
 
@@ -209,15 +211,31 @@ body {
     justify-content: center;
 }
 
+.dashboard-welcome {
+    font-size: 2.7em;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 38px;
+    text-align: center;
+    letter-spacing: 0.04em;
+    text-shadow:
+        2px 2px 12px rgba(0,0,0,0.8),
+        0 2px 8px #222;
+    padding: 18px 0 18px 0;
+    border-radius: 18px;
+    background: rgba(10, 20, 30, 0.45);
+    backdrop-filter: blur(2px);
+    box-shadow: 0 4px 32px rgba(0,0,0,0.10), 0 2px 12px rgba(0,0,0,0.5);
+}
+
 .dashboard-box {
-    background: rgba(0, 0, 0, 0.5);
-    border-radius: 12px;
-    padding: 30px;
-    text-decoration: none;
-    color: #E1F5FE;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
-    cursor: pointer;
+    background: rgba(20, 20, 30, 0.88);
+    border-radius: 16px;
+    padding: 32px 24px;
+    color: #e0f7fa;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -225,15 +243,41 @@ body {
 }
 
 .dashboard-box:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+    transform: translateY(-6px) scale(1.03);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.8);
+}
+
+.dashboard-icon {
+    font-size: 2.5em;
+    color: #00bcd4;
+    margin-bottom: 12px;
+    text-shadow: 1px 1px 6px rgba(0,0,0,0.7);
+}
+
+.dashboard-btn {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 10px 22px;
+    background: #00bcd4;
+    color: #1a237e;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1.08em;
+    transition: background 0.2s, color 0.2s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.dashboard-btn:hover, .dashboard-btn:focus {
+    background: #0097a7;
+    color: #fff;
 }
 
 .dashboard-box h2 {
     margin-bottom: 10px;
     font-size: 1.6em;
     font-weight: 600;
-    color: #B3E5FC;
+    color: #fff;
 }
 
 .dashboard-box p {
