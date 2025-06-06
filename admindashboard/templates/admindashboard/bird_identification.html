@@ -4,16 +4,19 @@
 {% block content %}
 <div class="container">
   <!-- Model Info and Error Display -->
-  {% if model_in_use %}
-    <div style="margin-bottom: 16px; padding: 10px; background: #e6f7ff; border: 1px solid #91d5ff; border-radius: 6px; color: #0050b3;">
-      <strong>Model in use:</strong> {{ model_in_use }}
-    </div>
-  {% endif %}
-  {% if model_load_error %}
-    <div style="margin-bottom: 16px; padding: 10px; background: #fff1f0; border: 1px solid #ffa39e; border-radius: 6px; color: #a8071a;">
-      <strong>Error:</strong> {{ model_load_error }}
-    </div>
-  {% endif %}
+  <div style="margin-bottom: 16px; padding: 10px; background: #e6f7ff; border: 1px solid #91d5ff; border-radius: 6px; color: #0050b3;">
+    <strong>Model in use:</strong>
+    <select id="modelSelect" class="model-select" style="margin-left: 10px; padding: 4px 8px; border: 1px solid #91d5ff; border-radius: 4px; background: white; color: #0050b3;">
+      <option value="chinese_egret">Chinese Egret</option>
+      <option value="whiskered_tern">Whiskered Tern</option>
+      <option value="great_knot">Great Knot</option>
+    </select>
+    {% if model_load_error %}
+      <div style="margin-top: 10px; padding: 8px; background: #fff1f0; border: 1px solid #ffa39e; border-radius: 4px; color: #a8071a;">
+        <strong>Error:</strong> {{ model_load_error }}
+      </div>
+    {% endif %}
+  </div>
   
   <!-- Back Button -->
   <button onclick="window.location.href='/admindashboard/dashboard/';" class="btn">Back</button>
@@ -64,6 +67,8 @@ const fileInput = document.getElementById('fileElem');
 const gallery = document.getElementById('gallery');
 const identifyBtn = document.getElementById('identifyBtn');
 const resultBox = document.getElementById('result-box');
+const modelSelect = document.getElementById('modelSelect');
+const currentModelSpan = document.getElementById('currentModel');
 
 // Modal elements
 const modal = document.getElementById('modal');
@@ -72,6 +77,16 @@ const modalClose = document.getElementById('modalClose');
 
 let currentImage = null;
 let currentImageDataUrl = null;  // store the image data URL for redrawing on canvas
+
+// Model selection change handler
+modelSelect.addEventListener('change', function() {
+  currentModelSpan.textContent = this.options[this.selectedIndex].text;
+  // Clear previous results when model changes
+  resultBox.innerHTML = '';
+  if (currentImage) {
+    enableIdentify();
+  }
+});
 
 // Prevent default drag behaviors
 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -182,12 +197,13 @@ identifyBtn.addEventListener('click', function() {
   if (!currentImage) return;
   
   // Display a loading message
-  resultBox.innerHTML = '<p>Processing image with YOLOv8...</p>';
+  resultBox.innerHTML = '<p>Processing image...</p>';
   disableIdentify();
   
-  // Create FormData to send the image file
+  // Create FormData to send the image file and selected model
   const formData = new FormData();
   formData.append('image', currentImage);
+  formData.append('model', modelSelect.value);
   
   // Make a POST request to the API endpoint
   fetch('/admindashboard/api/process_bird_image/', {
@@ -243,13 +259,24 @@ identifyBtn.addEventListener('click', function() {
           sumConfidence += det.confidence;
         });
         const avgConfidence = sumConfidence / totalBirds;
-        // Show only summary info for Chinese Egret
-        html += `<p><strong>Total Chinese Egrets Detected:</strong> ${totalBirds}</p>`;
-        html += `<p><strong>Species Type:</strong> Chinese Egret</p>`;
-        html += `<p><strong>Scientific Name:</strong> <em>Egretta eulophotes</em></p>`;
+        
+        // Get the selected model's display name
+        const selectedModel = modelSelect.options[modelSelect.selectedIndex].text;
+        
+        // Show detection results
+        html += `<p><strong>Total Birds Detected:</strong> ${totalBirds}</p>`;
+        html += `<p><strong>Species Type:</strong> ${selectedModel}</p>`;
+        
+        // Add scientific names based on the selected model
+        const scientificNames = {
+          'Chinese Egret': 'Egretta eulophotes',
+          'Whiskered Tern': 'Chlidonias hybrida',
+          'Great Knot': 'Calidris tenuirostris'
+        };
+        html += `<p><strong>Scientific Name:</strong> <em>${scientificNames[selectedModel]}</em></p>`;
         html += `<p><strong>Average Confidence:</strong> ${(avgConfidence * 100).toFixed(2)}%</p>`;
       } else {
-        html = "<p>No Chinese Egrets were detected.</p>";
+        html = `<p>No ${modelSelect.options[modelSelect.selectedIndex].text} were detected.</p>`;
       }
       resultBox.innerHTML = html;
     }
@@ -269,6 +296,22 @@ identifyBtn.addEventListener('click', function() {
   width: 80%;
   margin: 0 auto;
   font-family: Arial, sans-serif;
+}
+
+/* Model selection styling */
+.model-selection {
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.model-select {
+  margin-left: 10px;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ced4da;
+  font-size: 16px;
 }
 
 /* Back button styling */

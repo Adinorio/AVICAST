@@ -129,8 +129,9 @@ def process_bird_image(request):
     if model_load_error:
         return JsonResponse({'error': model_load_error}, status=500)
     if request.method == 'POST' and request.FILES.get('image'):
-        # Get image file from request
+        # Get image file and selected model from request
         image_file = request.FILES['image']
+        selected_model = request.POST.get('model', 'chinese_egret')
         
         # Create a temporary file to store the uploaded image
         with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as temp_file:
@@ -138,20 +139,35 @@ def process_bird_image(request):
             for chunk in image_file.chunks():
                 temp_file.write(chunk)
         try:
-            # Run inference with YOLO v8 on the temporary image file.
+            # Run inference with YOLO v8 on the temporary image file
+            # Note: In a production environment, you would load different models based on the selection
+            # For now, we'll use the same model but filter results based on the selected species
             results = model(temp_path, conf=0.5, iou=0.8)
+            
+            # Map model values to class names
+            model_to_class = {
+                'chinese_egret': 'Chinese Egret',
+                'whiskered_tern': 'Whiskered Tern',
+                'great_knot': 'Great Knot'
+            }
+            
+            # Process results and filter by selected species
+            detections = []
+            for result in results:
+                for box in result.boxes:
+                    class_name = result.names[int(box.cls[0])]
+                    # Only include detections for the selected species
+                    if class_name == model_to_class[selected_model]:
+                        detections.append({
+                            'class': class_name,
+                            'confidence': float(box.conf[0]),
+                            'coordinates': box.xyxy[0].tolist()
+                        })
+            
         except Exception as e:
             os.remove(temp_path)
             return JsonResponse({'error': f'Error during model inference: {str(e)}'}, status=500)
-        # Process results
-        detections = []
-        for result in results:
-            for box in result.boxes:
-                detections.append({
-                    'class': result.names[int(box.cls[0])],  # Class name (species)
-                    'confidence': float(box.conf[0]),  # Confidence score
-                    'coordinates': box.xyxy[0].tolist()  # Bounding box coordinates
-                })
+            
         # Clean up temporary file
         os.remove(temp_path)
         # Return JSON response with detections
