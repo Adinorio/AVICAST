@@ -57,7 +57,7 @@ body.no-scroll {
     top: 0;
     left: -280px;
     box-shadow: 3px 0 24px rgba(0,0,0,0.6);
-    z-index: 100;
+    z-index: 2000;
     transition: left 0.5s ease;
 }
 
@@ -237,7 +237,7 @@ body.no-scroll {
 
 .dashboard-welcome {
     font-size: 2.7em;
-    font-weight: 800;
+    font-weight: bold;
     color: #fff;
     margin-bottom: 38px;
     text-align: center;
