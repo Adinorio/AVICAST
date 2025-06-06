@@ -2,15 +2,15 @@ from pathlib import Path
 import os
 import sys
 import tempfile
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import logout
-from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
 from .models import Family, Species
 from .forms import FamilyForm, SpeciesForm
-from django.http import JsonResponse
+from django.contrib import messages
+import json
 import torch
 from ultralytics.nn.tasks import DetectionModel
 from ultralytics.nn.modules.conv import Conv, Concat
@@ -113,16 +113,22 @@ if model_path and not model_load_error:
     except Exception as e:
         model_load_error = f"Error loading YOLO model: {str(e)}"
 
-def dashboard_view(request):
-    return render(request, "admindashboard/dashboard.html")
+def dashboard(request):
+    """Main dashboard view"""
+    return render(request, 'admindashboard/dashboard.html')
 
 def logout_view(request):
+    """Logout view"""
     logout(request)
-    return redirect('superadminloginapp:login')
+    return redirect('login')
 
 def bird_identification_view(request):
-    # Renders the bird identification page, passing model info for frontend display.
-    return render(request, "admindashboard/bird_identification.html", {"model_in_use": model_in_use, "model_load_error": model_load_error})
+    """Bird identification view (legacy name)"""
+    return render(request, 'admindashboard/bird_identification.html')
+
+def identify_bird(request):
+    """Bird identification view (new name)"""
+    return render(request, 'admindashboard/bird_identification.html')
 
 @csrf_exempt
 def process_bird_image(request):
@@ -175,44 +181,132 @@ def process_bird_image(request):
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
 def bird_list(request):
-    families = Family.objects.filter(is_archived=False)
+    """Main view for displaying bird families and species"""
+    families = Family.objects.filter(is_archived=False).order_by('name')
     family_form = FamilyForm()
     species_form = SpeciesForm()
-    return render(request, 'admindashboard/bird_list.html', {
+    
+    context = {
         'families': families,
         'family_form': family_form,
         'species_form': species_form,
-    })
+    }
+    return render(request, 'admindashboard/bird_list.html', context)
 
 @require_POST
 def add_family(request):
+    """Add a new bird family"""
     form = FamilyForm(request.POST)
     if form.is_valid():
-        form.save()
-    return redirect('birds:bird_list')
+        family = form.save(commit=False)
+        family.is_archived = False
+        family.save()
+        messages.success(request, 'Family added successfully!')
+    else:
+        messages.error(request, 'Error adding family. Please check the form.')
+    return redirect('admindashboard:bird_list')
 
 @require_POST
 def add_species(request, family_id):
+    """Add a new species to a family"""
     family = get_object_or_404(Family, id=family_id)
     form = SpeciesForm(request.POST)
+    
     if form.is_valid():
-        sp = form.save(commit=False)
-        sp.family = family
-        sp.save()
-        data = {'id': sp.id, 'name': sp.name, 'scientific_name': sp.scientific_name}
-        return JsonResponse({'success': True, 'species': data})
-    return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+        species = form.save(commit=False)
+        species.family = family
+        species.is_archived = False
+        species.save()
+        messages.success(request, 'Species added successfully!')
+    else:
+        messages.error(request, 'Error adding species. Please check the form.')
+    
+    return redirect('admindashboard:bird_list')
+
+def edit_family(request, family_id):
+    """Edit an existing bird family"""
+    family = get_object_or_404(Family, id=family_id)
+    
+    if request.method == 'POST':
+        form = FamilyForm(request.POST, instance=family)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Family updated successfully!')
+            return redirect('admindashboard:bird_list')
+    else:
+        form = FamilyForm(instance=family)
+    
+    return render(request, 'admindashboard/edit_family.html', {
+        'form': form,
+        'family': family
+    })
+
+def edit_species(request, species_id):
+    """Edit an existing species"""
+    species = get_object_or_404(Species, id=species_id)
+    
+    if request.method == 'POST':
+        form = SpeciesForm(request.POST, instance=species)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Species updated successfully!')
+            return redirect('admindashboard:bird_list')
+    else:
+        form = SpeciesForm(instance=species)
+    
+    return render(request, 'admindashboard/edit_species.html', {
+        'form': form,
+        'species': species
+    })
 
 @require_POST
-def toggle_family_archive(request, family_id):
-    fam = get_object_or_404(Family, id=family_id)
-    fam.is_archived = not fam.is_archived
-    fam.save()
-    return JsonResponse({'success': True, 'archived': fam.is_archived})
+def archive_family(request, family_id):
+    """Archive a bird family"""
+    family = get_object_or_404(Family, id=family_id)
+    family.is_archived = True
+    family.save()
+    messages.success(request, 'Family archived successfully!')
+    return redirect('admindashboard:bird_list')
 
 @require_POST
-def toggle_species_archive(request, species_id):
-    sp = get_object_or_404(Species, id=species_id)
-    sp.is_archived = not sp.is_archived
-    sp.save()
-    return JsonResponse({'success': True, 'archived': sp.is_archived})
+def archive_species(request, species_id):
+    """Archive a species"""
+    species = get_object_or_404(Species, id=species_id)
+    species.is_archived = True
+    species.save()
+    messages.success(request, 'Species archived successfully!')
+    return redirect('admindashboard:bird_list')
+
+@require_POST
+def restore_family(request, family_id):
+    """Restore an archived family"""
+    family = get_object_or_404(Family, id=family_id)
+    family.is_archived = False
+    family.save()
+    messages.success(request, 'Family restored successfully!')
+    return redirect('admindashboard:bird_list')
+
+@require_POST
+def restore_species(request, species_id):
+    """Restore an archived species"""
+    species = get_object_or_404(Species, id=species_id)
+    species.is_archived = False
+    species.save()
+    messages.success(request, 'Species restored successfully!')
+    return redirect('admindashboard:bird_list')
+
+def get_species(request, family_id):
+    """Get all species for a family (AJAX endpoint)"""
+    family = get_object_or_404(Family, id=family_id)
+    species = Species.objects.filter(family=family, is_archived=False).order_by('name')
+    data = [{
+        'id': s.id,
+        'name': s.name,
+        'scientific_name': s.scientific_name,
+        'iucn_status': s.iucn_status
+    } for s in species]
+    return JsonResponse(data, safe=False)
+
+def help_view(request):
+    """Help page view"""
+    return render(request, "admindashboard/help.html")

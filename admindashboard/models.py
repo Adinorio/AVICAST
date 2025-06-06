@@ -30,27 +30,34 @@ class AdminUser(models.Model):
         return self.ID_number
 
 class Family(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
     is_archived = models.BooleanField(default=False)
-    created_at = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = "Families"
+        ordering = ['name']
 
     def __str__(self):
         return self.name
 
 class Species(models.Model):
     family = models.ForeignKey(Family, on_delete=models.CASCADE, related_name='species')
-    name = models.CharField(max_length=255)
-    scientific_name = models.CharField(max_length=255)
-    iucn_status = models.CharField(max_length=50)
+    name = models.CharField(max_length=100)
+    scientific_name = models.CharField(max_length=100)
+    iucn_status = models.CharField(max_length=50, blank=True)
     is_archived = models.BooleanField(default=False)
-    image = models.ImageField(upload_to='species_images/', null=True, blank=True)
-    created_at = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        verbose_name_plural = "Species"
+        ordering = ['name']
+
     def __str__(self):
-        return self.name
+        return f"{self.name} ({self.scientific_name})"
 
 class BirdDetection(models.Model):
     species = models.ForeignKey(Species, on_delete=models.CASCADE, related_name='detections')
@@ -78,11 +85,10 @@ class FamilyForm(forms.ModelForm):
 class SpeciesForm(forms.ModelForm):
     class Meta:
         model = Species
-        fields = ['name','scientific_name','iucn_status','image']
+        fields = ['name','scientific_name','iucn_status']
         widgets = {
             'name': forms.TextInput(attrs={'class':'form-control','placeholder':'Species Name'}),
             'scientific_name': forms.TextInput(attrs={'class':'form-control','placeholder':'Scientific Name'}),
             'iucn_status': forms.TextInput(attrs={'class':'form-control','placeholder':'IUCN Status'}),
-            'image': forms.FileInput(attrs={'class': 'form-control'}),
         }
 # Create your models here.

@@ -1,0 +1,72 @@
+{% extends 'admindashboard/base.html' %}
+{% load static %}
+
+{% block title %}Avicast Help{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link rel="stylesheet" href="{% static 'admindashboard/css/help.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="back-btn-container">
+    <a href="{% url 'admindashboard:dashboard' %}" class="btn btn-outline-secondary back-btn" style="text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.6);">⬅</a> 
+</div>
+
+<div class="help-container">
+    <h1><i class="fas fa-question-circle"></i> Avicast Help & Support</h1>
+
+    <div class="help-section">
+        <h2><i class="fas fa-rocket"></i> Getting Started</h2>
+        <p>Welcome to Avicast! This section will help you get started with the application.</p>
+        <ul>
+            <li><strong>Login:</strong> Use your registered username and password to log in.</li>
+            <li><strong>Dashboard:</strong> The dashboard provides an overview of key features and quick access to reports.</li>
+            <li><strong>Navigation:</strong> Use the sidebar menu to navigate through different sections of the application.</li>
+        </ul>
+    </div>
+
+    <div class="help-section">
+        <h2><i class="fas fa-dove"></i> Birds List</h2>
+        <p>The Birds List section allows you to view and manage a list of bird species.</p>
+        <ul>
+            <li><strong>Viewing Birds:</strong> Click on "Birds List" in the sidebar to view the list.</li>
+            <li><strong>Searching Birds:</strong> Use the search functionality to find specific bird species.</li>
+        </ul>
+    </div>
+
+    <div class="help-section">
+        <h2><i class="fas fa-search"></i> Birds Identification</h2>
+        <p>The Birds Identification section helps you identify bird species.</p>
+        <ul>
+            <li><strong>Uploading Images:</strong> Upload images of birds for identification.</li>
+            <li><strong>Viewing Results:</strong> View the identification results and related information.</li>
+        </ul>
+    </div>
+
+    <div class="help-section">
+        <h2><i class="fas fa-map-marker-alt"></i> Sites</h2>
+        <p>The Sites section allows you to manage water bird census reports.</p>
+        <ul>
+            <li><strong>Viewing Sites:</strong> Click on "Sites" in the sidebar to view the list of sites.</li>
+            <li><strong>Adding Sites:</strong> Add new sites for census management.</li>
+        </ul>
+    </div>
+
+    <div class="help-section">
+        <h2><i class="fas fa-chart-bar"></i> Statistical Reports</h2>
+        <p>The Statistical Reports section provides access to various reports and data visualizations.</p>
+        <ul>
+            <li><strong>Viewing Reports:</strong> Click on "Statistical Reports" to view available reports.</li>
+            <li><strong>Filtering Data:</strong> Use filters to customize the data displayed in reports.</li>
+        </ul>
+    </div>
+
+    <div class="contact-info">
+        <h2><i class="fas fa-headset"></i> Contact Us</h2>
+        <p>For further assistance, please contact us:</p>
+        <p><i class="fas fa-envelope"></i> Email: <a href="mailto:jepoyinere2003@gmail.com">jepoyinere2003@gmail.com</a></p>
+        <p><i class="fas fa-phone"></i> Phone: +63 9363629280</p>
+    </div>
+</div>
+{% endblock %}

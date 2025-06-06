@@ -1,65 +1,237 @@
-{% extends 'admindashboard/base.html' %}  
-{% block content %}  
-<div class="container mx-auto p-4">  
-  <h2 class="text-xl font-semibold mb-4">Bird Families & Species</h2>  
-  <!-- Add Family Form -->  
-  <form method="post" action="{% url 'admindashboard:add_family' %}" class="mb-6">  
-    {% csrf_token %}  
-    {{ family_form.name }} {{ family_form.description }}  
-    <button type="submit" class="btn btn-primary">Add Family</button>  
-  </form>  
-  <div id="familyContainer">  
-    {% for family in families %}  
-      <div class="card p-4 mb-4 shadow" id="family-{{ family.id }}">  
-        <div class="flex justify-between items-center">  
-          <div>  
-            <h3 class="text-lg font-bold">{{ family.name }}</h3>  
-            <p class="text-sm text-gray-600">{{ family.description }}</p>  
-          </div>  
-          <button onclick="toggleArchive({{ family.id }})" class="btn btn-sm">  
-            {% if not family.is_archived %}Archive{% else %}Restore{% endif %}  
-          </button>  
-        </div>  
-        <!-- Inline Add Species -->  
-        <form class="mt-3 add-species-form flex space-x-2" data-family-id="{{ family.id }}">  
-          {% csrf_token %}  
-          {{ species_form.name }} {{ species_form.scientific_name }} {{ species_form.iucn_status }}  
-          <button type="submit" class="btn btn-secondary btn-sm">Add</button>  
-        </form>  
-        <!-- Species List -->  
-        <ul id="species-{{ family.id }}" class="mt-2">  
-          {% for sp in family.species.all %}  
-            {% if not sp.is_archived %}  
-            <li class="flex justify-between">  
-              <span>{{ sp.name }} ({{ sp.scientific_name }})</span>  
-              <button onclick="toggleSpecies({{ sp.id }})" class="text-sm">Archive</button>  
-            </li>  
-            {% endif %}  
-          {% endfor %}  
-        </ul>  
-      </div>  
-    {% endfor %}  
-  </div>  
-</div>  
+{% extends 'admindashboard/base.html' %}
+{% load static %}
 
-<script>  
-function toggleArchive(id) {  
-  fetch(`{% url 'admindashboard:toggle_family' 0 %}`.replace('/0/', `/${id}/`), {method:'POST', headers:{'X-CSRFToken': '{{ csrf_token }}'}})  
-    .then(()=>location.reload());  
-}  
-function toggleSpecies(id) {  
-  fetch(`{% url 'admindashboard:toggle_species' 0 %}`.replace('/0/', `/${id}/`), {method:'POST', headers:{'X-CSRFToken': '{{ csrf_token }}'}})  
-    .then(()=>location.reload());  
-}  
-// AJAX add species  
-document.querySelectorAll('.add-species-form').forEach(form=>{  
-  form.addEventListener('submit', e=>{  
-    e.preventDefault();  
-    const fid = form.dataset.familyId;  
-    const data = new FormData(form);  
-    fetch(`{% url 'admindashboard:add_species' 0 %}`.replace('/0/', `/${fid}/`), {method:'POST', body:data})  
-      .then(r=>r.json()).then(json=> location.reload());  
-  });  
-});  
-</script>  
+{% block title %}Bird List - Admin Dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'admindashboard/css/bird_list.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="header-section">
+        <h2>Bird Families and Species</h2>
+        <div class="action-buttons">
+            <button type="button" class="btn btn-modern" data-bs-toggle="modal" data-bs-target="#addFamilyModal">
+                <i class="fas fa-plus-circle"></i> Add New Family
+            </button>
+            <div class="dropdown">
+                <button class="btn btn-outline-modern dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-sort"></i> Sort By
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="sortDropdown">
+                    <li><a class="dropdown-item" href="?sort=name">Name (A-Z)</a></li>
+                    <li><a class="dropdown-item" href="?sort=species_count">Species Count</a></li>
+                    <li><a class="dropdown-item" href="?sort=recent">Recently Added</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="families-container">
+        {% for family in families %}
+        <div class="family-card">
+            <div class="family-header">
+                <div class="family-title">
+                    <h3>{{ family.name }}</h3>
+                    <span class="species-count">{{ family.species_set.count }} species</span>
+                </div>
+                <div class="family-actions">
+                    <div class="dropdown">
+                        <button class="btn btn-icon" type="button" id="familyActions{{ family.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="familyActions{{ family.id }}">
+                            <li>
+                                <button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#editFamilyModal{{ family.id }}">
+                                    <i class="fas fa-edit"></i> Edit Family
+                                </button>
+                            </li>
+                            <li>
+                                <form method="post" action="{% url 'admindashboard:archive_family' family.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item text-warning" onclick="return confirm('Are you sure you want to archive this family?')">
+                                        <i class="fas fa-archive"></i> Archive Family
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <p class="family-description">{{ family.description }}</p>
+            
+            <div class="species-section">
+                <div class="species-header">
+                    <h4>Species</h4>
+                    <button type="button" class="btn btn-modern btn-sm" data-bs-toggle="modal" data-bs-target="#addSpeciesModal{{ family.id }}">
+                        <i class="fas fa-plus"></i> Add Species
+                    </button>
+                </div>
+                
+                <div class="species-list">
+                    {% for species in family.species_set.all %}
+                    <div class="species-item">
+                        <div class="species-info">
+                            <div class="species-name">
+                                <h5>{{ species.name }}</h5>
+                                <p class="scientific-name">{{ species.scientific_name }}</p>
+                            </div>
+                            {% if species.iucn_status %}
+                            <span class="badge bg-info">{{ species.iucn_status }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="species-actions">
+                            <div class="dropdown">
+                                <button class="btn btn-icon btn-sm" type="button" id="speciesActions{{ species.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="speciesActions{{ species.id }}">
+                                    <li>
+                                        <button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#editSpeciesModal{{ species.id }}">
+                                            <i class="fas fa-edit"></i> Edit Species
+                                        </button>
+                                    </li>
+                                    <li>
+                                        <form method="post" action="{% url 'admindashboard:archive_species' species.id %}" class="d-inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="dropdown-item text-warning" onclick="return confirm('Are you sure you want to archive this species?')">
+                                                <i class="fas fa-archive"></i> Archive Species
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="no-species">
+                        <i class="fas fa-dove"></i>
+                        <p>No species added yet.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="no-families">
+            <i class="fas fa-dove"></i>
+            <h3>No Bird Families Yet</h3>
+            <p>Start by adding your first bird family!</p>
+            <button type="button" class="btn btn-modern" data-bs-toggle="modal" data-bs-target="#addFamilyModal">
+                <i class="fas fa-plus-circle"></i> Add Family
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Add Family Modal -->
+<div class="modal fade" id="addFamilyModal" tabindex="-1" aria-labelledby="addFamilyModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addFamilyModalLabel">Add New Family</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="{% url 'admindashboard:add_family' %}" class="add-family-form">
+                    {% csrf_token %}
+                    {{ family_form.as_p }}
+                    <div class="text-end">
+                        <button type="button" class="btn btn-outline-modern" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-modern">Add Family</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Species Modals -->
+{% for family in families %}
+<div class="modal fade" id="addSpeciesModal{{ family.id }}" tabindex="-1" aria-labelledby="addSpeciesModalLabel{{ family.id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addSpeciesModalLabel{{ family.id }}">Add Species to {{ family.name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="{% url 'admindashboard:add_species' family.id %}" class="add-species-form">
+                    {% csrf_token %}
+                    {{ species_form.as_p }}
+                    <div class="text-end">
+                        <button type="button" class="btn btn-outline-modern" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-modern">Add Species</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Edit Family Modals -->
+{% for family in families %}
+<div class="modal fade" id="editFamilyModal{{ family.id }}" tabindex="-1" aria-labelledby="editFamilyModalLabel{{ family.id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editFamilyModalLabel{{ family.id }}">Edit {{ family.name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="{% url 'admindashboard:edit_family' family.id %}">
+                    {% csrf_token %}
+                    {{ family_form.as_p }}
+                    <div class="text-end">
+                        <button type="button" class="btn btn-outline-modern" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-modern">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Edit Species Modals -->
+{% for family in families %}
+{% for species in family.species_set.all %}
+<div class="modal fade" id="editSpeciesModal{{ species.id }}" tabindex="-1" aria-labelledby="editSpeciesModalLabel{{ species.id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editSpeciesModalLabel{{ species.id }}">Edit {{ species.name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="{% url 'admindashboard:edit_species' species.id %}">
+                    {% csrf_token %}
+                    {{ species_form.as_p }}
+                    <div class="text-end">
+                        <button type="button" class="btn btn-outline-modern" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-modern">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endfor %}
 {% endblock %}
