@@ -1,8 +1,79 @@
-{% extends "base.html" %}
-{% block page_title %}Settings{% endblock %}
-{% block page_subtitle %}Configure your AVICAST preferences{% endblock %}
+{% extends 'base.html' %}
+{% load static %}
+
 {% block content %}
-  <div class="p-6 bg-white rounded-lg shadow">
-    <p class="text-gray-600">Settings page coming soon…</p>
+<link rel="stylesheet" href="{% static 'css/settings.css' %}">
+<div class="dashboard">
+  <!-- Breadcrumb -->
+  <div class="breadcrumb">
+    <span class="breadcrumb__text">User Management System</span>
+    <span class="breadcrumb__separator">&gt;</span>
+    <span class="breadcrumb__text">Settings</span>
   </div>
+
+  <!-- Welcome Card -->
+  <section class="welcome-card">
+    <h2 class="welcome-card__title">Settings</h2>
+    <p class="welcome-card__subtitle">Configure your user account and application preferences.</p>
+  </section>
+
+  <!-- Profile Settings Section -->
+  <section class="settings-profile-card">
+    <div class="settings-profile-header">
+      <div class="settings-profile-avatar">DC</div> {# Placeholder for initials #}
+      <div class="settings-profile-info">
+        <span class="settings-profile-name">Dhenz Sherwin Cuenca</span> {# Placeholder for full name #}
+        <span class="settings-profile-id">01010111</span> {# Placeholder for user ID #}
+      </div>
+      <button class="action-btn action-btn--edit settings-edit-profile-btn">Edit</button>
+      <button class="action-btn settings-save-profile-btn" style="display: none;">Save</button>{# Hidden by default #}
+    </div>
+
+    <div class="settings-profile-fields">
+      <div class="settings-field-group">
+        <label class="settings-field-label">First Name</label>
+        <input type="text" class="settings-field-input settings-editable-field" value="Dhenz Sherwin" readonly> {# Placeholder value #}
+      </div>
+      <div class="settings-field-group">
+        <label class="settings-field-label">Last Name</label>
+        <input type="text" class="settings-field-input settings-editable-field" value="Cuenca" readonly> {# Placeholder value #}
+      </div>
+
+      <div class="settings-field-group">
+        <label class="settings-field-label">Enlisted Department</label>
+        <input type="text" class="settings-field-input settings-editable-field" value="City ENRO - Cadiz City" readonly> {# Placeholder value #}
+      </div>
+      <div class="settings-field-group">
+        <label class="settings-field-label">Department Address</label>
+        <input type="text" class="settings-field-input settings-editable-field" value="Commercial Complex, Cabahug St., Cadiz City" readonly> {# Placeholder value #}
+      </div>
+
+      <div class="settings-field-group">
+        <label class="settings-field-label">Role</label>
+        <input type="text" class="settings-field-input" value="Super Admin" readonly> {# Placeholder value, readonly as it's likely not editable here #}
+      </div>
+      <div class="settings-field-group">
+        <label class="settings-field-label">Backup Key</label>
+        <input type="text" class="settings-field-input" value="2025 0117" readonly> {# Placeholder value #}
+      </div>
+    </div>
+
+    <div class="settings-password-section">
+        <label class="settings-field-label">Password</label>
+        <div class="settings-password-input-group">
+            <span class="settings-password-icon">🔑</span> {# Placeholder icon #}
+            <input type="password" class="settings-field-input settings-password-field" value="password" readonly style="width: 100px;"> {# Placeholder value, shorter width #}
+            <span class="settings-password-last-changed">Last changed 1 month ago</span> {# Placeholder text #}
+        </div>
+         <div class="settings-confirm-password-group" style="display: none; margin-bottom: 15px;">{# Hidden by default #}
+             <label class="settings-field-label">Confirm Password</label>
+             <input type="password" class="settings-field-input settings-confirm-password-field" style="width: 100px;"> {# Shorter width #}
+         </div>
+        <button class="action-btn settings-change-password-btn">Change password</button>
+        <button class="action-btn settings-save-password-btn" style="display: none;">Save Password</button>{# Hidden by default #}
+    </div>
+
+  </section>
+
+</div>
 {% endblock %}
