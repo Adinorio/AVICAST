@@ -1,0 +1,60 @@
+{% extends "admindashboard/base.html" %}
+{% load static %}
+
+{% block title %}Image Processing Workflow{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'admindashboard/css/image_processing.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="tab-bar">
+        <a href="{% url 'admindashboard:image_processing' %}" class="tab active">Upload</a>
+        <a href="{% url 'admindashboard:image_processing_next' %}" class="tab">Process Data</a>
+        <a href="{% url 'admindashboard:review_dashboard' %}" class="tab">Review</a>
+    </div>
+    <h1 class="page-title"><i class="fas fa-upload"></i> Image Upload & Processing</h1>
+    <div class="upload-section">
+        <div class="upload-area" id="drop-area">
+            <i class="fas fa-cloud-upload-alt upload-icon"></i>
+            <p class="upload-text">Drag & drop images or folders here<br><span>or</span></p>
+            <input type="file" id="fileElemFiles" multiple accept=".jpg,.jpeg,.png" style="display:none">
+            <input type="file" id="fileElemFolder" multiple webkitdirectory directory style="display:none">
+            <label class="upload-btn" for="fileElemFiles">Select Files</label>
+            <label class="upload-btn secondary" for="fileElemFolder">Select Folder</label>
+        </div>
+        <div class="file-list-section" id="file-list-section" style="display:none;">
+            <h2>Selected Files</h2>
+            <table class="file-list-table" id="file-list-table">
+                <thead>
+                    <tr>
+                        <th>Thumbnail</th>
+                        <th>Filename</th>
+                        <th>Status</th>
+                        <th>Progress</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="file-list-body">
+                    <!-- JS will populate rows here -->
+                </tbody>
+            </table>
+        </div>
+        <div class="batch-progress-container" id="batch-progress-container" style="display:none;">
+            <span class="batch-progress-label">Batch Progress:</span>
+            <div class="batch-progress-bar">
+                <div class="batch-progress-bar-inner" id="batch-progress-bar-inner"></div>
+            </div>
+            <span id="batch-progress-text">0/0</span>
+        </div>
+        <div class="upload-actions">
+            <button class="upload-btn" id="uploadBtn" disabled>Upload</button>
+            <button class="upload-btn secondary" id="addMoreBtn" style="display:none;">Add More</button>
+            <button class="upload-btn primary" id="startProcessingBtn" style="display:none;">Start Processing</button>
+            <button class="continue-btn" id="continueBtn" disabled>Continue</button>
+        </div>
+    </div>
+</div>
+<script src="{% static 'admindashboard/js/image_processing.js' %}"></script>
+{% endblock %} 

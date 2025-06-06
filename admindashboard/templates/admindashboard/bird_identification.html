@@ -52,6 +52,11 @@
   </div>
 </div>
 
+<!-- Insert a temporary button (inside a div) to access the image-processing route -->
+<div class="temp-nav" style="margin: 20px; text-align: center;">
+  <a href="{% url 'admindashboard:image_processing' %}" class="btn" style="background: var(--accent-color); color: var(--text-primary); padding: 12px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; box-shadow: var(--shadow);">Go to Image Processing</a>
+</div>
+
 <!-- Modal for full image preview -->
 <div id="modal" class="modal">
   <span id="modalClose" class="modal-close">&times;</span>

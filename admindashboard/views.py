@@ -334,3 +334,12 @@ def get_species(request, family_id):
 def help_view(request):
     """Help page view"""
     return render(request, "admindashboard/help.html")
+
+def image_processing_view(request):
+    return render(request, 'admindashboard/image_processing.html')
+
+def image_processing_next_view(request):
+    return render(request, 'admindashboard/image_processing_next.html')
+
+def review_dashboard_view(request):
+    return render(request, 'admindashboard/review_dashboard.html')
