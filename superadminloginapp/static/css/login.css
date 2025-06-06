@@ -23,9 +23,10 @@ body {
 
 .login-card-figma {
     position: fixed;
-    width: 380px;
+    width: 22vw;
+    max-width: 450px;
     height: auto;
-    right: 20px;
+    right: 5%;
     top: 50%;
     transform: translateY(-50%);
     background: #2A2B30;
@@ -34,7 +35,7 @@ body {
     backdrop-filter: blur(67px);
     border-radius: 20px;
     z-index: 2;
-    padding: 25px;
+    padding: 1.5vw;
     box-sizing: border-box;
 }
 
@@ -160,11 +161,11 @@ body {
 
 .bird-info {
     position: fixed;
-    bottom: 80px;
-    left: 40px;
-    max-width: 600px;
+    bottom: 8vh;
+    left: 3vw;
+    max-width: 40vw;
     color: #fff;
-    font-size: 24px;
+    font-size: 1.5vw;
     font-weight: 500;
     line-height: 1.4;
     z-index: 2;
