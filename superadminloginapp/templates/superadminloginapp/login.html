@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=1920, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AVICAST - Login</title>
     <link rel="stylesheet" href="{% static 'css/login.css' %}">
     <link href="https://fonts.googleapis.com/css?family=Inter:400,500,600&display=swap" rel="stylesheet">
@@ -17,7 +17,6 @@
                 <div class="avicast-title-figma">AVICAST</div>
                 <div class="line-figma"></div>
                 <div class="subtitle-figma">Migratory Bird Census Management System</div>
-                
             </div>
         </div>
         <form method="POST" class="form-section-figma">
@@ -36,7 +35,7 @@
                 <button type="submit" class="login-btn-figma">LOGIN</button>
             </div>
             {% if error_message %}
-                <p class="error" style="color: #ff6b6b; text-align:center; font-size:18px;">{{ error_message }}</p>
+                <p class="error">{{ error_message }}</p>
             {% endif %}
         </form>
     </div>
