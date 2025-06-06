@@ -1,4 +1,108 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+{% load static %}
+
 {% block content %}
-<!-- New logs interface will be implemented here -->
+<link rel="stylesheet" href="{% static 'css/users.css' %}">
+<div class="users-dashboard">
+  <!-- Breadcrumb -->
+  <div class="users-breadcrumb">
+    <span class="users-breadcrumb__text">System Logs</span>
+    <span class="users-breadcrumb__separator">&gt;</span>
+    <span class="users-breadcrumb__text">Logs</span>
+  </div>
+
+  <!-- Welcome Card -->
+  <section class="users-welcome-card">
+    <h2 class="users-welcome-card__title">System Logs</h2>
+    <p class="users-welcome-card__subtitle">View system activity and events here.</p>
+  </section>
+
+  <!-- Stats Cards -->
+  <div class="users-stats-container">
+    <div class="users-stat-card users-stat-card--admin">
+      <span class="users-stat-card__label">Total Log Entries</span>
+      <div class="users-stat-card__inner">
+        <span class="users-stat-card__value">0</span>
+        <!-- TODO: replace with actual total log entries -->
+      </div>
+    </div>
+    <div class="users-stat-card users-stat-card--field">
+      <span class="users-stat-card__label">Recent Critical Logs</span>
+      <div class="users-stat-card__inner">
+        <span class="users-stat-card__value">0</span>
+        <!-- TODO: replace with actual critical logs count -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Logs Table -->
+  <section class="users-table">
+    <div class="users-table__header">
+      <div class="users-table__search">
+        <input type="text" placeholder="Search logs...">
+      </div>
+      <div class="users-table__buttons">
+        <button class="users-table__filter-button">Filters</button>
+        <!-- Removed Add User Button -->
+      </div>
+    </div>
+    <div class="users-table__container">
+      <div class="users-table__bg">
+        <table class="users-table__content">
+          <thead>
+            <tr>
+              <th class="users-table__th">Timestamp <span class="sort-icon">&#8597;</span></th>
+              <th class="users-table__th">Level <span class="sort-icon">&#8597;</span></th>
+              <th class="users-table__th">Source <span class="sort-icon">&#8597;</span></th>
+              <th class="users-table__th">Message <span class="sort-icon">&#8597;</span></th>
+              <th class="users-table__th">User <span class="sort-icon">&#8597;</span></th>
+              <th class="users-table__th">Action <span class="sort-icon">&#8597;</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% comment %}
+            Example log entry rows - replace with actual loop over log data
+            {% endcomment %}
+            <tr>
+              <td class="users-table__td">2023-10-27 10:30:00</td>
+              <td class="users-table__td">INFO</td>
+              <td class="users-table__td">system.auth</td>
+              <td class="users-table__td">User 'admin' logged in successfully.</td>
+              <td class="users-table__td">admin</td>
+              <td class="users-table__td">View Details</td>
+            </tr>
+            <tr>
+              <td class="users-table__td">2023-10-27 10:35:00</td>
+              <td class="users-table__td">WARNING</td>
+              <td class="users-table__td">system.network</td>
+              <td class="users-table__td">Connection attempt failed from IP 192.168.1.100.</td>
+              <td class="users-table__td">N/A</td>
+              <td class="users-table__td">View Details</td>
+            </tr>
+             <tr>
+              <td class="users-table__td">2023-10-27 10:40:00</td>
+              <td class="users-table__td">ERROR</td>
+              <td class="users-table__td">system.database</td>
+              <td class="users-table__td">Database query failed: Table not found.</td>
+              <td class="users-table__td">system</td>
+              <td class="users-table__td">View Details</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pagination -->
+  <div class="users-pagination">
+    <button class="users-pagination__button users-pagination__button--prev">< Previous page</button>
+    <span class="users-pagination__page-number">1</span>
+    <button class="users-pagination__button users-pagination__button--next">Next page ></button>
+  </div>
+</div>
+
+{% comment %}
+Removed user drawer include and related script as they are not relevant for the logs page.
+{% endcomment %}
+
 {% endblock %}

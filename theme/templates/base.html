@@ -37,18 +37,12 @@
                 </span>
                 <span class="sidebar__label">Roles</span>
             </a></li>
-            <li><button type="button" class="sidebar__nav-item" data-nav="assignment" aria-label="Assignment" tabindex="0">
-                <span class="sidebar__icon-container">
-                    <i class="fas fa-chart-line sidebar__icon"></i>
-                </span>
-                <span class="sidebar__label">Assignment</span>
-            </button></li>
-            <li><button type="button" class="sidebar__nav-item" data-nav="history" aria-label="History" tabindex="0">
+            <li><a href="{% url 'dashboardadminapp:logs' %}" class="sidebar__nav-item" data-nav="history" aria-label="History" tabindex="0">
                 <span class="sidebar__icon-container">
                     <i class="fas fa-clock sidebar__icon"></i>
                 </span>
                 <span class="sidebar__label">History</span>
-            </button></li>
+            </a></li>
             <li class="sidebar__divider"></li>
             <li><button type="button" class="sidebar__nav-item" data-nav="notifications" aria-label="Notifications" tabindex="0">
                 <span class="sidebar__icon-container sidebar__icon-container--relative">
