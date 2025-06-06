@@ -32,16 +32,21 @@
             <li class="logout"><a href="#" onclick="confirmLogout(event)"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
         </ul>
     </aside>
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
     <!-- Main content area -->
     <div class="main-content">
         <!-- Top Navigation -->
         <nav class="top-nav">
-            <i class="fas fa-bars menu-btn" onclick="toggleSidebar()"></i>
-            <div class="user-info">
-                <i class="fas fa-bell"></i>
-                <img src="{% static 'admindashboard/images/user-profile.jpg' %}" alt="User Profile">
-                <span>{{ user.username }}</span>
+            <div class="nav-left">
+                <i class="fas fa-bars menu-btn" id="menuBtn" onclick="toggleSidebar()"></i>
+            </div>
+            <div class="nav-right">
+                <div class="user-info">
+                    <i class="fas fa-bell"></i>
+                    <img src="{% static 'admindashboard/images/user-profile.jpg' %}" alt="User Profile">
+                    <span>{{ user.username }}</span>
+                </div>
             </div>
         </nav>
 
@@ -57,11 +62,42 @@
         // Sidebar toggle functionality
         function toggleSidebar() {
             const sidebar = document.getElementById("sidebar");
-            const mainContent = document.querySelector(".main-content");
-
-            sidebar.classList.toggle("active");
-            mainContent.classList.toggle("sidebar-open");
+            const overlay = document.getElementById("sidebarOverlay");
+            const body = document.body;
+            const menuBtn = document.getElementById("menuBtn");
+            const isActive = sidebar.classList.toggle("active");
+            overlay.classList.toggle("active");
+            if (isActive) {
+                body.classList.add("no-scroll");
+                menuBtn.classList.add("hide-when-sidebar");
+            } else {
+                body.classList.remove("no-scroll");
+                menuBtn.classList.remove("hide-when-sidebar");
+            }
         }
+
+        // Auto-hide top-nav on scroll down, show on scroll up
+        let lastScrollY = window.scrollY;
+        let ticking = false;
+        const topNav = document.querySelector('.top-nav');
+        function handleNavScroll() {
+            const currentScrollY = window.scrollY;
+            if (currentScrollY > lastScrollY && currentScrollY > 40) {
+                // Scrolling down
+                topNav.classList.add('hide-on-scroll');
+            } else {
+                // Scrolling up
+                topNav.classList.remove('hide-on-scroll');
+            }
+            lastScrollY = currentScrollY;
+            ticking = false;
+        }
+        window.addEventListener('scroll', function() {
+            if (!ticking) {
+                window.requestAnimationFrame(handleNavScroll);
+                ticking = true;
+            }
+        });
 
         // Show loading screen before redirect
         function showLoading(event, url = null) {
