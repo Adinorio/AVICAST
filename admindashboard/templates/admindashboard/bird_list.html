@@ -48,6 +48,161 @@
     .form-group:last-child {
         padding-right: 12px;
     }
+
+    /* Description textarea specific styles */
+    .form-group textarea {
+        width: 100%;
+        padding: 0.8rem 1rem;
+        border: 1px solid #555;
+        border-radius: 4px;
+        box-sizing: border-box;
+        font-size: 1rem;
+        background-color: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.4;
+        resize: none;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.1rem rgba(0, 123, 255, 0.25);
+        background-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .form-group textarea:disabled {
+        background-color: rgba(255, 255, 255, 0.05);
+        color: #b0b0b0;
+        cursor: not-allowed;
+        opacity: 0.9;
+        border-color: #444;
+    }
+
+    .form-group textarea::placeholder {
+        color: #b0b0b0;
+        opacity: 1;
+    }
+
+    /* Delete button styles */
+    .delete-btn {
+        background-color: transparent;
+        color: #dc3545;
+        border: none;
+        padding: 0.5rem;
+        border-radius: 5px;
+        font-size: 1.2rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: none; /* Hidden by default */
+        margin-left: auto; /* Push to the right */
+    }
+
+    .delete-btn:hover {
+        color: #c82333;
+        background-color: rgba(220, 53, 69, 0.1);
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    /* Confirmation Modal Styles */
+    .confirmation-modal {
+        display: none;
+        position: fixed;
+        z-index: 2000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        align-items: center;
+        justify-content: center;
+    }
+
+    .confirmation-content {
+        background-color: rgba(30, 30, 40, 0.98);
+        padding: 2rem;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 500px;
+        text-align: center;
+        color: #e0f7fa;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+    }
+
+    .confirmation-content h3 {
+        color: #ff6b6b;
+        margin-bottom: 1.5rem;
+        font-size: 1.5rem;
+    }
+
+    .confirmation-content p {
+        margin-bottom: 1.5rem;
+        line-height: 1.6;
+    }
+
+    .confirmation-content .dependencies {
+        background-color: rgba(255, 107, 107, 0.1);
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        text-align: left;
+    }
+
+    .confirmation-content .dependencies h4 {
+        color: #ff6b6b;
+        margin-bottom: 0.5rem;
+    }
+
+    .confirmation-content .dependencies ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .confirmation-content .dependencies li {
+        margin-bottom: 0.5rem;
+        color: #e0f7fa;
+    }
+
+    .confirmation-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+    }
+
+    .confirmation-buttons button {
+        padding: 0.8rem 1.5rem;
+        border-radius: 5px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .confirm-delete {
+        background-color: #dc3545;
+        color: white;
+        border: none;
+    }
+
+    .confirm-delete:hover {
+        background-color: #c82333;
+    }
+
+    .cancel-delete {
+        background-color: transparent;
+        color: #e0f7fa;
+        border: 1px solid #e0f7fa;
+    }
+
+    .cancel-delete:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
 </style>
 {% endblock %}
 
@@ -107,6 +262,9 @@
                 <div class="section-header">
                     <i class="fas fa-pencil-alt"></i>
                     <h3>Bird Details</h3>
+                    <button class="delete-btn" id="deleteBirdBtn" style="display: none;" title="Delete Bird">
+                        <i class="fas fa-trash"></i>
+                    </button>
                 </div>
                 <form id="birdForm" enctype="multipart/form-data">
                     {% csrf_token %}
@@ -177,6 +335,23 @@
         </div>
     </div>
 </div>
+
+<!-- Add Confirmation Modal -->
+<div id="deleteConfirmationModal" class="confirmation-modal">
+    <div class="confirmation-content">
+        <h3>Confirm Deletion</h3>
+        <p>Are you sure you want to delete this bird? This action cannot be undone.</p>
+        <div id="dependenciesWarning" class="dependencies" style="display: none;">
+            <h4>Warning: This bird is currently being used in:</h4>
+            <ul id="dependenciesList"></ul>
+            <p>Deleting this bird may affect these features. Please proceed with caution.</p>
+        </div>
+        <div class="confirmation-buttons">
+            <button class="confirm-delete" id="confirmDeleteBtn">Delete</button>
+            <button class="cancel-delete" id="cancelDeleteBtn">Cancel</button>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -212,6 +387,14 @@
     const filterConservationStatusCheckboxes = document.getElementById('filterConservationStatusCheckboxes');
     const applyFiltersBtn = document.getElementById('applyFiltersBtn');
     const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+
+    // Add these new functions and event listeners
+    const deleteBirdBtn = document.getElementById('deleteBirdBtn');
+    const deleteConfirmationModal = document.getElementById('deleteConfirmationModal');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+    const dependenciesWarning = document.getElementById('dependenciesWarning');
+    const dependenciesList = document.getElementById('dependenciesList');
 
     // Function to populate Family dropdown (reused for filter modal)
     async function populateFamilies() {
@@ -404,6 +587,7 @@
         isAddingMode = false;
         isEditingMode = false;
         currentSpeciesId = null;
+        toggleDeleteButton(false); // Hide delete button
         
         // Remove any existing ribbon from the form
         const formRibbon = document.querySelector('.details-section .conservation-ribbon');
@@ -423,13 +607,12 @@
 
     // Function to display form in "Edit" mode and populate with data
     async function displayEditMode(speciesId) {
-        resetFormState(); // Ensure a clean slate
+        resetFormState();
         setFormEnabled(true);
         isEditingMode = true;
         currentSpeciesId = speciesId;
         speciesIdInput.value = speciesId;
-
-        // Buttons transform, no need to hide
+        toggleDeleteButton(true); // Show delete button
 
         try {
             const response = await fetch(`/admindashboard/api/birds/${speciesId}/`);
@@ -658,6 +841,116 @@
         } else {
             imagePreview.style.display = 'none';
             previewImg.src = '';
+        }
+    });
+
+    // Function to show/hide delete button
+    function toggleDeleteButton(show) {
+        deleteBirdBtn.style.display = show ? 'inline-block' : 'none';
+    }
+
+    // Function to check dependencies
+    async function checkDependencies(speciesId) {
+        try {
+            const response = await fetch(`/admindashboard/api/birds/${speciesId}/dependencies/`);
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error checking dependencies:', error);
+            return { can_delete: false, dependencies: [] };
+        }
+    }
+
+    async function deleteSpecies(speciesId) {
+        try {
+            const response = await fetch(`/admindashboard/api/birds/${speciesId}/delete/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok && data.success) {
+                // Remove the card from the UI
+                const card = document.querySelector(`[data-species-id="${speciesId}"]`);
+                if (card) {
+                    card.remove();
+                }
+                // Reset form state and hide modals
+                resetFormState();
+                deleteConfirmationModal.style.display = 'none';
+                
+                // Show success message
+                alert(data.message || 'Bird deleted successfully');
+                
+                // Refresh the page after a short delay
+                setTimeout(() => {
+                    window.location.reload();
+                }, 500);
+            } else {
+                throw new Error(data.message || 'Failed to delete species');
+            }
+        } catch (error) {
+            console.error('Error deleting species:', error);
+            alert('Failed to delete species. Please try again.');
+        }
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Event listener for delete button
+    deleteBirdBtn.addEventListener('click', async () => {
+        if (currentSpeciesId) {
+            const dependenciesData = await checkDependencies(currentSpeciesId);
+            
+            if (dependenciesData.dependencies && dependenciesData.dependencies.length > 0) {
+                dependenciesList.innerHTML = '';
+                dependenciesData.dependencies.forEach(dep => {
+                    const li = document.createElement('li');
+                    li.textContent = dep;
+                    dependenciesList.appendChild(li);
+                });
+                dependenciesWarning.style.display = 'block';
+            } else {
+                dependenciesWarning.style.display = 'none';
+            }
+            
+            deleteConfirmationModal.style.display = 'flex';
+        }
+    });
+
+    // Event listener for confirm delete
+    confirmDeleteBtn.addEventListener('click', async () => {
+        if (currentSpeciesId) {
+            await deleteSpecies(currentSpeciesId);
+            deleteConfirmationModal.style.display = 'none';
+        }
+    });
+
+    // Event listener for cancel delete
+    cancelDeleteBtn.addEventListener('click', () => {
+        deleteConfirmationModal.style.display = 'none';
+    });
+
+    // Close modal when clicking outside
+    window.addEventListener('click', (event) => {
+        if (event.target === deleteConfirmationModal) {
+            deleteConfirmationModal.style.display = 'none';
         }
     });
 

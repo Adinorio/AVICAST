@@ -28,6 +28,7 @@ from django.db.models import Count, Avg, Max, Min
 from django.db.models.functions import TruncMonth, TruncYear
 from django.utils import timezone
 from datetime import timedelta
+from django.conf import settings
 
 # Get the base directory of the project
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -661,3 +662,55 @@ def get_monthly_detections(request, site_id, year):
             'unique_species': entry['unique_species'],
         })
     return JsonResponse({'monthly_data': monthly_data})
+
+@csrf_exempt
+def check_species_dependencies(request, species_id):
+    """API to check if a species is being used in other features."""
+    species = get_object_or_404(Species, pk=species_id)
+    dependencies = []
+    
+    # Check if species is used in any bird detections
+    detections = BirdDetection.objects.filter(species=species)
+    if detections.exists():
+        dependencies.append(f"Bird Detections ({detections.count()} records)")
+    
+    return JsonResponse({
+        'dependencies': dependencies,
+        'can_delete': len(dependencies) == 0
+    })
+
+@csrf_exempt
+@require_POST
+def delete_species(request, species_id):
+    """API to delete a bird species and its associated image."""
+    species = get_object_or_404(Species, pk=species_id)
+    
+    # Check dependencies first
+    detections = BirdDetection.objects.filter(species=species)
+    if detections.exists():
+        return JsonResponse({
+            'success': False,
+            'message': 'Cannot delete species as it is being used in bird detections.'
+        }, status=400)
+    
+    try:
+        # Delete the image file if it exists
+        if species.image:
+            # Get the full path to the image file
+            image_path = os.path.join(settings.MEDIA_ROOT, str(species.image))
+            # Delete the file if it exists
+            if os.path.isfile(image_path):
+                os.remove(image_path)
+        
+        # Delete the species from the database
+        species.delete()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Bird species "{species.common_name}" deleted successfully!'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error deleting species: {str(e)}'
+        }, status=500)

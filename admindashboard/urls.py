@@ -25,6 +25,8 @@ urlpatterns = [
     path('api/families/', views.get_families_api, name='get_families_api'),
     path('api/conservation-statuses/', views.get_conservation_statuses_api, name='get_conservation_statuses_api'),
     path('api/birds/<int:species_id>/', views.get_species_details_api, name='get_species_details_api'),
+    path('api/birds/<int:species_id>/dependencies/', views.check_species_dependencies, name='check_species_dependencies'),
+    path('api/birds/<int:species_id>/delete/', views.delete_species, name='delete_species'),
     # Site URLs
     path('sites/', views.site_list, name='site_list'),
     path('sites/<int:site_id>/', views.site_detail, name='site_detail'),
