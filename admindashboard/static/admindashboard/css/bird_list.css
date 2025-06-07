@@ -26,36 +26,36 @@ body {
     width: 380px;
     flex-shrink: 0;
     padding: 1.5rem;
-    position: sticky;
-    top: 0;
-    height: calc(80vh);
     border-left: 1px solid rgba(255, 255, 255, 0.1);
-    overflow: visible;
+    overflow-y: auto; /* Changed to auto to ensure content-based height calculation */
+    align-self: flex-start; /* Added to prevent stretching and allow auto-resizing based on content */
+    height: auto; /* Added to explicitly allow auto-resizing */
 }
 
 /* Empty Dashboard Card Styling within Right Sidebar */
 .right-sidebar .dashboard-box {
-    background: rgba(65, 69, 79, 0.9) !important;
-    border: 1px solid rgba(88, 88, 88, 0.5) !important;
-    box-shadow: 0px 0px 8px 4px rgba(0,0,0,0.35) !important;
-    border-radius: 8px !important;
-    padding: 1.5rem 1rem !important;
-    height: 100%; /* Make card fill sidebar height */
-    display: flex !important;
-    flex-direction: column !important;
-    text-align: center !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-    transition: none !important;
+    background: rgba(65, 69, 79, 0.9);
+    border: 1px solid rgba(88, 88, 88, 0.5);
+    box-shadow: 0px 0px 8px 4px rgba(0,0,0,0.35);
+    border-radius: 8px;
+    padding: 1.5rem 1rem;
+    min-height: fit-content;
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    width: 100%;
+    box-sizing: border-box;
+    transition: none;
     color: #e0e0e0;
+    height: auto; /* Added to explicitly allow auto-resizing */
 }
 
 .right-sidebar .dashboard-box:hover {
-    transform: none !important;
-    box-shadow: 0px 0px 8px 4px rgba(0,0,0,0.35) !important; /* Keep the same shadow on hover */
-    background: rgba(65, 69, 79, 0.9) !important; /* Keep the same background on hover */
-    border: 1px solid rgba(88, 88, 88, 0.5) !important; /* Keep the same border on hover */
-    cursor: default !important;
+    transform: none;
+    box-shadow: 0px 0px 8px 4px rgba(0,0,0,0.35);
+    background: rgba(65, 69, 79, 0.9);
+    border: 1px solid rgba(88, 88, 88, 0.5);
+    cursor: default;
 }
 
 .right-sidebar .search-filter-area {
@@ -209,6 +209,10 @@ body {
     appearance: none;
     /* Add a custom arrow if needed */
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.right-sidebar .form-group textarea {
+    resize: none; /* Prevent manual resizing */
 }
 
 .right-sidebar .form-group input[type="text"]::placeholder,
@@ -431,7 +435,7 @@ body {
     }
 
     .right-sidebar .dashboard-box {
-        min-height: auto !important; /* Remove fixed height on smaller screens */
+        min-height: auto; /* Remove fixed height on smaller screens */
     }
     
     .families-container {
@@ -634,4 +638,56 @@ body {
     color: #e0f7fa;
     font-size: 1em;
     cursor: pointer;
+}
+
+/* Image Upload Styles */
+.image-preview {
+    margin-top: 10px;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: rgba(255, 255, 255, 0.05);
+    padding: 10px;
+    text-align: center;
+}
+
+.image-preview img {
+    max-width: 100%;
+    max-height: 200px;
+    object-fit: contain;
+    border-radius: 4px;
+}
+
+input[type="file"] {
+    width: 100%;
+    padding: 8px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid #555;
+    border-radius: 4px;
+    color: #e0e0e0;
+    cursor: pointer;
+}
+
+input[type="file"]:disabled {
+    background-color: rgba(255, 255, 255, 0.05);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+input[type="file"]::-webkit-file-upload-button {
+    background-color: #17a2b8;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+input[type="file"]::-webkit-file-upload-button:hover {
+    background-color: #138496;
+}
+
+input[type="file"]:disabled::-webkit-file-upload-button {
+    background-color: #555;
+    cursor: not-allowed;
 }

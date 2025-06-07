@@ -70,7 +70,9 @@
                 data-family-id="{{ species.family.id|default:"" }}"
                 data-conservation-status="{{ species.conservation_status|default:"" }}">
                 <div class="bird-image-container">
-                    <img src="{% static 'admindashboard/images/vincent-van-zalinge-SzcO_chuZoE-unsplash.jpg' %}" alt="Bird Image" class="bird-image">
+                    {% if species.image %}
+                    <img src="{{ species.image.url }}" alt="{{ species.common_name }} Image" class="bird-image">
+                    {% endif %}
                 </div>
                 <div class="bird-info">
                     <h3 class="bird-name">{{ species.common_name }} <span class="scientific-name">({{ species.scientific_name }})</span>
@@ -83,7 +85,9 @@
                             {% endif %}
                         </div>
                     </h3>
-                    <p class="bird-description">{{ species.description|default:"No description available." }}</p>
+                    {% if species.description %}
+                    <p class="bird-description">{{ species.description }}</p>
+                    {% endif %}
                 </div>
                 <div class="conservation-ribbon"></div>
             </div>
@@ -110,9 +114,17 @@
                     <i class="fas fa-pencil-alt"></i>
                     <h3>Bird Details</h3>
                 </div>
-                <form id="birdForm">
+                <form id="birdForm" enctype="multipart/form-data">
                     {% csrf_token %}
                     <input type="hidden" id="species_id" name="species_id" value="">
+
+                    <div class="form-group">
+                        <label for="bird_image">Bird Image</label>
+                        <input type="file" id="bird_image" name="image" accept="image/*" disabled>
+                        <div id="imagePreview" class="image-preview" style="display: none;">
+                            <img id="previewImg" src="" alt="Preview" style="max-width: 100%; max-height: 200px; margin-top: 10px;">
+                        </div>
+                    </div>
 
                     <div class="form-group">
                         <label for="common_name">Common Name</label>
@@ -136,12 +148,8 @@
                     </div>
                     <div class="form-group">
                         <label for="description">Description</label>
-                        <textarea id="description" name="description" placeholder="Enter Description" rows="3" disabled></textarea>
-                    </div>
-
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-modern save-btn" id="saveBirdBtn">Save</button>
-                        <button type="button" class="btn btn-outline-modern cancel-btn" id="cancelBirdBtn">Cancel</button>
+                        <textarea id="description" name="description" placeholder="Enter Description" rows="3" disabled maxlength="60"></textarea>
+                        <small id="descriptionHelp" class="form-text text-muted" style="display: none;">Maximum 60 characters.</small>
                     </div>
                 </form>
             </div>
@@ -191,11 +199,13 @@
     const familySelect = document.getElementById('family');
     const conservationStatusSelect = document.getElementById('conservation_status');
     const descriptionInput = document.getElementById('description');
+    const birdImageInput = document.getElementById('bird_image');
+    const imagePreview = document.getElementById('imagePreview');
+    const previewImg = document.getElementById('previewImg');
+    const descriptionHelp = document.getElementById('descriptionHelp');
 
     const addBirdBtn = document.getElementById('addBirdBtn');
     const editBirdBtn = document.getElementById('editBirdBtn');
-    const saveBirdBtn = document.getElementById('saveBirdBtn');
-    const cancelBirdBtn = document.getElementById('cancelBirdBtn');
 
     const birdCardsContainer = document.querySelector('.families-container');
     const birdSearchInput = document.getElementById('birdSearchInput');
@@ -352,8 +362,31 @@
         familySelect.disabled = !enabled;
         conservationStatusSelect.disabled = !enabled;
         descriptionInput.disabled = !enabled;
-        saveBirdBtn.style.display = enabled ? 'inline-block' : 'none';
-        cancelBirdBtn.style.display = enabled ? 'inline-block' : 'none';
+        birdImageInput.disabled = !enabled;
+
+        // Update button text and display based on enabled state
+        if (enabled) {
+            addBirdBtn.textContent = 'Save';
+            editBirdBtn.textContent = 'Cancel';
+            addBirdBtn.classList.remove('add-btn'); 
+            addBirdBtn.classList.add('save-btn');
+            editBirdBtn.classList.remove('edit-btn');
+            editBirdBtn.classList.add('cancel-btn');
+            // Ensure the main buttons are always visible when form is enabled
+            addBirdBtn.style.display = 'inline-block';
+            editBirdBtn.style.display = 'inline-block';
+
+        } else {
+            addBirdBtn.textContent = 'Add';
+            editBirdBtn.textContent = 'Edit';
+            addBirdBtn.classList.remove('save-btn');
+            addBirdBtn.classList.add('add-btn');
+            editBirdBtn.classList.remove('cancel-btn');
+            editBirdBtn.classList.add('edit-btn');
+            // Show main buttons when form is disabled (view mode)
+            addBirdBtn.style.display = 'inline-block';
+            editBirdBtn.style.display = 'inline-block';
+        }
     }
 
     // Helper function to clear form fields
@@ -364,6 +397,10 @@
         familySelect.value = '';
         conservationStatusSelect.value = '';
         descriptionInput.value = '';
+        birdImageInput.value = '';
+        imagePreview.style.display = 'none';
+        previewImg.src = '';
+        descriptionHelp.style.display = 'none'; // Hide help text when clearing form
     }
 
     // Function to reset the form state (initial/view mode)
@@ -373,8 +410,9 @@
         isAddingMode = false;
         isEditingMode = false;
         currentSpeciesId = null;
-        addBirdBtn.style.display = 'inline-block';
-        editBirdBtn.style.display = 'inline-block';
+        // Buttons now transform, so no need to explicitly set display here
+        // addBirdBtn.style.display = 'inline-block';
+        // editBirdBtn.style.display = 'inline-block';
         
         // Remove any existing ribbon from the form
         const formRibbon = document.querySelector('.details-section .conservation-ribbon');
@@ -388,8 +426,7 @@
         resetFormState(); // Ensure a clean slate
         setFormEnabled(true);
         isAddingMode = true;
-        addBirdBtn.style.display = 'none';
-        editBirdBtn.style.display = 'none';
+        // Buttons transform, no need to hide
         commonNameInput.focus();
     }
 
@@ -401,11 +438,10 @@
         currentSpeciesId = speciesId;
         speciesIdInput.value = speciesId;
 
-        addBirdBtn.style.display = 'none';
-        editBirdBtn.style.display = 'none';
+        // Buttons transform, no need to hide
 
         try {
-            const response = await fetch(`/api/birds/${speciesId}/`);
+            const response = await fetch(`/admindashboard/api/birds/${speciesId}/`);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -417,6 +453,22 @@
             familySelect.value = details.family_id;
             conservationStatusSelect.value = details.conservation_status;
             descriptionInput.value = details.description;
+
+            // Update image preview if image exists
+            if (details.image_url) {
+                previewImg.src = details.image_url;
+                imagePreview.style.display = 'block';
+            } else {
+                imagePreview.style.display = 'none';
+                previewImg.src = '';
+            }
+
+            // Check description length on load for edit mode
+            if (descriptionInput.value.length >= 60) {
+                descriptionHelp.style.display = 'block';
+            } else {
+                descriptionHelp.style.display = 'none';
+            }
 
             // Update ribbon color in the form
             const formRibbon = document.createElement('div');
@@ -430,6 +482,15 @@
             resetFormState();
         }
     }
+
+    // Add event listener for description input for character count feedback
+    descriptionInput.addEventListener('input', function() {
+        if (this.value.length >= this.maxLength) {
+            descriptionHelp.style.display = 'block';
+        } else {
+            descriptionHelp.style.display = 'none';
+        }
+    });
 
     // Handle form submission
     birdForm.addEventListener('submit', async (event) => {
@@ -458,7 +519,7 @@
         try {
             const response = await fetch(targetUrl, {
                 method: method,
-                body: new URLSearchParams(formData) // FormData for application/x-www-form-urlencoded
+                body: formData // Changed from new URLSearchParams(formData) to formData
             });
 
             const result = await response.json();
@@ -479,8 +540,30 @@
     });
 
     // Event listeners for buttons
-    addBirdBtn.addEventListener('click', displayAddMode);
-    cancelBirdBtn.addEventListener('click', resetFormState);
+    addBirdBtn.addEventListener('click', (event) => {
+        // Prevent default button behavior only if it's acting as a submit button
+        if (addBirdBtn.textContent === 'Save') {
+            event.preventDefault(); // Prevent default button click action for submission
+            birdForm.dispatchEvent(new Event('submit', { cancelable: true }));
+        } else {
+            // If it's 'Add', just display add mode. No need to prevent default.
+            displayAddMode();
+        }
+    });
+
+    editBirdBtn.addEventListener('click', (event) => {
+        // Prevent default button behavior only if it's acting as a cancel button
+        if (editBirdBtn.textContent === 'Cancel') {
+            event.preventDefault(); // Prevent default button click action for cancel
+            resetFormState();
+        } else {
+            // If it's 'Edit' and no bird is selected, alert the user.
+            // Otherwise, its default action (displaying edit mode via card click) is fine.
+            if (!currentSpeciesId && !isEditingMode) {
+                alert('Please select a bird card to edit its details.');
+            }
+        }
+    });
 
     // Event delegation for bird card clicks (for edit mode)
     birdCardsContainer.addEventListener('click', (event) => {
@@ -488,7 +571,13 @@
         if (birdCard) {
             const speciesId = birdCard.dataset.speciesId;
             if (speciesId) {
-                displayEditMode(speciesId);
+                // Only display edit mode if not already in add or edit mode
+                if (!isAddingMode && !isEditingMode) {
+                    displayEditMode(speciesId);
+                } else if (currentSpeciesId !== speciesId) {
+                    // If another card is clicked while editing, switch to that card
+                    displayEditMode(speciesId);
+                }
             }
         }
     });
@@ -573,6 +662,22 @@
         filterModal.style.display = 'none';
     });
 
+    // Image preview functionality
+    birdImageInput.addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+                imagePreview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        } else {
+            imagePreview.style.display = 'none';
+            previewImg.src = '';
+        }
+    });
+
     // Initial setup on page load
     document.addEventListener('DOMContentLoaded', () => {
         populateFamilies();
@@ -585,6 +690,11 @@
             const ribbon = card.querySelector('.conservation-ribbon');
             if (ribbon && status) {
                 updateRibbonColor(ribbon, status);
+            }
+            // Log image source for debugging
+            const birdImage = card.querySelector('.bird-image');
+            if (birdImage) {
+                console.log(`Bird Card ID: ${card.dataset.speciesId}, Image Source: ${birdImage.src}`);
             }
         });
     });

@@ -49,6 +49,7 @@ class Species(models.Model):
     scientific_name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
     conservation_status = models.CharField(max_length=50, blank=True)
+    image = models.ImageField(upload_to='bird_images/', null=True, blank=True)
     is_archived = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

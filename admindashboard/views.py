@@ -252,15 +252,21 @@ def add_family(request):
 def add_species_view(request):
     """API to add a new bird species."""
     if request.method == 'POST':
-        form = SpeciesForm(request.POST)
+        print(f"add_species_view: Received POST request. request.FILES: {request.FILES}") # Debug log
+        form = SpeciesForm(request.POST, request.FILES)
         if form.is_valid():
+            print("add_species_view: Form is valid.") # Debug log
             try:
                 species = form.save()
+                print(f"add_species_view: Species saved. Image path: {species.image.url if species.image else 'None'}") # Debug log
                 return JsonResponse({'success': True, 'message': f'Bird species "{species.common_name}" added successfully!'})
             except Exception as e:
+                print(f"add_species_view: Error saving species: {str(e)}") # Debug log
                 return JsonResponse({'success': False, 'message': f'Error saving species: {str(e)}'}, status=500)
         else:
+            print(f"add_species_view: Validation failed. Form errors: {form.errors}") # Debug log
             return JsonResponse({'success': False, 'message': 'Validation failed: ' + str(form.errors)}, status=400)
+    print("add_species_view: Invalid request method.") # Debug log
     return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=405)
 
 @require_POST
@@ -269,16 +275,22 @@ def edit_species_view(request, species_id):
     """API to edit an existing bird species."""
     species = get_object_or_404(Species, pk=species_id)
     if request.method == 'POST':
-        form = SpeciesForm(request.POST, instance=species)
+        print(f"edit_species_view: Received POST request for ID {species_id}. request.FILES: {request.FILES}") # Debug log
+        form = SpeciesForm(request.POST, request.FILES, instance=species)
         if form.is_valid():
+            print("edit_species_view: Form is valid.") # Debug log
             try:
                 species = form.save()
+                print(f"edit_species_view: Species updated. Image path: {species.image.url if species.image else 'None'}") # Debug log
                 return JsonResponse({'success': True, 'message': f'Bird species "{species.common_name}" updated successfully!'})
             except Exception as e:
+                print(f"edit_species_view: Error updating species: {str(e)}") # Debug log
                 return JsonResponse({'success': False, 'message': f'Error updating species: {str(e)}'}, status=500)
         else:
+            print(f"edit_species_view: Validation failed. Form errors: {form.errors}") # Debug log
             return JsonResponse({'success': False, 'message': 'Validation failed: ' + str(form.errors)}, status=400)
-    return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=405)
+    print("edit_species_view: Invalid request method.") # Debug log
+    return JsonResponse({'success': False, 'message': 'GET request not supported for this endpoint.'}, status=405)
 
 def get_families_api(request):
     """API to get a list of active bird families."""
@@ -297,16 +309,24 @@ def get_conservation_statuses_api(request):
 
 def get_species_details_api(request, species_id):
     """API to get details for a specific species."""
-    species = get_object_or_404(Species, pk=species_id)
-    details = {
-        'id': species.id,
-        'common_name': species.common_name,
-        'scientific_name': species.scientific_name,
-        'description': species.description,
-        'family_id': species.family.id if species.family else None,
-        'conservation_status': species.conservation_status,
-    }
-    return JsonResponse({'details': details})
+    print(f"get_species_details_api: Received request for species_id: {species_id}") # Debug log
+    try:
+        species = get_object_or_404(Species, pk=species_id)
+        print(f"get_species_details_api: Found species: {species.common_name} (ID: {species.id})") # Debug log
+        details = {
+            'id': species.id,
+            'common_name': species.common_name,
+            'scientific_name': species.scientific_name,
+            'description': species.description,
+            'family_id': species.family.id if species.family else None,
+            'conservation_status': species.conservation_status,
+            'image_url': species.image.url if species.image else None,
+        }
+        return JsonResponse({'details': details})
+    except Exception as e:
+        print(f"get_species_details_api: Error fetching species details for ID {species_id}: {str(e)}") # Debug log
+        # Re-raise the exception or return a more specific error if needed
+        raise # Re-raise to ensure 404 is still triggered by get_object_or_404 if not found
 
 def edit_family(request, family_id):
     """Edit an existing bird family"""
