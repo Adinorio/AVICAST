@@ -23,6 +23,7 @@ urlpatterns = [
     path('review-dashboard/', views.review_dashboard_view, name='review_dashboard'),
     # Site URLs
     path('sites/', views.site_list, name='site_list'),
+    path('sites/<int:site_id>/', views.site_detail, name='site_detail'),
     path('add-site/', views.add_site, name='add_site'),
     path('edit-site/<int:site_id>/', views.edit_site, name='edit_site'),
     path('delete-site/<int:site_id>/', views.delete_site, name='delete_site'),

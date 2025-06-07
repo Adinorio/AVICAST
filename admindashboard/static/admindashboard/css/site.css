@@ -203,6 +203,43 @@ body {
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
+.right-sidebar .form-group input[type="file"] {
+    width: 100%;
+    padding: 0.8rem 1rem; /* Adjust padding for file input specifically */
+    border: 1px solid #555;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 1rem;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.right-sidebar .form-group input[type="file"]::-webkit-file-upload-button {
+    background-color: #17a2b8;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    padding: 0.6rem 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    margin-right: 1rem;
+}
+
+.right-sidebar .form-group input[type="file"]::-webkit-file-upload-button:hover {
+    background-color: #138496;
+}
+
+.right-sidebar .form-group input[type="file"]:disabled,
+.right-sidebar .form-group input[type="file"]:disabled::-webkit-file-upload-button {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: #b0b0b0;
+    cursor: not-allowed;
+    opacity: 0.9;
+    border-color: #444;
+}
+
 .right-sidebar .form-group input[type="text"]::placeholder,
 .right-sidebar .form-group select::placeholder {
     color: #b0b0b0;

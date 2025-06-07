@@ -12,26 +12,33 @@
 <div class="page-container">
     <div class="main-area">
         <div class="sites-container">
-            <div class="dashboard-box">
+            {% for site in sites %}
+            <a href="#" class="dashboard-box site-card" data-site-id="{{ site.id }}" data-site-name="{{ site.name }}" data-site-code="{{ site.code }}" data-site-location="{{ site.location }}" data-site-status="{{ site.status }}">
                 <div class="site-image-container">
-                    <img src="{% static 'admindashboard/images/site-example.jpg' %}" alt="Site Image" class="site-image">
-                    <div class="site-status">Active</div>
+                    {% if site.image %}
+                    <img src="{{ site.image.url }}" alt="Site Image" class="site-image">
+                    {% else %}
+                    <img src="{% static 'admindashboard/images/site-example.jpg' %}" alt="Default Site Image" class="site-image">
+                    {% endif %}
+                    <div class="site-status">{{ site.get_status_display }}</div>
                 </div>
                 <div class="site-info">
-                    <h3 class="site-name">Site Name <span class="site-code">(SITE-001)</span></h3>
+                    <h3 class="site-name">{{ site.name }} <span class="site-code">({{ site.code }})</span></h3>
                     <div class="site-details">
                         <div class="detail-item">
                             <i class="fas fa-map-marker-alt"></i>
-                            <span>Location: Manila Bay</span>
+                            <span>Location: {{ site.location }}</span>
                         </div>
                         <div class="detail-item">
                             <i class="fas fa-calendar-alt"></i>
-                            <span>Last Updated: 2024-03-20</span>
+                            <span>Last Updated: {{ site.updated_at|date:"Y-m-d" }}</span>
                         </div>
                     </div>
                 </div>
-            </div>
-            <!-- More site cards can be added here -->
+            </a>
+            {% empty %}
+            <p>No sites available. Please add a new site.</p>
+            {% endfor %}
         </div>
     </div>
     <div class="right-sidebar">
@@ -39,11 +46,11 @@
             <div class="search-filter-area">
                 <div class="search-row">
                     <input type="text" class="form-control" placeholder="Search sites...">
-                    <button class="btn btn-modern add-btn">Add Site</button>
+                    <button class="btn btn-modern add-btn" id="mainAddSiteBtn" type="button">Add Site</button>
                 </div>
                 <div class="filter-row">
                     <button class="btn btn-outline-modern filter-btn"><i class="fas fa-filter"></i> Filter</button>
-                    <button class="btn btn-outline-modern edit-btn">Edit</button>
+                    <button class="btn btn-outline-modern edit-btn" id="cancelEditBtn" type="button">Edit</button>
                 </div>
             </div>
 
@@ -52,29 +59,237 @@
                     <i class="fas fa-pencil-alt"></i>
                     <h3>Site Details</h3>
                 </div>
-                <div class="form-group">
-                    <label for="site_name">Site Name</label>
-                    <input type="text" id="site_name" placeholder="Enter Site Name" disabled>
-                </div>
-                <div class="form-group">
-                    <label for="site_code">Site Code</label>
-                    <input type="text" id="site_code" placeholder="Enter Site Code" disabled>
-                </div>
-                <div class="form-group">
-                    <label for="location">Location</label>
-                    <input type="text" id="location" placeholder="Enter Location" disabled>
-                </div>
-                <div class="form-group">
-                    <label for="status">Status</label>
-                    <select id="status" disabled>
-                        <option value="">Select Status</option>
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                        <option value="maintenance">Under Maintenance</option>
-                    </select>
-                </div>
+                <form id="addSiteForm" method="POST" action="{% url 'admindashboard:add_site' %}">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="site_name">Site Name</label>
+                        <input type="text" id="site_name" name="name" placeholder="Enter Site Name" disabled required>
+                    </div>
+                    <div class="form-group">
+                        <label for="site_code">Site Code</label>
+                        <input type="text" id="site_code" name="code" placeholder="Enter Site Code" disabled required>
+                    </div>
+                    <div class="form-group">
+                        <label for="location">Location</label>
+                        <input type="text" id="location" name="location" placeholder="Enter Location" disabled required>
+                    </div>
+                    <div class="form-group">
+                        <label for="status">Status</label>
+                        <select id="status" name="status" disabled required>
+                            <option value="">Select Status</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                            <option value="maintenance">Under Maintenance</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="site_image">Site Image</label>
+                        <input type="file" id="site_image" name="image" accept="image/*" disabled>
+                    </div>
+                    <input type="hidden" id="site_id" name="site_id" value="">
+                    <div class="button-group">
+                        
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM Content Loaded. Script is running.');
+        try {
+            const mainAddSiteBtn = document.getElementById('mainAddSiteBtn');
+            console.log('mainAddSiteBtn:', mainAddSiteBtn); // Debugging
+            const cancelEditBtn = document.getElementById('cancelEditBtn');
+            console.log('cancelEditBtn:', cancelEditBtn); // Debugging
+            const addSiteForm = document.getElementById('addSiteForm');
+            console.log('addSiteForm:', addSiteForm); // Debugging
+            const siteNameInput = document.getElementById('site_name');
+            console.log('siteNameInput:', siteNameInput); // Debugging
+            const siteCodeInput = document.getElementById('site_code');
+            console.log('siteCodeInput:', siteCodeInput); // Debugging
+            const locationInput = document.getElementById('location');
+            console.log('locationInput:', locationInput); // Debugging
+            const statusSelect = document.getElementById('status');
+            console.log('statusSelect:', statusSelect); // Debugging
+            const siteImageInput = document.getElementById('site_image');
+            console.log('siteImageInput:', siteImageInput); // Debugging
+            const siteIdInput = document.getElementById('site_id'); // New: hidden input for site ID
+            console.log('siteIdInput:', siteIdInput); // Debugging
+            const formInputs = [siteNameInput, siteCodeInput, locationInput, statusSelect, siteImageInput];
+
+            // Function to populate form fields with site data
+            function populateForm(siteData) {
+                console.log('populateForm called with:', siteData); // Debugging
+                siteIdInput.value = siteData.id || '';
+                siteNameInput.value = siteData.name || '';
+                siteCodeInput.value = siteData.code || '';
+                locationInput.value = siteData.location || '';
+                statusSelect.value = siteData.status || '';
+                // Image input cannot be pre-populated for security reasons, but we can display existing image if any
+                // For displaying existing image, you would typically have a separate <img> tag or logic.
+                // For now, the file input will just be clear.
+            }
+            console.log('populateForm function defined.'); // Debugging: confirm function definition
+
+            console.log('mainAddSiteBtn element:', mainAddSiteBtn);
+
+            let isAddingMode = false; // True for adding, false for viewing/editing
+            let isEditingMode = false; // New: True when actively editing a site
+
+            function setFormState(enable) {
+                formInputs.forEach(input => {
+                    input.disabled = !enable;
+                    if (!enable) {
+                        input.classList.remove('is-invalid'); // Clear validation feedback on reset
+                    }
+                });
+
+                if (enable) { // Form is enabled (either for add or edit)
+                    mainAddSiteBtn.textContent = isEditingMode ? 'Update Site' : 'Save Site';
+                    cancelEditBtn.textContent = 'Cancel';
+                } else { // Form is disabled (viewing mode)
+                    mainAddSiteBtn.textContent = 'Add Site';
+                    cancelEditBtn.textContent = 'Edit';
+                    addSiteForm.reset();
+                    siteIdInput.value = ''; // Ensure site ID is cleared when going to view mode
+                }
+                mainAddSiteBtn.disabled = false;
+                cancelEditBtn.disabled = false;
+            }
+
+            // Event listener for site cards to select a site for editing
+            document.querySelectorAll('.site-card').forEach(card => {
+                card.addEventListener('click', function(event) {
+                    event.preventDefault(); // Prevent default link behavior
+                    console.log('Site card clicked!'); // Debugging
+
+                    // First, reset the form and state
+                    addSiteForm.reset(); // Clear form fields
+                    siteIdInput.value = ''; // Clear site ID
+                    isAddingMode = false;
+                    isEditingMode = true; // Enter editing mode when a card is clicked
+
+                    const siteData = {
+                        id: this.dataset.siteId,
+                        name: this.dataset.siteName,
+                        code: this.dataset.siteCode,
+                        location: this.dataset.siteLocation,
+                        status: this.dataset.siteStatus,
+                    };
+                    console.log('Site Data extracted from card:', siteData); // Debugging
+                    populateForm(siteData);
+                    setFormState(true); // Enable form fields and set button text to 'Update Site'
+                    console.log('Form populated and state set to editing.'); // Debugging
+                });
+            });
+
+            // Initial state: form inputs are disabled, Add Site button is enabled, Edit button is enabled
+            setFormState(false);
+
+            mainAddSiteBtn.addEventListener('click', function(event) {
+                console.log('Main Add/Save/Update Site button clicked!'); // Debugging for clarity
+                if (!isAddingMode && !isEditingMode) { // If not in add/edit mode, switch to add mode
+                    isAddingMode = true;
+                    isEditingMode = false;
+                    setFormState(true); // Enable form fields and set button text
+                } else if (isAddingMode || isEditingMode) { // If in add or edit mode, attempt submission
+                    event.preventDefault();
+                    addSiteForm.dispatchEvent(new Event('submit', { cancelable: true }));
+                }
+            });
+
+            cancelEditBtn.addEventListener('click', function() {
+                console.log('Cancel/Edit button clicked!'); // Debugging for clarity
+                if (isAddingMode || isEditingMode) { // If in add or edit mode, cancel
+                    setFormState(false); // Disable form fields and set button text to 'Add Site' and 'Edit'
+                    isAddingMode = false;
+                    isEditingMode = false;
+                } else { // If not in add/edit mode, and it says 'Edit', it should do nothing or provide feedback
+                    // You might want to add functionality here later if 'Edit' button without selecting a card is desired.
+                    alert('Please select a site card first to edit its details.');
+                }
+            });
+
+            addSiteForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+
+                let allFilled = true;
+                formInputs.forEach(input => {
+                    // Only check required fields for validation when adding/editing
+                    // The image field is optional, so it's excluded from this basic validation
+                    if (input.hasAttribute('required') && !input.value) {
+                        allFilled = false;
+                        input.classList.add('is-invalid');
+                    } else {
+                        input.classList.remove('is-invalid');
+                    }
+                });
+
+                if (!allFilled) {
+                    alert('Please fill in all required fields.');
+                    return;
+                }
+
+                console.log('Attempting to save/update site...'); // Debugging: before disabling and sending
+                mainAddSiteBtn.textContent = 'Processing...';
+                mainAddSiteBtn.disabled = true;
+                cancelEditBtn.disabled = true;
+
+                const formData = new FormData(addSiteForm);
+                console.log('Form Data collected. Contents:'); // Debugging: form data check
+                for (let [key, value] of formData.entries()) {
+                    console.log(`${key}: ${value}`);
+                }
+
+                // Determine the correct URL based on mode
+                let targetUrl = isEditingMode ? '{% url "admindashboard:edit_site" 0 %}' : '{% url "admindashboard:add_site" %}';
+                if (isEditingMode) {
+                    targetUrl = targetUrl.replace('/0/', '/' + siteIdInput.value + '/');
+                }
+                console.log('Final target URL:', targetUrl); // Debugging: final URL check
+                
+                fetch(targetUrl, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                })
+                .then(response => {
+                    console.log('Fetch response received.', response); // Debugging: after fetch response
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Fetch data parsed.', data); // Debugging: after parsing JSON
+                    if (data.success) {
+                        alert(data.message);
+                        setFormState(false);
+                        isAddingMode = false;
+                        isEditingMode = false;
+                        location.reload(); // Reload to show updated/new site
+                    } else {
+                        alert('Error: ' + data.message);
+                        mainAddSiteBtn.textContent = isEditingMode ? 'Update Site' : 'Save Site';
+                        mainAddSiteBtn.disabled = false;
+                        cancelEditBtn.disabled = false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while processing the site.');
+                    mainAddSiteBtn.textContent = isEditingMode ? 'Update Site' : 'Save Site';
+                    mainAddSiteBtn.disabled = false;
+                    cancelEditBtn.disabled = false;
+                });
+            });
+        } catch (error) {
+            console.error('Error in DOMContentLoaded block:', error);
+        }
+    });
+</script>
 {% endblock %} 

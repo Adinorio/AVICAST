@@ -1,0 +1,83 @@
+.site-detail-container {
+    padding: 30px;
+    max-width: 900px;
+    margin: 30px auto;
+    background: rgba(20, 20, 30, 0.95);
+    border-radius: 18px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+    color: #e0f7fa;
+}
+
+.site-detail-container h2 {
+    font-size: 2.2em;
+    color: #B2EBF2;
+    margin-bottom: 25px;
+    text-align: center;
+    text-shadow: 1px 1px 4px rgba(0,0,0,0.7);
+}
+
+.site-detail-container p {
+    font-size: 1.1em;
+    color: #B0BEC5;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.bird-census-data {
+    margin-top: 40px;
+}
+
+.bird-census-data h3 {
+    font-size: 1.8em;
+    color: #00bcd4;
+    margin-bottom: 25px;
+    text-align: center;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.6);
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background: rgba(10, 10, 20, 0.8);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+}
+
+.data-table th,
+.data-table td {
+    padding: 15px 20px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.data-table th {
+    background: rgba(0, 188, 212, 0.2);
+    color: #E0F7FA;
+    font-weight: 600;
+    font-size: 1.1em;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.data-table tr:hover {
+    background: rgba(0, 188, 212, 0.08);
+}
+
+.data-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.data-table td {
+    color: #B0BEC5;
+    font-size: 1.05em;
+}
+
+/* No data message */
+.data-table tbody tr td[colspan="2"] {
+    text-align: center;
+    font-style: italic;
+    color: #78909c;
+    padding: 30px;
+} 

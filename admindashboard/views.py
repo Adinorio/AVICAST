@@ -2,6 +2,7 @@ from pathlib import Path
 import os
 import sys
 import tempfile
+import models
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -349,44 +350,87 @@ def review_dashboard_view(request):
     return render(request, 'admindashboard/review_dashboard.html')
 
 def site_list(request):
-    """Main view for displaying sites"""
+    """View for displaying all sites and their details."""
     sites = Site.objects.all().order_by('name')
-    site_form = SiteForm()
-    
+    print(f"Fetched {len(sites)} sites for site_list view.") # Debugging log
     context = {
         'sites': sites,
-        'site_form': site_form,
     }
     return render(request, 'admindashboard/site.html', context)
 
-@require_POST
+def site_detail(request, site_id):
+    """View for displaying detailed bird census data for a specific site and year."""
+    site = get_object_or_404(Site, id=site_id)
+    
+    # Get all species to display all 96 birds, even if no detections
+    all_species = Species.objects.filter(is_archived=False).order_by('common_name')
+
+    # Get the current year or a selected year (for now, let's use the current year)
+    current_year = timezone.now().year
+
+    # Aggregate bird detections for the selected site and year
+    bird_data = []
+    for species in all_species:
+        count = BirdDetection.objects.filter(
+            site=site,
+            species=species,
+            detection_date__year=current_year
+        ).count()
+        bird_data.append({
+            'species_name': species.common_name,
+            'count': count
+        })
+
+    context = {
+        'site': site,
+        'year': current_year,
+        'bird_data': bird_data,
+    }
+    return render(request, 'admindashboard/site_detail.html', context)
+
 def add_site(request):
     """Add a new site"""
-    form = SiteForm(request.POST, request.FILES)
-    if form.is_valid():
-        form.save()
-        messages.success(request, 'Site added successfully!')
-    else:
-        messages.error(request, 'Error adding site. Please check the form.')
-    return redirect('admindashboard:site_list')
+    print("Received request to add site.") # Debugging log
+    if request.method == 'POST':
+        form = SiteForm(request.POST, request.FILES)
+        print(f"Form received: {request.POST}") # Debugging log
+        if form.is_valid():
+            print("Form is valid.") # Debugging log
+            site = form.save(commit=False)
+            site.save()
+            print(f"Site saved: {site.name} ({site.code})") # Debugging log
+            messages.success(request, 'Site added successfully!')
+            return JsonResponse({'success': True, 'message': 'Site added successfully!'})
+        else:
+            errors = form.errors.as_json()
+            print(f"Form is NOT valid. Errors: {form.errors}") # Debugging log
+            messages.error(request, 'Error adding site. Please check the form.')
+            return JsonResponse({'success': False, 'message': 'Error adding site. Please check the form.', 'errors': errors}, status=400)
+    print("Invalid request method for add site.") # Debugging log
+    return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=405)
 
 def edit_site(request, site_id):
     """Edit an existing site"""
     site = get_object_or_404(Site, id=site_id)
     
+    print(f"Received request to edit site ID: {site_id}") # Debugging log
     if request.method == 'POST':
         form = SiteForm(request.POST, request.FILES, instance=site)
+        print(f"Form received for edit: {request.POST}") # Debugging log
         if form.is_valid():
+            print("Edit form is valid.") # Debugging log
             form.save()
+            print(f"Site updated: {site.name} ({site.code})") # Debugging log
             messages.success(request, 'Site updated successfully!')
-            return redirect('admindashboard:site_list')
+            return JsonResponse({'success': True, 'message': 'Site updated successfully!'})
+        else:
+            errors = form.errors.as_json()
+            print(f"Edit form is NOT valid. Errors: {form.errors}") # Debugging log
+            messages.error(request, 'Error updating site. Please check the form.')
+            return JsonResponse({'success': False, 'message': 'Error updating site. Please check the form.', 'errors': errors}, status=400)
     else:
-        form = SiteForm(instance=site)
-    
-    return render(request, 'admindashboard/edit_site.html', {
-        'form': form,
-        'site': site
-    })
+        print("Received GET request for edit_site view - usually not intended for direct access.")
+        return JsonResponse({'success': False, 'message': 'GET request not supported for this endpoint.'}, status=405)
 
 @require_POST
 def delete_site(request, site_id):

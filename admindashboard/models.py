@@ -83,6 +83,7 @@ class Site(models.Model):
         return f"{self.name} ({self.code})"
 
 class BirdDetection(models.Model):
+    site = models.ForeignKey(Site, on_delete=models.CASCADE, related_name='bird_detections', null=True, blank=True)
     species = models.ForeignKey(Species, on_delete=models.CASCADE, related_name='detections')
     image = models.ImageField(upload_to='detection_images/')
     confidence = models.FloatField()

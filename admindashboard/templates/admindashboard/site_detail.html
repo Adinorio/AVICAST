@@ -1,0 +1,47 @@
+{% extends "admindashboard/base.html" %}
+{% load static %}
+
+{% block title %}Site Detail - {{ site.name }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'admindashboard/css/site_detail.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="main-area">
+        <div class="site-detail-container">
+            <div class="dashboard-box">
+                <h2>{{ site.name }} - Bird Census Data</h2>
+                <p>Location: {{ site.location }}</p>
+                <p>Site Code: {{ site.site_code }}</p>
+                
+                <!-- Placeholder for bird census data table -->
+                <div class="bird-census-data">
+                    <h3>Bird Species Counts ({{ year }}):</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Species</th>
+                                <th>Count</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for species_data in bird_data %}
+                            <tr>
+                                <td>{{ species_data.species_name }}</td>
+                                <td>{{ species_data.count }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="2">No bird data available for this site and year.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
