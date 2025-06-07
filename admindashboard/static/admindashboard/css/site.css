@@ -271,6 +271,15 @@ body {
     padding-right: 2.5rem;
 }
 
+.right-sidebar .form-group select option {
+    background-color: #4a4e5a; /* Greyish background for options */
+    color: #e0e0e0; /* Text color for options */
+}
+
+.right-sidebar .form-group select option:hover {
+    background-color: #5d616d; /* Slightly darker grey on hover */
+}
+
 .right-sidebar .form-group select:disabled {
     background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23b0b0b0%22%20d%3D%22M287%2C114.5L145.2%2C256.3L3.4%2C114.5c-4.5-4.5-4.5-12.4%2C0-16.9l22.2-22.2c4.5-4.5%2C12.4-4.5%2C16.9%2C0l104.6%2C104.6L247.9%2C75.4c4.5-4.5%2C12.4-4.5%2C16.9%2C0l22.2%2C22.2C291.5%2C102.1%2C291.5%2C110%2C287%2C114.5z%22%2F%3E%3C%2Fsvg%3E');
 }
@@ -282,6 +291,10 @@ body {
     gap: 1.5rem;
     padding: 1rem;
     overflow: visible;
+}
+
+.site-card {
+    text-decoration: none; /* Remove underline from the entire card link */
 }
 
 .main-area .dashboard-box {
