@@ -175,6 +175,7 @@ body {
     font-size: 1.3rem; /* Adjust font size */
     margin: 0;
     font-weight: 600; /* Make header text slightly bolder */
+    gap: 0.8rem; /* Space between elements within the h3 */
 }
 
 .right-sidebar .form-group {
@@ -248,55 +249,58 @@ body {
      background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23b0b0b0%22%20d%3D%22M287%2C114.5L145.2%2C256.3L3.4%2C114.5c-4.5-4.5-4.5-12.4%2C0-16.9l22.2-22.2c4.5-4.5%2C12.4-4.5%2C16.9%2C0l104.6%2C104.6L247.9%2C75.4c4.5-4.5%2C12.4-4.5%2C16.9%2C0l22.2%2C22.2C291.5%2C102.1%2C291.5%2C110%2C287%2C114.5z%22%2F%3E%3C%2Fsvg%3E'); /* Custom light gray arrow for disabled */
 }
 
+.right-sidebar .form-group select option {
+    background-color: #4a4e5a; /* Greyish background for options */
+    color: #e0e0e0; /* Text color for options */
+}
+
+.right-sidebar .form-group select option:hover {
+    background-color: #5d616d; /* Slightly darker grey on hover */
+}
+
 /* Main Area Card Styling */
 .families-container {
-    display: grid; /* Use grid for layout */
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Responsive columns */
-    gap: 1.5rem; /* Space between cards */
-    padding: 1rem; /* Padding inside the container */
-    overflow: visible; /* Ensure no scrollbar */
+    display: flex; /* Changed from grid to flex */
+    flex-direction: column; /* Stack cards vertically */
+    gap: 1.2rem;
+    padding: 1.5rem 0;
 }
 
 .main-area .dashboard-box {
-    background: rgba(255, 255, 255, 0.1);
-    color: #FFFFFF;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    padding: 1.5rem;
-    min-height: 190px;
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
+    display: flex; /* Use flexbox for horizontal layout */
+    flex-direction: row; /* Arrange items in a row */
+    align-items: center; /* Vertically align items in the center */
+    background: rgba(30, 30, 40, 0.9); /* Darker background for contrast */
+    border-radius: 12px; /* Consistent rounded corners */
+    padding: 1.2rem; /* Adjusted padding */
+    box-shadow: 0 6px 20px rgba(0,0,0,0.5); /* Stronger shadow */
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    width: 100%; /* Ensure it takes full width of main-area */
+    box-sizing: border-box;
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .main-area .dashboard-box:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-4px) scale(1.01); /* Subtle lift and scale */
+    box-shadow: 0 10px 25px rgba(0,0,0,0.7); /* More pronounced shadow on hover */
 }
 
 .bird-image-container {
+    flex-shrink: 0; /* Prevent image from shrinking */
+    width: 120px; /* Fixed width for the image container */
+    height: 100px; /* Fixed height for consistency */
+    border-radius: 8px; /* Rounded corners for the image container */
+    overflow: hidden; /* Hide overflowing parts of the image */
     position: relative;
-    width: 100%;
-    height: 120px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 1rem;
-    border-radius: 8px;
-    overflow: hidden;
-    background: rgba(0, 0, 0, 0.2);
+    margin-right: 1.5rem; /* Space between image and text content */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 
 .bird-image {
-    max-width: 100%;
-    max-height: 100%;
-    width: auto;
-    height: auto;
-    object-fit: contain;
-    object-position: center;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Cover the container, cropping if necessary */
+    border-radius: 8px; /* Apply border-radius directly to image */
     transition: transform 0.3s ease;
 }
 
@@ -304,71 +308,87 @@ body {
     transform: scale(1.05);
 }
 
-.conservation-status {
+.conservation-ribbon {
     position: absolute;
-    top: 8px;
-    right: 8px;
-    background: rgba(40, 167, 69, 0.9);
-    color: white;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 0.8rem;
-    font-weight: 500;
-    backdrop-filter: blur(4px);
+    top: 0;
+    right: 0;
+    width: 8px;
+    height: 100%;
+    background-color: #dc3545; /* Changed to red as requested */
+    border-top-right-radius: 12px;
+    border-bottom-right-radius: 12px;
+    z-index: 0;
 }
 
 .bird-info {
+    flex-grow: 1; /* Allow info section to take remaining space */
     text-align: left;
-    padding: 0;
-    width: 100%;
+    color: #e0f7fa;
+    display: flex;
+    flex-direction: column;
 }
 
 .bird-name {
-    margin: 0;
-    font-size: 1.2rem;
-    color: #FFFFFF;
+    font-size: 1.8em;
+    margin-bottom: 0; /* Removed margin to bring description closer */
+    color: #B2EBF2;
     font-weight: 600;
     display: flex;
-    align-items: baseline;
-    gap: 0.5rem;
-    text-align: left;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.8rem;
 }
 
 .scientific-name {
+    font-size: 1em;
+    color: #B0BEC5;
     font-style: italic;
-    font-size: 0.9rem;
-    color: #e0e0e0;
-    font-weight: normal;
+    margin-left: -5px; /* Move 10 pixels to the left */
+    margin-right: 0.8rem;
+    margin-bottom: 0;
+    line-height: 1.2;
 }
 
-.bird-details {
-    margin-top: 0.75rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    text-align: left;
-}
-
-.detail-item {
+.bird-status-group {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    color: #e0e0e0;
-    font-size: 0.9rem;
-    text-align: left;
+    gap: 1rem; /* Space between 'Small bird' and 'Least Concern' */
+    margin-left: auto; /* Pushes this group to the far right */
+    margin-right: 20px; /* Move 20 pixels to the left from the right edge */
 }
 
-.detail-item i {
-    color: #17a2b8;
-    width: 16px;
-    text-align: center;
+.bird-inline-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem; /* Tighter spacing for inline detail items */
+    align-items: center;
+    margin-top: 0.2rem; /* Small top margin to slightly separate from name */
+    margin-bottom: 0; /* Remove bottom margin as h3 handles it */
 }
 
-.bird-family {
-    margin: 0.5rem 0 0 0;
-    font-size: 0.9rem;
-    color: #e0e0e0;
+.detail-item-inline {
+    display: flex;
+    align-items: center;
+    font-size: 0.6em;
+    color: #B0BEC5;
+    line-height: 1.2;
+    transform: translateY(9px);
 }
+
+.detail-item-inline i {
+    margin-right: 0.5rem;
+    color: #00bcd4;
+    font-size: 1em;
+}
+
+.bird-description {
+    font-size: 0.95em;
+    color: #E0F7FA;
+    margin-top: 6px; /* Moved description down by 5 pixels */
+    line-height: 1.4;
+}
+
+/* Removed old .bird-details and .detail-item styling */
 
 /* Keep message styles for now */
 .messages {
@@ -418,4 +438,200 @@ body {
         grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* Adjust for smaller screens */
         gap: 1rem;
     }
+}
+
+/* Modal Overlay (reused from site.css for consistency) */
+.modal-overlay {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 2000; /* On top of everything */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.7);
+    align-items: center;
+    justify-content: center;
+}
+
+/* Modal Content (reused from site.css for consistency) */
+.modal-content {
+    background-color: rgba(30, 30, 40, 0.98); /* Slightly darker, more opaque */
+    margin: auto;
+    padding: 40px 30px; /* Increased padding */
+    border-radius: 18px; /* Slightly more rounded */
+    width: 90%;
+    max-width: 450px; /* Slightly narrower */
+    box-shadow: 0 12px 35px rgba(0,0,0,0.9); /* Stronger shadow */
+    position: relative;
+    color: #e0f7fa;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-content h3 {
+    color: #9FBECB; /* A softer, greyish-blue for better readability and less eye strain */
+    margin-bottom: 30px;
+    font-size: 2.1em;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.7);
+}
+
+.modal-content .form-group {
+    margin-bottom: 25px;
+    text-align: left;
+}
+
+.modal-content label {
+    display: block;
+    color: #e0f7fa;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.modal-content select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #5d616d;
+    border-radius: 8px;
+    background-color: #3b3f4d;
+    color: #e0f7fa;
+    font-size: 1.1em;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23e0f7fa%22%20d%3D%22M287%2C114.5L145.2%2C256.3L3.4%2C114.5c-4.5-4.5-4.5-12.4%2C0-16.9l22.2-22.2c4.5-4.5%2C12.4-4.5%2C16.9%2C0l104.6%2C104.6L247.9%2C75.4c4.5-4.5%2C12.4-4.5%2C16.9%2C0l22.2%2C22.2C291.5%2C102.1%2C291.5%2C110%2C287%2C114.5z%22%2F%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 0.9em auto;
+    cursor: pointer;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.modal-content select:focus {
+    outline: none;
+    border-color: #6a93cb;
+    box-shadow: 0 0 0 3px rgba(106, 147, 203, 0.4);
+}
+
+.modal-content select option {
+    background-color: #3b3f4d; /* Dark background for options */
+    color: #e0f7fa;
+}
+
+.modal-content select option:hover {
+    background-color: #4a4e5a;
+}
+
+.modal-content .button-group {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+.modal-content .btn-modern {
+    background-color: #007bff; /* Blue */
+    color: white;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.modal-content .btn-modern:hover {
+    background-color: #0056b3; /* Darker blue */
+    transform: translateY(-2px);
+}
+
+.modal-content .btn-outline-modern {
+    background-color: transparent;
+    color: #007bff;
+    border: 1px solid #007bff;
+    padding: 12px 25px;
+    border-radius: 8px;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
+}
+
+.modal-content .btn-outline-modern:hover {
+    background-color: #007bff;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.close-button {
+    position: absolute;
+    top: 15px;
+    right: 25px;
+    color: #b0b0b0;
+    font-size: 30px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: #ffffff;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* New Styles for Checkboxes in Filter Modal */
+.checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px; /* Space between checkboxes */
+    justify-content: flex-start; /* Align items to the start */
+    padding: 10px 0;
+}
+
+.form-check {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0;
+    gap: 8px; /* Space between checkbox and label */
+}
+
+.form-check-input {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #6a93cb; /* Blue border */
+    border-radius: 4px; /* Slightly rounded */
+    background-color: transparent;
+    cursor: pointer;
+    position: relative;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.form-check-input:checked {
+    background-color: #6a93cb; /* Blue background when checked */
+    border-color: #6a93cb;
+}
+
+.form-check-input:checked::before {
+    content: '\2713'; /* Checkmark symbol */
+    display: block;
+    color: white;
+    font-size: 14px;
+    text-align: center;
+    line-height: 18px; /* Vertically align checkmark */
+}
+
+.form-check-input:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(106, 147, 203, 0.4); /* Focus shadow */
+}
+
+.form-check-label {
+    color: #e0f7fa;
+    font-size: 1em;
+    cursor: pointer;
 }

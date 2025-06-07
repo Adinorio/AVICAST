@@ -211,14 +211,26 @@ def process_bird_image(request):
 
 def bird_list(request):
     """Main view for displaying bird families and species"""
+    # Ensure specified bird families exist
+    family_names = [
+        "Ardeidae", "Anatidae", "Rallidae", "Recurvirostridae",
+        "Charadriidae", "Scolopacidae", "Laridae", "Accipitridae",
+        "Alcedinidae", "Hirundinidae", "Pandionidae", "Podicipedidae",
+        "Rostratulidae"
+    ]
+
+    for family_name in family_names:
+        Family.objects.get_or_create(name=family_name)
+
     families = Family.objects.filter(is_archived=False).order_by('name')
-    family_form = FamilyForm()
-    species_form = SpeciesForm()
     
+    # For now, let's just pass some example species if none exist for testing purposes
+    example_species = Species.objects.filter(is_archived=False).order_by('common_name')
+
+
     context = {
         'families': families,
-        'family_form': family_form,
-        'species_form': species_form,
+        'species': example_species, # Pass the species objects to the template
     }
     return render(request, 'admindashboard/bird_list.html', context)
 
@@ -236,21 +248,65 @@ def add_family(request):
     return redirect('admindashboard:bird_list')
 
 @require_POST
-def add_species(request, family_id):
-    """Add a new species to a family"""
-    family = get_object_or_404(Family, id=family_id)
-    form = SpeciesForm(request.POST)
-    
-    if form.is_valid():
-        species = form.save(commit=False)
-        species.family = family
-        species.is_archived = False
-        species.save()
-        messages.success(request, 'Species added successfully!')
-    else:
-        messages.error(request, 'Error adding species. Please check the form.')
-    
-    return redirect('admindashboard:bird_list')
+@csrf_exempt
+def add_species_view(request):
+    """API to add a new bird species."""
+    if request.method == 'POST':
+        form = SpeciesForm(request.POST)
+        if form.is_valid():
+            try:
+                species = form.save()
+                return JsonResponse({'success': True, 'message': f'Bird species "{species.common_name}" added successfully!'})
+            except Exception as e:
+                return JsonResponse({'success': False, 'message': f'Error saving species: {str(e)}'}, status=500)
+        else:
+            return JsonResponse({'success': False, 'message': 'Validation failed: ' + str(form.errors)}, status=400)
+    return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=405)
+
+@require_POST
+@csrf_exempt
+def edit_species_view(request, species_id):
+    """API to edit an existing bird species."""
+    species = get_object_or_404(Species, pk=species_id)
+    if request.method == 'POST':
+        form = SpeciesForm(request.POST, instance=species)
+        if form.is_valid():
+            try:
+                species = form.save()
+                return JsonResponse({'success': True, 'message': f'Bird species "{species.common_name}" updated successfully!'})
+            except Exception as e:
+                return JsonResponse({'success': False, 'message': f'Error updating species: {str(e)}'}, status=500)
+        else:
+            return JsonResponse({'success': False, 'message': 'Validation failed: ' + str(form.errors)}, status=400)
+    return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=405)
+
+def get_families_api(request):
+    """API to get a list of active bird families."""
+    families = Family.objects.filter(is_archived=False).values('id', 'name').order_by('name')
+    return JsonResponse({'families': list(families)})
+
+def get_conservation_statuses_api(request):
+    """API to get available conservation status choices."""
+    # Assuming Conservation Status is a predefined list or from a model field choices
+    # For Species model, conservation_status is a CharField, so we define choices here
+    STATUS_CHOICES = [
+        "Least Concern", "Near Threatened", "Vulnerable", "Endangered",
+        "Critically Endangered", "Extinct In The Wild", "Extinct"
+    ]
+    return JsonResponse({'statuses': STATUS_CHOICES})
+
+def get_species_details_api(request, species_id):
+    """API to get details for a specific species."""
+    species = get_object_or_404(Species, pk=species_id)
+    details = {
+        'id': species.id,
+        'common_name': species.common_name,
+        'scientific_name': species.scientific_name,
+        'description': species.description,
+        'family_id': species.family.id if species.family else None,
+        'conservation_status': species.conservation_status,
+    }
+    return JsonResponse({'details': details})
 
 def edit_family(request, family_id):
     """Edit an existing bird family"""

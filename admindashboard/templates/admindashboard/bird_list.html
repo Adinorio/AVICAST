@@ -6,80 +6,144 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'admindashboard/css/bird_list.css' %}">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+    .dashboard-box {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .conservation-ribbon {
+        width: 8px;
+        height: 100%;
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        border-radius: 4px 0 0 4px;
+        box-shadow: -2px 0 4px rgba(0, 0, 0, 0.1);
+        transition: background-color 0.3s ease;
+    }
+
+    /* Conservation Status Colors with improved contrast */
+    .ribbon-EX { background-color: #000000; } /* Black */
+    .ribbon-EW { background-color: #2C2C2C; } /* Darker Grey */
+    .ribbon-CR { background-color: #D32F2F; } /* Deep Red */
+    .ribbon-EN { background-color: #E64A19; } /* Deep Orange-Red */
+    .ribbon-VU { background-color: #F57C00; } /* Deep Orange */
+    .ribbon-NT { background-color: #FFC107; } /* Amber */
+    .ribbon-LC { background-color: #388E3C; } /* Deep Green */
+    .ribbon-DD { background-color: #757575; } /* Blue Grey */
+    .ribbon-NE { background-color: #9E9E9E; } /* Grey */
+
+    /* Form ribbon specific styles */
+    .details-section {
+        position: relative;
+    }
+
+    .details-section .conservation-ribbon {
+        width: 6px;
+        right: -3px;
+        border-radius: 3px 0 0 3px;
+    }
+
+    /* Ensure the ribbon doesn't overlap with content */
+    .bird-info {
+        padding-right: 12px;
+    }
+
+    .form-group:last-child {
+        padding-right: 12px;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
 <div class="page-container">
     <div class="main-area">
         <div class="families-container">
-            <div class="dashboard-box">
+            {% for species in species %}
+            <div class="dashboard-box bird-card"
+                data-species-id="{{ species.id }}"
+                data-common-name="{{ species.common_name }}"
+                data-scientific-name="{{ species.scientific_name }}"
+                data-family="{{ species.family.name|default:"" }}"
+                data-family-id="{{ species.family.id|default:"" }}"
+                data-conservation-status="{{ species.conservation_status|default:"" }}">
                 <div class="bird-image-container">
                     <img src="{% static 'admindashboard/images/vincent-van-zalinge-SzcO_chuZoE-unsplash.jpg' %}" alt="Bird Image" class="bird-image">
-                    <div class="conservation-status">Least Concern</div>
                 </div>
                 <div class="bird-info">
-                    <h3 class="bird-name">Bird example <span class="scientific-name">(lepros opus)</span></h3>
-                    <div class="bird-details">
-                        <div class="detail-item">
-                            <i class="fas fa-dove"></i>
-                            <span>Small bird</span>
+                    <h3 class="bird-name">{{ species.common_name }} <span class="scientific-name">({{ species.scientific_name }})</span>
+                        <div class="bird-status-group">
+                            {% if species.family %}
+                            <span class="detail-item-inline"><i class="fas fa-dove"></i> {{ species.family.name }}</span>
+                            {% endif %}
+                            {% if species.conservation_status %}
+                            <span class="detail-item-inline"><i class="fas fa-leaf"></i> {{ species.conservation_status }}</span>
+                            {% endif %}
                         </div>
-                        <div class="detail-item">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <span>Native to Asia</span>
-                        </div>
-                    </div>
+                    </h3>
+                    <p class="bird-description">{{ species.description|default:"No description available." }}</p>
                 </div>
+                <div class="conservation-ribbon"></div>
             </div>
-            <div class="dashboard-box">
-                {# Content for the second bird card #}
-            </div>
-            <div class="dashboard-box">
-                {# Content for the third bird card #}
-            </div>
+            {% empty %}
+            <p>No birds found. Click 'Add' to add a new bird.</p>
+            {% endfor %}
         </div>
     </div>
     <div class="right-sidebar">
         <div class="dashboard-box">
             <div class="search-filter-area">
                 <div class="search-row">
-                    <input type="text" class="form-control" placeholder="Search birds...">
-                    <button class="btn btn-modern add-btn">Add</button>
+                    <input type="text" class="form-control" placeholder="Search birds..." id="birdSearchInput">
+                    <button class="btn btn-modern add-btn" id="addBirdBtn">Add</button>
                 </div>
                 <div class="filter-row">
                     <button class="btn btn-outline-modern filter-btn"><i class="fas fa-filter"></i> Filter</button>
-                    <button class="btn btn-outline-modern edit-btn">Edit</button>
+                    <button class="btn btn-outline-modern edit-btn" id="editBirdBtn">Edit</button>
                 </div>
             </div>
 
             <div class="details-section">
                 <div class="section-header">
                     <i class="fas fa-pencil-alt"></i>
-                    <h3>Details</h3>
+                    <h3>Bird Details</h3>
                 </div>
-                <div class="form-group">
-                    <label for="common_name">Common Name</label>
-                    <input type="text" id="common_name" placeholder="Enter Common Name" disabled>
-                </div>
-                <div class="form-group">
-                    <label for="scientific_name">Scientific Name</label>
-                    <input type="text" id="scientific_name" placeholder="Enter Scientific Name" disabled>
-                </div>
-                 <div class="form-group">
-                    <label for="family_name">Family</label>
-                    <select id="family_name" disabled>
-                        <option value="">Select Family</option>
-                        {# Options for families will be populated here #}
-                    </select>
-                </div>
-                 <div class="form-group">
-                    <label for="conservation_status">Conservation Status</label>
-                    <select id="conservation_status" disabled>
-                         <option value="">Select Status</option>
-                        {# Options for statuses will be populated here #}
-                    </select>
-                </div>
-                {# Add more fields here later if needed #}
+                <form id="birdForm">
+                    {% csrf_token %}
+                    <input type="hidden" id="species_id" name="species_id" value="">
+
+                    <div class="form-group">
+                        <label for="common_name">Common Name</label>
+                        <input type="text" id="common_name" name="common_name" placeholder="Enter Common Name" disabled required>
+                    </div>
+                    <div class="form-group">
+                        <label for="scientific_name">Scientific Name</label>
+                        <input type="text" id="scientific_name" name="scientific_name" placeholder="Enter Scientific Name" disabled required>
+                    </div>
+                    <div class="form-group">
+                        <label for="family">Family</label>
+                        <select id="family" name="family" disabled required>
+                            {# Options for families will be populated here by JavaScript #}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="conservation_status">Conservation Status</label>
+                        <select id="conservation_status" name="conservation_status" disabled required>
+                            {# Options for statuses will be populated here by JavaScript #}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea id="description" name="description" placeholder="Enter Description" rows="3" disabled></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-modern save-btn" id="saveBirdBtn">Save</button>
+                        <button type="button" class="btn btn-outline-modern cancel-btn" id="cancelBirdBtn">Cancel</button>
+                    </div>
+                </form>
             </div>
 
             {# Add other sections like Tags, Projects, Fields, Offset Time here later if needed #}
@@ -87,4 +151,443 @@
         </div>
     </div>
 </div>
+
+<!-- Filter Modal -->
+<div id="filterModal" class="modal-overlay">
+    <div class="modal-content">
+        <span class="close-button" id="closeFilterModal">&times;</span>
+        <h3>Filter Birds</h3>
+        <div class="form-group">
+            <label>Family</label>
+            <div id="filterFamilyCheckboxes" class="checkbox-group">
+                <!-- Checkboxes will be populated here by JavaScript -->
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Conservation Status</label>
+            <div id="filterConservationStatusCheckboxes" class="checkbox-group">
+                <!-- Checkboxes will be populated here by JavaScript -->
+            </div>
+        </div>
+        <div class="button-group">
+            <button class="btn btn-modern" id="applyFiltersBtn">Apply Filters</button>
+            <button class="btn btn-outline-modern" id="clearFiltersBtn">Clear Filters</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let isAddingMode = false;
+    let isEditingMode = false;
+    let currentSpeciesId = null;
+
+    // Get DOM elements
+    const birdForm = document.getElementById('birdForm');
+    const speciesIdInput = document.getElementById('species_id');
+    const commonNameInput = document.getElementById('common_name');
+    const scientificNameInput = document.getElementById('scientific_name');
+    const familySelect = document.getElementById('family');
+    const conservationStatusSelect = document.getElementById('conservation_status');
+    const descriptionInput = document.getElementById('description');
+
+    const addBirdBtn = document.getElementById('addBirdBtn');
+    const editBirdBtn = document.getElementById('editBirdBtn');
+    const saveBirdBtn = document.getElementById('saveBirdBtn');
+    const cancelBirdBtn = document.getElementById('cancelBirdBtn');
+
+    const birdCardsContainer = document.querySelector('.families-container');
+    const birdSearchInput = document.getElementById('birdSearchInput');
+
+    // Filter modal elements
+    const filterModal = document.getElementById('filterModal');
+    const closeFilterModalBtn = document.getElementById('closeFilterModal');
+    const filterBtn = document.querySelector('.filter-row .filter-btn');
+    const filterFamilyCheckboxes = document.getElementById('filterFamilyCheckboxes');
+    const filterConservationStatusCheckboxes = document.getElementById('filterConservationStatusCheckboxes');
+    const applyFiltersBtn = document.getElementById('applyFiltersBtn');
+    const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+
+    // Function to populate Family dropdown (reused for filter modal)
+    async function populateFamilies() {
+        try {
+            const response = await fetch('{% url "admindashboard:get_families_api" %}');
+            const data = await response.json();
+            
+            // For main form
+            familySelect.innerHTML = '<option value="">Select Family</option>';
+            data.families.forEach(family => {
+                const option = document.createElement('option');
+                option.value = family.id;
+                option.textContent = family.name;
+                familySelect.appendChild(option);
+            });
+
+            // For filter modal
+            filterFamilyCheckboxes.innerHTML = '';
+            data.families.forEach(family => {
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = family.id;
+                checkbox.id = `family-${family.id}`;
+                checkbox.className = 'form-check-input';
+                checkbox.addEventListener('change', () => {
+                    const selectedFamilies = Array.from(filterFamilyCheckboxes.querySelectorAll('input:checked')).map(input => input.value);
+                    const birdCards = document.querySelectorAll('.bird-card');
+
+                    birdCards.forEach(card => {
+                        const familyId = card.dataset.familyId;
+                        if (selectedFamilies.includes(familyId)) {
+                            card.style.display = '';
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+                });
+
+                const label = document.createElement('label');
+                label.className = 'form-check-label';
+                label.setAttribute('for', checkbox.id);
+                label.textContent = family.name;
+
+                const div = document.createElement('div');
+                div.className = 'form-check';
+                div.appendChild(checkbox);
+                div.appendChild(label);
+
+                filterFamilyCheckboxes.appendChild(div);
+            });
+
+        } catch (error) {
+            console.error('Error fetching families:', error);
+        }
+    }
+
+    // Function to get ribbon class based on conservation status
+    function getRibbonClass(status) {
+        const statusMap = {
+            'Extinct': 'EX',
+            'Extinct in the Wild': 'EW',
+            'Critically Endangered': 'CR',
+            'Endangered': 'EN',
+            'Vulnerable': 'VU',
+            'Near Threatened': 'NT',
+            'Least Concern': 'LC',
+            'Data Deficient': 'DD',
+            'Not Evaluated': 'NE'
+        };
+        return `ribbon-${statusMap[status] || 'NE'}`;
+    }
+
+    // Function to update ribbon color
+    function updateRibbonColor(ribbonElement, status) {
+        // Remove all existing ribbon classes
+        ribbonElement.className = 'conservation-ribbon';
+        // Add the appropriate class based on status
+        if (status) {
+            ribbonElement.classList.add(getRibbonClass(status));
+        }
+    }
+
+    // Function to populate Conservation Status dropdown (reused for filter modal)
+    async function populateConservationStatuses() {
+        try {
+            const response = await fetch('{% url "admindashboard:get_conservation_statuses_api" %}');
+            const data = await response.json();
+
+            // For main form
+            conservationStatusSelect.innerHTML = '<option value="">Select Status</option>';
+            data.statuses.forEach(status => {
+                const option = document.createElement('option');
+                option.value = status;
+                option.textContent = status;
+                conservationStatusSelect.appendChild(option);
+            });
+
+            // For filter modal
+            filterConservationStatusCheckboxes.innerHTML = '';
+            data.statuses.forEach(status => {
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = status;
+                checkbox.id = `status-${status.replace(' ', '-').toLowerCase()}`;
+                checkbox.className = 'form-check-input';
+                checkbox.addEventListener('change', () => {
+                    const selectedStatuses = Array.from(filterConservationStatusCheckboxes.querySelectorAll('input:checked')).map(input => input.value);
+                    const birdCards = document.querySelectorAll('.bird-card');
+
+                    birdCards.forEach(card => {
+                        const status = card.dataset.conservationStatus;
+                        if (selectedStatuses.includes(status)) {
+                            card.style.display = '';
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+                });
+
+                const label = document.createElement('label');
+                label.className = 'form-check-label';
+                label.setAttribute('for', checkbox.id);
+                label.textContent = status;
+
+                const div = document.createElement('div');
+                div.className = 'form-check';
+                div.appendChild(checkbox);
+                div.appendChild(label);
+
+                filterConservationStatusCheckboxes.appendChild(div);
+            });
+
+        } catch (error) {
+            console.error('Error fetching conservation statuses:', error);
+        }
+    }
+
+    // Helper function to enable/disable form fields
+    function setFormEnabled(enabled) {
+        commonNameInput.disabled = !enabled;
+        scientificNameInput.disabled = !enabled;
+        familySelect.disabled = !enabled;
+        conservationStatusSelect.disabled = !enabled;
+        descriptionInput.disabled = !enabled;
+        saveBirdBtn.style.display = enabled ? 'inline-block' : 'none';
+        cancelBirdBtn.style.display = enabled ? 'inline-block' : 'none';
+    }
+
+    // Helper function to clear form fields
+    function clearForm() {
+        speciesIdInput.value = '';
+        commonNameInput.value = '';
+        scientificNameInput.value = '';
+        familySelect.value = '';
+        conservationStatusSelect.value = '';
+        descriptionInput.value = '';
+    }
+
+    // Function to reset the form state (initial/view mode)
+    function resetFormState() {
+        clearForm();
+        setFormEnabled(false);
+        isAddingMode = false;
+        isEditingMode = false;
+        currentSpeciesId = null;
+        addBirdBtn.style.display = 'inline-block';
+        editBirdBtn.style.display = 'inline-block';
+        
+        // Remove any existing ribbon from the form
+        const formRibbon = document.querySelector('.details-section .conservation-ribbon');
+        if (formRibbon) {
+            formRibbon.remove();
+        }
+    }
+
+    // Function to display form in "Add" mode
+    function displayAddMode() {
+        resetFormState(); // Ensure a clean slate
+        setFormEnabled(true);
+        isAddingMode = true;
+        addBirdBtn.style.display = 'none';
+        editBirdBtn.style.display = 'none';
+        commonNameInput.focus();
+    }
+
+    // Function to display form in "Edit" mode and populate with data
+    async function displayEditMode(speciesId) {
+        resetFormState(); // Ensure a clean slate
+        setFormEnabled(true);
+        isEditingMode = true;
+        currentSpeciesId = speciesId;
+        speciesIdInput.value = speciesId;
+
+        addBirdBtn.style.display = 'none';
+        editBirdBtn.style.display = 'none';
+
+        try {
+            const response = await fetch(`/api/birds/${speciesId}/`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            const details = data.details;
+
+            commonNameInput.value = details.common_name;
+            scientificNameInput.value = details.scientific_name;
+            familySelect.value = details.family_id;
+            conservationStatusSelect.value = details.conservation_status;
+            descriptionInput.value = details.description;
+
+            // Update ribbon color in the form
+            const formRibbon = document.createElement('div');
+            formRibbon.className = 'conservation-ribbon';
+            updateRibbonColor(formRibbon, details.conservation_status);
+            document.querySelector('.details-section').appendChild(formRibbon);
+
+        } catch (error) {
+            console.error('Error fetching bird details:', error);
+            alert('Error fetching bird details. Please try again.');
+            resetFormState();
+        }
+    }
+
+    // Handle form submission
+    birdForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const formData = new FormData(birdForm);
+        let targetUrl = '';
+        let method = 'POST';
+
+        if (isAddingMode) {
+            targetUrl = '{% url "admindashboard:add_species_api" %}';
+        } else if (isEditingMode && currentSpeciesId) {
+            targetUrl = `{% url "admindashboard:edit_species_api" 0 %}`.replace('/0/', `/${currentSpeciesId}/`);
+        } else {
+            console.error('Invalid form state for submission.');
+            alert('Invalid form state. Please try again.');
+            return;
+        }
+
+        // Add CSRF token to formData if not already present
+        const csrfToken = document.querySelector('[name="csrfmiddlewaretoken"]').value;
+        if (csrfToken) {
+            formData.append('csrfmiddlewaretoken', csrfToken);
+        }
+
+        try {
+            const response = await fetch(targetUrl, {
+                method: method,
+                body: new URLSearchParams(formData) // FormData for application/x-www-form-urlencoded
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                alert(result.message);
+                resetFormState();
+                // Optionally, refresh the list of birds or add/update the specific bird card
+                // For now, let's just reload the page to see changes
+                location.reload();
+            } else {
+                alert(`Error: ${result.message || response.statusText}`);
+            }
+        } catch (error) {
+            console.error('Error submitting form:', error);
+            alert('An error occurred. Please try again.');
+        }
+    });
+
+    // Event listeners for buttons
+    addBirdBtn.addEventListener('click', displayAddMode);
+    cancelBirdBtn.addEventListener('click', resetFormState);
+
+    // Event delegation for bird card clicks (for edit mode)
+    birdCardsContainer.addEventListener('click', (event) => {
+        const birdCard = event.target.closest('.bird-card');
+        if (birdCard) {
+            const speciesId = birdCard.dataset.speciesId;
+            if (speciesId) {
+                displayEditMode(speciesId);
+            }
+        }
+    });
+
+    // Add event listener for conservation status changes (for the form ribbon)
+    conservationStatusSelect.addEventListener('change', function() {
+        const formRibbon = document.querySelector('.details-section .conservation-ribbon');
+        if (formRibbon) {
+            updateRibbonColor(formRibbon, this.value);
+        }
+    });
+
+    // Search functionality
+    birdSearchInput.addEventListener('input', () => {
+        const query = birdSearchInput.value.toLowerCase().trim();
+        const birdCards = document.querySelectorAll('.bird-card');
+
+        birdCards.forEach(card => {
+            const commonName = card.dataset.commonName.toLowerCase();
+            const scientificName = card.dataset.scientificName.toLowerCase();
+            const family = card.dataset.family.toLowerCase();
+            const conservationStatus = card.dataset.conservationStatus.toLowerCase();
+
+            if (commonName.includes(query) ||
+                scientificName.includes(query) ||
+                family.includes(query) ||
+                conservationStatus.includes(query)) {
+                card.style.display = ''; // Show card
+            } else {
+                card.style.display = 'none'; // Hide card
+            }
+        });
+    });
+
+    // Filter Modal Logic
+    filterBtn.addEventListener('click', () => {
+        filterModal.style.display = 'flex';
+        // Ensure dropdowns are populated when modal opens
+        populateFamilies(); 
+        populateConservationStatuses();
+    });
+
+    closeFilterModalBtn.addEventListener('click', () => {
+        filterModal.style.display = 'none';
+    });
+
+    window.addEventListener('click', (event) => {
+        if (event.target == filterModal) {
+            filterModal.style.display = 'none';
+        }
+    });
+
+    applyFiltersBtn.addEventListener('click', () => {
+        const selectedFamilies = Array.from(filterFamilyCheckboxes.querySelectorAll('input:checked')).map(input => input.value);
+        const selectedConservationStatuses = Array.from(filterConservationStatusCheckboxes.querySelectorAll('input:checked')).map(input => input.value);
+        const birdCards = document.querySelectorAll('.bird-card');
+
+        birdCards.forEach(card => {
+            const familyId = card.dataset.familyId;
+            const conservationStatus = card.dataset.conservationStatus;
+
+            const familyMatch = (selectedFamilies.length === 0 || selectedFamilies.includes(familyId));
+            const statusMatch = (selectedConservationStatuses.length === 0 || selectedConservationStatuses.includes(conservationStatus));
+
+            if (familyMatch && statusMatch) {
+                card.style.display = ''; // Show card
+            } else {
+                card.style.display = 'none'; // Hide card
+            }
+        });
+
+        filterModal.style.display = 'none'; // Close modal after applying filters
+    });
+
+    clearFiltersBtn.addEventListener('click', () => {
+        filterFamilyCheckboxes.innerHTML = '';
+        filterConservationStatusCheckboxes.innerHTML = '';
+        // Show all cards
+        document.querySelectorAll('.bird-card').forEach(card => {
+            card.style.display = '';
+        });
+        filterModal.style.display = 'none';
+    });
+
+    // Initial setup on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        populateFamilies();
+        populateConservationStatuses();
+        resetFormState();
+
+        // Update ribbon colors for all bird cards
+        document.querySelectorAll('.bird-card').forEach(card => {
+            const status = card.querySelector('.detail-item-inline:last-child')?.textContent.replace('Least Concern', '').trim();
+            const ribbon = card.querySelector('.conservation-ribbon');
+            if (ribbon && status) {
+                updateRibbonColor(ribbon, status);
+            }
+        });
+    });
+
+</script>
 {% endblock %}
