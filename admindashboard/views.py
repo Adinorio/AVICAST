@@ -7,8 +7,8 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import logout
 from django.views.decorators.http import require_POST
-from .models import Family, Species
-from .forms import FamilyForm, SpeciesForm
+from .models import Family, Species, Site
+from .forms import FamilyForm, SpeciesForm, SiteForm
 from django.contrib import messages
 import json
 import torch
@@ -343,3 +343,51 @@ def image_processing_next_view(request):
 
 def review_dashboard_view(request):
     return render(request, 'admindashboard/review_dashboard.html')
+
+def site_list(request):
+    """Main view for displaying sites"""
+    sites = Site.objects.all().order_by('name')
+    site_form = SiteForm()
+    
+    context = {
+        'sites': sites,
+        'site_form': site_form,
+    }
+    return render(request, 'admindashboard/site.html', context)
+
+@require_POST
+def add_site(request):
+    """Add a new site"""
+    form = SiteForm(request.POST, request.FILES)
+    if form.is_valid():
+        form.save()
+        messages.success(request, 'Site added successfully!')
+    else:
+        messages.error(request, 'Error adding site. Please check the form.')
+    return redirect('admindashboard:site_list')
+
+def edit_site(request, site_id):
+    """Edit an existing site"""
+    site = get_object_or_404(Site, id=site_id)
+    
+    if request.method == 'POST':
+        form = SiteForm(request.POST, request.FILES, instance=site)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Site updated successfully!')
+            return redirect('admindashboard:site_list')
+    else:
+        form = SiteForm(instance=site)
+    
+    return render(request, 'admindashboard/edit_site.html', {
+        'form': form,
+        'site': site
+    })
+
+@require_POST
+def delete_site(request, site_id):
+    """Delete a site"""
+    site = get_object_or_404(Site, id=site_id)
+    site.delete()
+    messages.success(request, 'Site deleted successfully!')
+    return redirect('admindashboard:site_list')

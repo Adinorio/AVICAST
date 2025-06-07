@@ -45,19 +45,42 @@ class Family(models.Model):
 
 class Species(models.Model):
     family = models.ForeignKey(Family, on_delete=models.CASCADE, related_name='species')
-    name = models.CharField(max_length=100)
+    common_name = models.CharField(max_length=100)
     scientific_name = models.CharField(max_length=100)
-    iucn_status = models.CharField(max_length=50, blank=True)
+    description = models.TextField(blank=True)
+    conservation_status = models.CharField(max_length=50, blank=True)
     is_archived = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name_plural = "Species"
+        ordering = ['common_name']
+
+    def __str__(self):
+        return f"{self.common_name} ({self.scientific_name})"
+
+class Site(models.Model):
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('inactive', 'Inactive'),
+        ('maintenance', 'Under Maintenance'),
+    ]
+
+    name = models.CharField(max_length=100)
+    code = models.CharField(max_length=20, unique=True)
+    location = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
+    image = models.ImageField(upload_to='site_images/', null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
         ordering = ['name']
 
     def __str__(self):
-        return f"{self.name} ({self.scientific_name})"
+        return f"{self.name} ({self.code})"
 
 class BirdDetection(models.Model):
     species = models.ForeignKey(Species, on_delete=models.CASCADE, related_name='detections')
@@ -82,13 +105,4 @@ class FamilyForm(forms.ModelForm):
             'description': forms.Textarea(attrs={'class':'form-control','placeholder':'Description','rows':2}),
         }
 
-class SpeciesForm(forms.ModelForm):
-    class Meta:
-        model = Species
-        fields = ['name','scientific_name','iucn_status']
-        widgets = {
-            'name': forms.TextInput(attrs={'class':'form-control','placeholder':'Species Name'}),
-            'scientific_name': forms.TextInput(attrs={'class':'form-control','placeholder':'Scientific Name'}),
-            'iucn_status': forms.TextInput(attrs={'class':'form-control','placeholder':'IUCN Status'}),
-        }
 # Create your models here.

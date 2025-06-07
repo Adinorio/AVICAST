@@ -1,0 +1,80 @@
+{% extends "admindashboard/base.html" %}
+{% load static %}
+
+{% block title %}Sites - Admin Dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'admindashboard/css/site.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="main-area">
+        <div class="sites-container">
+            <div class="dashboard-box">
+                <div class="site-image-container">
+                    <img src="{% static 'admindashboard/images/site-example.jpg' %}" alt="Site Image" class="site-image">
+                    <div class="site-status">Active</div>
+                </div>
+                <div class="site-info">
+                    <h3 class="site-name">Site Name <span class="site-code">(SITE-001)</span></h3>
+                    <div class="site-details">
+                        <div class="detail-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>Location: Manila Bay</span>
+                        </div>
+                        <div class="detail-item">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>Last Updated: 2024-03-20</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- More site cards can be added here -->
+        </div>
+    </div>
+    <div class="right-sidebar">
+        <div class="dashboard-box">
+            <div class="search-filter-area">
+                <div class="search-row">
+                    <input type="text" class="form-control" placeholder="Search sites...">
+                    <button class="btn btn-modern add-btn">Add Site</button>
+                </div>
+                <div class="filter-row">
+                    <button class="btn btn-outline-modern filter-btn"><i class="fas fa-filter"></i> Filter</button>
+                    <button class="btn btn-outline-modern edit-btn">Edit</button>
+                </div>
+            </div>
+
+            <div class="details-section">
+                <div class="section-header">
+                    <i class="fas fa-pencil-alt"></i>
+                    <h3>Site Details</h3>
+                </div>
+                <div class="form-group">
+                    <label for="site_name">Site Name</label>
+                    <input type="text" id="site_name" placeholder="Enter Site Name" disabled>
+                </div>
+                <div class="form-group">
+                    <label for="site_code">Site Code</label>
+                    <input type="text" id="site_code" placeholder="Enter Site Code" disabled>
+                </div>
+                <div class="form-group">
+                    <label for="location">Location</label>
+                    <input type="text" id="location" placeholder="Enter Location" disabled>
+                </div>
+                <div class="form-group">
+                    <label for="status">Status</label>
+                    <select id="status" disabled>
+                        <option value="">Select Status</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                        <option value="maintenance">Under Maintenance</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
