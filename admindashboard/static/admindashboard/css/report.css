@@ -1,0 +1,148 @@
+/* Report page specific styles */
+.dashboard {
+    padding: 30px;
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+}
+
+.dashboard-welcome {
+    font-size: 2.7em;
+    font-weight: bold;
+    color: #fff;
+    margin-bottom: 38px;
+    text-align: center;
+    letter-spacing: 0.04em;
+    text-shadow:
+        2px 2px 12px rgba(0,0,0,0.8),
+        0 2px 8px #222;
+    padding: 18px 0 18px 0;
+    border-radius: 18px;
+    background: rgba(10, 20, 30, 0.45);
+    backdrop-filter: blur(2px);
+    box-shadow: 0 4px 32px rgba(0,0,0,0.10), 0 2px 12px rgba(0,0,0,0.5);
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    justify-content: center;
+}
+
+.dashboard-box {
+    background: rgba(20, 20, 30, 0.88);
+    border-radius: 16px;
+    padding: 32px 24px;
+    color: #e0f7fa;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.dashboard-box:hover {
+    transform: translateY(-6px) scale(1.03);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.8);
+}
+
+.dashboard-icon {
+    font-size: 2.5em;
+    color: #00bcd4;
+    margin-bottom: 12px;
+    text-shadow: 1px 1px 6px rgba(0,0,0,0.7);
+}
+
+.dashboard-box h2 {
+    margin-bottom: 10px;
+    font-size: 1.6em;
+    font-weight: 600;
+    color: #fff;
+}
+
+.dashboard-box p {
+    font-size: 1.1em;
+    color: #B0BEC5;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.dashboard-btn {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 10px 22px;
+    background: #00bcd4;
+    color: #1a237e;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1.08em;
+    transition: background 0.2s, color 0.2s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.dashboard-btn:hover, .dashboard-btn:focus {
+    background: #0097a7;
+    color: #fff;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .dashboard {
+        padding: 20px;
+    }
+
+    .dashboard-welcome {
+        font-size: 2em;
+        margin-bottom: 30px;
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .dashboard-box {
+        padding: 25px;
+    }
+
+    .dashboard-box h2 {
+        font-size: 1.4em;
+    }
+
+    .dashboard-box p {
+        font-size: 1em;
+    }
+
+    .dashboard-btn {
+        padding: 10px 24px;
+        font-size: 1em;
+    }
+}
+
+/* Animation for dashboard boxes */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dashboard-box {
+    animation: fadeInUp 0.6s ease-out forwards;
+}
+
+.dashboard-box:nth-child(1) { animation-delay: 0.1s; }
+.dashboard-box:nth-child(2) { animation-delay: 0.2s; }
+.dashboard-box:nth-child(3) { animation-delay: 0.3s; }
+.dashboard-box:nth-child(4) { animation-delay: 0.4s; }
+.dashboard-box:nth-child(5) { animation-delay: 0.5s; }
+.dashboard-box:nth-child(6) { animation-delay: 0.6s; } 

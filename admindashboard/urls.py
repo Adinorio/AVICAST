@@ -26,4 +26,6 @@ urlpatterns = [
     path('add-site/', views.add_site, name='add_site'),
     path('edit-site/<int:site_id>/', views.edit_site, name='edit_site'),
     path('delete-site/<int:site_id>/', views.delete_site, name='delete_site'),
+    # Report URL
+    path('reports/', views.report_view, name='reports'),
 ]

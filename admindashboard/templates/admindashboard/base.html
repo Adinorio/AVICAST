@@ -29,7 +29,7 @@
             <li><a href="{% url 'admindashboard:bird_list' %}" onclick="showLoading(event)"><i class="fas fa-dove"></i> Birds List</a></li>
             <li><a href="{% url 'admindashboard:bird_identification' %}" onclick="showLoading(event)"><i class="fas fa-search"></i> Birds Identification</a></li>
             <li><a href="{% url 'admindashboard:site_list' %}" onclick="showLoading(event)"><i class="fas fa-map-marker-alt"></i> Sites</a></li>
-            <li><a href="#" onclick="showLoading(event)"><i class="fas fa-chart-bar"></i> Statistical Reports</a></li>
+            <li><a href="{% url 'admindashboard:reports' %}" onclick="showLoading(event)"><i class="fas fa-chart-bar"></i> Statistical Reports</a></li>
             <li><a href="{% url 'admindashboard:help' %}" onclick="showLoading(event)"><i class="fas fa-question-circle"></i> Help</a></li>
             <li class="logout"><a href="#" onclick="confirmLogout(event)"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
         </ul>

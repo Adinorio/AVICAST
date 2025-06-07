@@ -391,3 +391,11 @@ def delete_site(request, site_id):
     site.delete()
     messages.success(request, 'Site deleted successfully!')
     return redirect('admindashboard:site_list')
+
+def report_view(request):
+    """View for the statistical reports page"""
+    context = {
+        'page_title': 'Statistical Reports',
+        'active_page': 'reports'
+    }
+    return render(request, 'admindashboard/report.html', context)
