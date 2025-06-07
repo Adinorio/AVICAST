@@ -553,3 +553,35 @@ def report_view(request):
         'active_page': 'reports'
     }
     return render(request, 'admindashboard/report.html', context)
+
+def get_site_years(request, site_id):
+    """API to get available years for a given site with bird detections."""
+    site = get_object_or_404(Site, id=site_id)
+    years = BirdDetection.objects.filter(site=site).annotate(year=TruncYear('detection_date')).values_list('year', flat=True).distinct().order_by('-year')
+    # Convert datetime.date objects to year integers
+    year_list = [year.year for year in years if year is not None]
+    return JsonResponse({'years': year_list})
+
+def get_monthly_detections(request, site_id, year):
+    """API to get monthly bird detection data for a specific site and year."""
+    site = get_object_or_404(Site, id=site_id)
+    detections = BirdDetection.objects.filter(
+        site=site,
+        detection_date__year=year
+    ).annotate(
+        month=TruncMonth('detection_date')
+    ).values('month').annotate(
+        total_detections=Count('id'),
+        unique_species=Count('species', distinct=True)
+    ).order_by('month')
+
+    # Format for frontend
+    monthly_data = []
+    for entry in detections:
+        monthly_data.append({
+            'month_name': entry['month'].strftime('%B'), # Full month name
+            'month_number': entry['month'].month,
+            'total_detections': entry['total_detections'],
+            'unique_species': entry['unique_species'],
+        })
+    return JsonResponse({'monthly_data': monthly_data})

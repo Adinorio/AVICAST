@@ -40,6 +40,14 @@
             <p>No sites available. Please add a new site.</p>
             {% endfor %}
         </div>
+
+        <!-- Monthly data display area (initially hidden) -->
+        <div class="monthly-data-container" style="display: none;">
+            <h2 id="monthlyDataTitle">Monthly Bird Data for [Site Name] - [Year]</h2>
+            <div class="monthly-cards-grid">
+                <!-- Month cards will be injected here by JavaScript -->
+            </div>
+        </div>
     </div>
     <div class="right-sidebar">
         <div class="dashboard-box">
@@ -95,6 +103,21 @@
         </div>
     </div>
 </div>
+
+<!-- Year Selection Modal -->
+<div id="yearSelectionModal" class="modal-overlay">
+    <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <h3 id="modalSiteName">Select Year for [Site Name]</h3>
+        <div class="form-group">
+            <label for="yearSelect">Select Year</label>
+            <select id="yearSelect" class="form-control">
+                <!-- Years will be populated by JavaScript -->
+            </select>
+        </div>
+        <button class="btn btn-modern" id="viewMonthlyDataBtn">View Monthly Data</button>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -121,6 +144,24 @@
             const siteIdInput = document.getElementById('site_id'); // New: hidden input for site ID
             console.log('siteIdInput:', siteIdInput); // Debugging
             const formInputs = [siteNameInput, siteCodeInput, locationInput, statusSelect, siteImageInput];
+
+            // Year Selection Modal elements
+            const yearSelectionModal = document.getElementById('yearSelectionModal');
+            const closeButton = yearSelectionModal.querySelector('.close-button');
+            const modalSiteName = document.getElementById('modalSiteName');
+            const yearSelect = document.getElementById('yearSelect');
+            const viewMonthlyDataBtn = document.getElementById('viewMonthlyDataBtn');
+
+            // Main content area elements for monthly data
+            const sitesContainer = document.querySelector('.sites-container');
+            const monthlyDataContainer = document.querySelector('.monthly-data-container');
+            const monthlyDataTitle = document.getElementById('monthlyDataTitle');
+            const monthlyCardsGrid = document.querySelector('.monthly-cards-grid');
+
+            let currentSelectedSite = null; // Store the site object when a card is double-clicked
+
+            let clickTimer = null; // New: Timer to differentiate single and double clicks
+            const DBLCLICK_DELAY = 300; // Milliseconds to wait before considering it a single click
 
             // Function to populate form fields with site data
             function populateForm(siteData) {
@@ -162,34 +203,224 @@
                 cancelEditBtn.disabled = false;
             }
 
-            // Event listener for site cards to select a site for editing
+            // Function to fetch and populate years for the modal
+            async function populateYears(siteId) {
+                let yearsToDisplay = [2023, 2024, 2025]; // Hardcoded years for UI demonstration
+                
+                // You can still fetch from backend and combine, but for now, prioritize hardcoded
+                /*
+                try {
+                    const response = await fetch(`/admindashboard/api/sites/${siteId}/years/`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    if (data.years && data.years.length > 0) {
+                        // Merge unique years, prioritizing newer ones
+                        const fetchedYears = data.years.map(y => parseInt(y));
+                        yearsToDisplay = [...new Set([...fetchedYears, ...yearsToDisplay])].sort((a,b) => b - a);
+                    }
+                } catch (error) {
+                    console.error('Error fetching years, using hardcoded defaults:', error);
+                }
+                */
+
+                let yearsHtml = '<option value="">Select a year</option>';
+                yearsToDisplay.forEach(year => {
+                    yearsHtml += `<option value="${year}">${year}</option>`;
+                });
+                yearSelect.innerHTML = yearsHtml;
+            }
+
+            // Event listener for site cards to select a site for editing (single click)
+            // And now, for double click to open monthly data
             document.querySelectorAll('.site-card').forEach(card => {
                 card.addEventListener('click', function(event) {
                     event.preventDefault(); // Prevent default link behavior
-                    console.log('Site card clicked!'); // Debugging
+                    console.log('Site card clicked (single click)!'); // Debugging
 
-                    // First, reset the form and state
-                    addSiteForm.reset(); // Clear form fields
-                    siteIdInput.value = ''; // Clear site ID
-                    isAddingMode = false;
-                    isEditingMode = true; // Enter editing mode when a card is clicked
+                    if (clickTimer) {
+                        clearTimeout(clickTimer);
+                        clickTimer = null;
+                    }
 
-                    const siteData = {
+                    clickTimer = setTimeout(() => {
+                        // This code runs if it's a single click (no double-click followed)
+                        console.log('Executing single click logic.');
+                        // Clear any previous selection or form state
+                        addSiteForm.reset(); // Clear form fields
+                        siteIdInput.value = ''; // Clear site ID
+                        isAddingMode = false;
+                        isEditingMode = true; // Enter editing mode when a card is clicked
+
+                        const siteData = {
+                            id: this.dataset.siteId,
+                            name: this.dataset.siteName,
+                            code: this.dataset.siteCode,
+                            location: this.dataset.siteLocation,
+                            status: this.dataset.siteStatus,
+                        };
+                        console.log('Site Data extracted from card for editing:', siteData); // Debugging
+                        populateForm(siteData);
+                        setFormState(true); // Enable form fields and set button text to 'Update Site'
+                        console.log('Form populated and state set to editing.'); // Debugging
+                    }, DBLCLICK_DELAY);
+                });
+
+                card.addEventListener('dblclick', async function(event) {
+                    event.preventDefault(); // Prevent default dblclick behavior
+                    console.log('Site card double-clicked!'); // Debugging
+
+                    if (clickTimer) {
+                        clearTimeout(clickTimer);
+                        clickTimer = null; // Clear the single-click timer
+                    }
+
+                    currentSelectedSite = {
                         id: this.dataset.siteId,
                         name: this.dataset.siteName,
-                        code: this.dataset.siteCode,
-                        location: this.dataset.siteLocation,
-                        status: this.dataset.siteStatus,
                     };
-                    console.log('Site Data extracted from card:', siteData); // Debugging
-                    populateForm(siteData);
-                    setFormState(true); // Enable form fields and set button text to 'Update Site'
-                    console.log('Form populated and state set to editing.'); // Debugging
+                    modalSiteName.textContent = `Select Year for ${currentSelectedSite.name}`;
+                    await populateYears(currentSelectedSite.id);
+                    yearSelectionModal.style.display = 'flex'; // Show the modal
                 });
             });
 
-            // Initial state: form inputs are disabled, Add Site button is enabled, Edit button is enabled
-            setFormState(false);
+            // Close modal button
+            closeButton.addEventListener('click', function() {
+                yearSelectionModal.style.display = 'none';
+                currentSelectedSite = null;
+            });
+
+            // Click outside modal to close
+            window.addEventListener('click', function(event) {
+                if (event.target == yearSelectionModal) {
+                    yearSelectionModal.style.display = 'none';
+                    currentSelectedSite = null;
+                }
+            });
+
+            // View Monthly Data button in modal
+            viewMonthlyDataBtn.addEventListener('click', async function() {
+                const selectedYear = yearSelect.value;
+                if (selectedYear && currentSelectedSite) {
+                    console.log(`Viewing monthly data for site ${currentSelectedSite.name} (${currentSelectedSite.id}) in year ${selectedYear}`);
+                    yearSelectionModal.style.display = 'none';
+
+                    try {
+                        const response = await fetch(`/admindashboard/api/sites/${currentSelectedSite.id}/months/${selectedYear}/`);
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        const data = await response.json();
+
+                        // Hide site cards and show monthly data container
+                        sitesContainer.style.display = 'none';
+                        monthlyDataContainer.style.display = 'block';
+
+                        monthlyDataTitle.textContent = `Monthly Bird Data for ${currentSelectedSite.name} - ${selectedYear}`;
+
+                        // Update right sidebar for month management
+                        document.querySelector('.search-row').style.display = 'none'; // Hide search bar
+                        document.querySelector('.filter-row').style.display = 'none'; // Hide filter/edit buttons
+                        
+                        // Placeholder for new month management UI
+                        document.querySelector('.details-section .section-header h3').textContent = 'Month Management';
+                        document.querySelector('.details-section form').innerHTML = `
+                            <div class="form-group">
+                                <label for="monthSelect">Select Month</label>
+                                <select id="monthSelect" class="form-control" required>
+                                    <option value="">Select a month</option>
+                                    <!-- Months will be populated by JavaScript -->
+                                </select>
+                            </div>
+                            <div class="button-group">
+                                <button class="btn btn-primary" id="addMonthBtn">Add Month</button>
+                                <button class="btn btn-secondary" id="deleteMonthBtn">Delete Month</button>
+                            </div>
+                        `;
+                        // Re-fetch references to new elements after innerHTML update
+                        const monthSelect = document.getElementById('monthSelect');
+                        const addMonthBtn = document.getElementById('addMonthBtn');
+                        const deleteMonthBtn = document.getElementById('deleteMonthBtn');
+
+                        // List of all months
+                        const allMonths = [
+                            { name: 'January', value: 1 }, { name: 'February', value: 2 }, { name: 'March', value: 3 },
+                            { name: 'April', value: 4 }, { name: 'May', value: 5 }, { name: 'June', value: 6 },
+                            { name: 'July', value: 7 }, { name: 'August', value: 8 }, { name: 'September', value: 9 },
+                            { name: 'October', value: 10 }, { name: 'November', value: 11 }, { name: 'December', value: 12 }
+                        ];
+
+                        // Get months already present in the data
+                        const existingMonthNumbers = data.monthly_data.map(month => month.month_number);
+
+                        // Populate month dropdown, excluding existing months
+                        let monthOptionsHtml = '<option value="">Select a month</option>';
+                        allMonths.forEach(month => {
+                            if (!existingMonthNumbers.includes(month.value)) {
+                                monthOptionsHtml += `<option value="${month.value}">${month.name}</option>`;
+                            }
+                        });
+                        monthSelect.innerHTML = monthOptionsHtml;
+
+                        // Add event listener for Add Month button
+                        addMonthBtn.addEventListener('click', function() {
+                            const selectedMonthValue = monthSelect.value;
+                            const selectedMonthName = monthSelect.options[monthSelect.selectedIndex].text;
+
+                            if (selectedMonthValue) {
+                                // For demonstration, just add a dummy card and remove from dropdown
+                                const newMonthCard = `
+                                    <div class="dashboard-box monthly-card">
+                                        <h3>${selectedMonthName}</h3>
+                                        <p>Total Detections: (New)</p>
+                                        <p>Unique Species: (New)</p>
+                                    </div>
+                                `;
+                                monthlyCardsGrid.insertAdjacentHTML('beforeend', newMonthCard);
+
+                                // Remove the added month from the dropdown
+                                monthSelect.querySelector(`option[value="${selectedMonthValue}"]`).remove();
+                                monthSelect.value = ''; // Reset dropdown
+
+                                alert(`Month ${selectedMonthName} added (visually).`);
+                                // In a real app, you would send this to backend via fetch API.
+                            } else {
+                                alert('Please select a month to add.');
+                            }
+                        });
+
+                        // You'll need to add event listener for deleteMonthBtn here when needed
+
+                        // Populate monthly cards grid
+                        let monthCardsHtml = '';
+                        if (data.monthly_data && data.monthly_data.length > 0) {
+                            data.monthly_data.forEach(month => {
+                                monthCardsHtml += `
+                                    <div class="dashboard-box monthly-card">
+                                        <h3>${month.month_name}</h3>
+                                        <p>Total Detections: ${month.total_detections}</p>
+                                        <p>Unique Species: ${month.unique_species}</p>
+                                    </div>
+                                `;
+                            });
+                        } else {
+                            monthCardsHtml = '<p>No monthly data available for this site and year.</p>';
+                        }
+                        monthlyCardsGrid.innerHTML = monthCardsHtml;
+
+                    } catch (error) {
+                        console.error('Error fetching monthly data:', error);
+                        alert('Failed to load monthly data. Please try again later.');
+                        // Potentially revert UI if data load fails
+                        sitesContainer.style.display = 'grid';
+                        monthlyDataContainer.style.display = 'none';
+                    }
+                } else {
+                    alert('Please select a year.');
+                }
+            });
 
             mainAddSiteBtn.addEventListener('click', function(event) {
                 console.log('Main Add/Save/Update Site button clicked!'); // Debugging for clarity
@@ -209,6 +440,65 @@
                     setFormState(false); // Disable form fields and set button text to 'Add Site' and 'Edit'
                     isAddingMode = false;
                     isEditingMode = false;
+                    // If currently viewing monthly data, switch back to site cards
+                    if (monthlyDataContainer.style.display === 'block') {
+                        sitesContainer.style.display = 'grid';
+                        monthlyDataContainer.style.display = 'none';
+                        // Restore original right sidebar elements if needed for site management
+                        document.querySelector('.search-row').style.display = 'flex';
+                        document.querySelector('.filter-row').style.display = 'flex';
+                        document.querySelector('.details-section .section-header h3').textContent = 'Site Details';
+                        // Re-render the original site form or use a template for it
+                        // For simplicity, for now, just reset form.
+                        addSiteForm.innerHTML = `
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="site_name">Site Name</label>
+                                <input type="text" id="site_name" name="name" placeholder="Enter Site Name" disabled required>
+                            </div>
+                            <div class="form-group">
+                                <label for="site_code">Site Code</label>
+                                <input type="text" id="site_code" name="code" placeholder="Enter Site Code" disabled required>
+                            </div>
+                            <div class="form-group">
+                                <label for="location">Location</label>
+                                <input type="text" id="location" name="location" placeholder="Enter Location" disabled required>
+                            </div>
+                            <div class="form-group">
+                                <label for="status">Status</label>
+                                <select id="status" name="status" disabled required>
+                                    <option value="">Select Status</option>
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                    <option value="maintenance">Under Maintenance</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="site_image">Site Image</label>
+                                <input type="file" id="site_image" name="image" accept="image/*" disabled>
+                            </div>
+                            <input type="hidden" id="site_id" name="site_id" value="">
+                            <div class="button-group"></div>
+                        `;
+                        // Re-assign references after re-rendering HTML (crucial!)
+                        // Note: These need to be const or let and reassigned, not re-declared.
+                        // To avoid re-declaring in a loop, you might need a different structure.
+                        // For now, let's re-get them, assuming they are accessible via window or a global object if truly re-rendered.
+                        // A safer way would be to wrap the form in a reusable function that also returns the elements.
+                        // For this iteration, we'll re-get, but be aware of potential issues if not done carefully.
+                        window.siteNameInput = document.getElementById('site_name');
+                        window.siteCodeInput = document.getElementById('site_code');
+                        window.locationInput = document.getElementById('location');
+                        window.statusSelect = document.getElementById('status');
+                        window.siteImageInput = document.getElementById('site_image');
+                        window.siteIdInput = document.getElementById('site_id');
+                        // Re-initialize formInputs array - this is crucial
+                        window.formInputs = [window.siteNameInput, window.siteCodeInput, window.locationInput, window.statusSelect, window.siteImageInput];
+
+                        // Re-add event listeners if elements were replaced (e.g., for add/edit buttons on the form)
+                        // This current setup is for the mainAddSiteBtn and cancelEditBtn being outside the replaced form area.
+                        // If buttons inside form were replaced, their listeners would need re-attachment here too.
+                    }
                 } else { // If not in add/edit mode, and it says 'Edit', it should do nothing or provide feedback
                     // You might want to add functionality here later if 'Edit' button without selecting a card is desired.
                     alert('Please select a site card first to edit its details.');

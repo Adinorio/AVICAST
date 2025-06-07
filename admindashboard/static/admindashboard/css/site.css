@@ -427,4 +427,191 @@ body {
         grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
         gap: 1rem;
     }
+}
+
+/* Modal Overlay */
+.modal-overlay {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 2000; /* On top of everything */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.7);
+    align-items: center;
+    justify-content: center;
+}
+
+/* Modal Content */
+.modal-content {
+    background-color: rgba(30, 30, 40, 0.98); /* Slightly darker, more opaque */
+    margin: auto;
+    padding: 40px 30px; /* Increased padding */
+    border-radius: 18px; /* Slightly more rounded */
+    width: 90%;
+    max-width: 450px; /* Slightly narrower */
+    box-shadow: 0 12px 35px rgba(0,0,0,0.9); /* Stronger shadow */
+    position: relative;
+    color: #e0f7fa;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-content h3 {
+    color: #9FBECB; /* A softer, greyish-blue for better readability and less eye strain */
+    margin-bottom: 30px;
+    font-size: 2.1em;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.7);
+}
+
+.modal-content .form-group {
+    margin-bottom: 25px;
+}
+
+.modal-content label {
+    display: block;
+    margin-bottom: 10px;
+    font-size: 1.1em;
+    color: #B0BEC5;
+}
+
+.modal-content select#yearSelect {
+    width: 100%;
+    padding: 12px 15px;
+    border-radius: 8px;
+    border: 1px solid #555;
+    background-color: rgba(60, 60, 70, 0.8); /* Darker grey background */
+    color: #e0f7fa;
+    font-size: 1.1em;
+    appearance: none; /* Remove default arrow */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23e0f7fa'%3E%3Cpath d='M7 10l5 5 5-5H7z'/%3E%3C/svg%3E"); /* Custom arrow */
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    cursor: pointer;
+    transition: border-color 0.3s, background-color 0.3s;
+}
+
+.modal-content select#yearSelect:focus {
+    outline: none;
+    border-color: #A2FFEB;
+    box-shadow: 0 0 0 3px rgba(162, 255, 235, 0.3);
+}
+
+.modal-content select#yearSelect option {
+    background-color: #4a4e5a; /* Greyish background for options */
+    color: #e0e0e0; /* Text color for options */
+}
+
+/* Modern Grey Button for Modal */
+.modal-content .btn-modern#viewMonthlyDataBtn {
+    background-color: #6C757D; /* Medium grey */
+    color: #FFFFFF;
+    border: none;
+    border-radius: 8px;
+    padding: 14px 35px;
+    font-size: 1.15em;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.modal-content .btn-modern#viewMonthlyDataBtn:hover {
+    background-color: #5A6268; /* Slightly darker grey on hover */
+}
+
+.monthly-card {
+    background: rgba(20, 20, 30, 0.88);
+    border-radius: 16px;
+    padding: 25px;
+    color: #e0f7fa;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-align: center;
+}
+
+.monthly-card:hover {
+    transform: translateY(-6px) scale(1.03);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.8);
+}
+
+.monthly-card h3 {
+    font-size: 1.5em;
+    color: #00bcd4;
+    margin-bottom: 10px;
+}
+
+.monthly-card p {
+    font-size: 1em;
+    color: #B0BEC5;
+}
+
+/* Styling for new month management form in right sidebar */
+.details-section .form-group input#monthInput {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border: 1px solid #555;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 1rem;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.details-section .form-group input#monthInput::placeholder {
+    color: #b0b0b0;
+    opacity: 1;
+}
+
+.details-section .form-group input#monthInput:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.1rem rgba(0, 123, 255, 0.25);
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+.details-section .btn#addMonthBtn,
+.details-section .btn#deleteMonthBtn {
+    width: 100%;
+    margin-top: 1rem;
+    padding: 0.8rem 1rem;
+    font-size: 1rem;
+}
+
+.details-section .btn#addMonthBtn {
+    /*background-color: #28a745; */
+}
+.details-section .btn#addMonthBtn:hover {
+    /*background-color: #218838; */
+}
+
+.details-section .btn#deleteMonthBtn {
+    /*background-color: #dc3545; */
+}
+.details-section .btn#deleteMonthBtn:hover {
+    /*background-color: #c82333; */
+}
+
+/* Close Button */
+.close-button {
+    color: #aaa;
+    position: absolute;
+    top: 20px; /* Adjust top position */
+    right: 20px; /* Adjust right position */
+    font-size: 35.2px; /* 32px * 1.10 = 35.2px */
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: #e0f7fa;
+    text-decoration: none;
+    cursor: pointer;
 } 
