@@ -7,7 +7,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import logout
 from django.views.decorators.http import require_POST
-from .models import Family, Species, Site
+from .models import Family, Species, Site, BirdDetection
 from .forms import FamilyForm, SpeciesForm, SiteForm
 from django.contrib import messages
 import json
@@ -23,6 +23,10 @@ from torch.nn.modules.activation import SiLU
 from torch.nn.modules.upsampling import Upsample
 from torch.nn.modules.pooling import MaxPool2d
 from torch.nn.modules.linear import Linear
+from django.db.models import Count, Avg, Max, Min
+from django.db.models.functions import TruncMonth, TruncYear
+from django.utils import timezone
+from datetime import timedelta
 
 # Get the base directory of the project
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -392,8 +396,114 @@ def delete_site(request, site_id):
     messages.success(request, 'Site deleted successfully!')
     return redirect('admindashboard:site_list')
 
+def get_species_distribution():
+    """Generate species distribution report"""
+    # Get species distribution by family
+    family_distribution = Family.objects.filter(is_archived=False).annotate(
+        species_count=Count('species', filter=models.Q(species__is_archived=False))
+    ).values('name', 'species_count')
+
+    # Get species distribution by site
+    site_distribution = Site.objects.filter(status='active').annotate(
+        detection_count=Count('birddetection')
+    ).values('name', 'detection_count')
+
+    return {
+        'family_distribution': list(family_distribution),
+        'site_distribution': list(site_distribution)
+    }
+
+def get_population_trends():
+    """Generate population trends report"""
+    # Get monthly detection trends
+    monthly_trends = BirdDetection.objects.annotate(
+        month=TruncMonth('detection_date')
+    ).values('month').annotate(
+        count=Count('id')
+    ).order_by('month')
+
+    # Get species-wise trends
+    species_trends = BirdDetection.objects.values(
+        'species__common_name'
+    ).annotate(
+        total_detections=Count('id'),
+        avg_confidence=Avg('confidence')
+    ).order_by('-total_detections')
+
+    return {
+        'monthly_trends': list(monthly_trends),
+        'species_trends': list(species_trends)
+    }
+
+def get_forecasting_data():
+    """Generate forecasting data for optimal field work timing"""
+    # Get historical detection patterns
+    last_year = timezone.now() - timedelta(days=365)
+    monthly_patterns = BirdDetection.objects.filter(
+        detection_date__gte=last_year
+    ).annotate(
+        month=TruncMonth('detection_date')
+    ).values('month').annotate(
+        detection_count=Count('id'),
+        avg_confidence=Avg('confidence')
+    ).order_by('month')
+
+    # Get site-wise patterns
+    site_patterns = BirdDetection.objects.filter(
+        detection_date__gte=last_year
+    ).values(
+        'species__family__name'
+    ).annotate(
+        total_detections=Count('id'),
+        avg_confidence=Avg('confidence')
+    ).order_by('-total_detections')
+
+    return {
+        'monthly_patterns': list(monthly_patterns),
+        'site_patterns': list(site_patterns)
+    }
+
+def get_site_analysis():
+    """Generate site analysis report"""
+    # Get site statistics
+    site_stats = Site.objects.filter(status='active').annotate(
+        total_detections=Count('birddetection'),
+        unique_species=Count('birddetection__species', distinct=True),
+        avg_confidence=Avg('birddetection__confidence')
+    ).values('name', 'total_detections', 'unique_species', 'avg_confidence')
+
+    # Get species distribution per site
+    species_per_site = BirdDetection.objects.values(
+        'species__common_name', 'site__name'
+    ).annotate(
+        count=Count('id')
+    ).order_by('site__name', '-count')
+
+    return {
+        'site_stats': list(site_stats),
+        'species_per_site': list(species_per_site)
+    }
+
 def report_view(request):
     """View for the statistical reports page"""
+    report_type = request.GET.get('type')
+    
+    if report_type:
+        # Handle AJAX request for report data
+        if report_type == 'distribution':
+            data = get_species_distribution()
+        elif report_type == 'trends':
+            data = get_population_trends()
+        elif report_type == 'forecasting':
+            data = get_forecasting_data()
+        elif report_type == 'site_analysis':
+            data = get_site_analysis()
+        else:
+            data = None
+            
+        return JsonResponse(data if data else {'error': 'Invalid report type'})
+    
+    # Regular page load - render the template
     context = {
         'page_title': 'Statistical Reports',
         'active_page': 'reports'

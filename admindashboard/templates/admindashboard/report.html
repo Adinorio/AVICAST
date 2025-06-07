@@ -5,44 +5,554 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'admindashboard/css/report.css' %}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 {% endblock %}
 
 {% block content %}
 <div class="dashboard">
-    <h1 class="dashboard-welcome">Statistical Reports</h1>
-    
     <div class="dashboard-grid">
         <!-- Species Distribution Report -->
-        <div class="dashboard-box">
+        <div class="dashboard-box" onclick="loadReport('distribution')">
             <i class="fas fa-chart-pie dashboard-icon"></i>
             <h2>Species Distribution</h2>
             <p>View bird species distribution across locations and time periods.</p>
-            <a href="#" class="dashboard-btn">Generate Report</a>
+            <a href="#" class="dashboard-btn" onclick="event.preventDefault(); loadReport('distribution')">Generate Report</a>
         </div>
 
         <!-- Population Trends -->
-        <div class="dashboard-box">
+        <div class="dashboard-box" onclick="loadReport('trends')">
             <i class="fas fa-chart-line dashboard-icon"></i>
             <h2>Population Trends</h2>
             <p>Track population changes and trends for different bird species.</p>
-            <a href="#" class="dashboard-btn">Generate Report</a>
+            <a href="#" class="dashboard-btn" onclick="event.preventDefault(); loadReport('trends')">Generate Report</a>
         </div>
 
         <!-- Forecasting -->
-        <div class="dashboard-box">
+        <div class="dashboard-box" onclick="loadReport('forecasting')">
             <i class="fas fa-calendar-check dashboard-icon"></i>
             <h2>Forecasting</h2>
             <p>Predict optimal dates for field work to maximize bird census data collection.</p>
-            <a href="#" class="dashboard-btn">Generate Report</a>
+            <a href="#" class="dashboard-btn" onclick="event.preventDefault(); loadReport('forecasting')">Generate Report</a>
         </div>
 
         <!-- Site Analysis -->
-        <div class="dashboard-box">
+        <div class="dashboard-box" onclick="loadReport('site_analysis')">
             <i class="fas fa-map-marked-alt dashboard-icon"></i>
             <h2>Site Analysis</h2>
             <p>Detailed analysis of bird populations across different observation sites.</p>
-            <a href="#" class="dashboard-btn">Generate Report</a>
+            <a href="#" class="dashboard-btn" onclick="event.preventDefault(); loadReport('site_analysis')">Generate Report</a>
+        </div>
+    </div>
+
+    <!-- Report Display Area -->
+    <div id="report-display" class="report-display" style="display: none;">
+        <div class="report-header">
+            <h2 id="report-title"></h2>
+            <button class="close-btn" onclick="closeReport()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="report-content">
+            <div id="chart-container"></div>
+            <div id="data-table"></div>
         </div>
     </div>
 </div>
+
+<script>
+function loadReport(type) {
+    const reportDisplay = document.getElementById('report-display');
+    const reportTitle = document.getElementById('report-title');
+    const chartContainer = document.getElementById('chart-container');
+    const dataTable = document.getElementById('data-table');
+    
+    // Show loading state
+    reportDisplay.style.display = 'block';
+    chartContainer.innerHTML = '<div class="loading">Loading report data...</div>';
+    dataTable.innerHTML = '';
+
+    // Set report title
+    const titles = {
+        'distribution': 'Species Distribution Report',
+        'trends': 'Population Trends Report',
+        'forecasting': 'Forecasting Report',
+        'site_analysis': 'Site Analysis Report'
+    };
+    reportTitle.textContent = titles[type];
+
+    // Fetch report data
+    fetch(`/admindashboard/reports/?type=${type}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.error) {
+                throw new Error(data.error);
+            }
+
+            // Clear previous content
+            chartContainer.innerHTML = '';
+            dataTable.innerHTML = '';
+
+            // Generate appropriate visualizations based on report type
+            switch(type) {
+                case 'distribution':
+                    createDistributionCharts(data);
+                    break;
+                case 'trends':
+                    createTrendsCharts(data);
+                    break;
+                case 'forecasting':
+                    createForecastingCharts(data);
+                    break;
+                case 'site_analysis':
+                    createSiteAnalysisCharts(data);
+                    break;
+                default:
+                    throw new Error('Invalid report type');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading report:', error);
+            chartContainer.innerHTML = `<div class="error">
+                <i class="fas fa-exclamation-circle"></i>
+                <p>Error loading report data: ${error.message}</p>
+                <p>Please try again later.</p>
+            </div>`;
+        });
+}
+
+function closeReport() {
+    document.getElementById('report-display').style.display = 'none';
+}
+
+function createDistributionCharts(data) {
+    const chartContainer = document.getElementById('chart-container');
+    const dataTable = document.getElementById('data-table');
+
+    // Create family distribution chart
+    const familyCtx = document.createElement('canvas');
+    chartContainer.appendChild(familyCtx);
+    new Chart(familyCtx, {
+        type: 'pie',
+        data: {
+            labels: data.family_distribution.map(item => item.name),
+            datasets: [{
+                data: data.family_distribution.map(item => item.species_count),
+                backgroundColor: [
+                    '#00bcd4', '#0097a7', '#006064', '#4dd0e1', '#80deea'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Species Distribution by Family',
+                    color: '#e0f7fa',
+                    font: {
+                        size: 16
+                    }
+                },
+                legend: {
+                    labels: {
+                        color: '#e0f7fa'
+                    }
+                }
+            }
+        }
+    });
+
+    // Create site distribution chart
+    const siteCtx = document.createElement('canvas');
+    chartContainer.appendChild(siteCtx);
+    new Chart(siteCtx, {
+        type: 'bar',
+        data: {
+            labels: data.site_distribution.map(item => item.name),
+            datasets: [{
+                label: 'Detections',
+                data: data.site_distribution.map(item => item.detection_count),
+                backgroundColor: '#00bcd4'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Species Distribution by Site',
+                    color: '#e0f7fa',
+                    font: {
+                        size: 16
+                    }
+                },
+                legend: {
+                    labels: {
+                        color: '#e0f7fa'
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    ticks: {
+                        color: '#e0f7fa'
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                },
+                x: {
+                    ticks: {
+                        color: '#e0f7fa'
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                }
+            }
+        }
+    });
+}
+
+function createTrendsCharts(data) {
+    const chartContainer = document.getElementById('chart-container');
+    const dataTable = document.getElementById('data-table');
+
+    // Create monthly trends chart
+    const monthlyCtx = document.createElement('canvas');
+    chartContainer.appendChild(monthlyCtx);
+    new Chart(monthlyCtx, {
+        type: 'line',
+        data: {
+            labels: data.monthly_trends.map(item => new Date(item.month).toLocaleDateString()),
+            datasets: [{
+                label: 'Detections',
+                data: data.monthly_trends.map(item => item.count),
+                borderColor: '#00bcd4',
+                backgroundColor: 'rgba(0, 188, 212, 0.1)',
+                tension: 0.1,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Monthly Detection Trends',
+                    color: '#e0f7fa',
+                    font: {
+                        size: 16
+                    }
+                },
+                legend: {
+                    labels: {
+                        color: '#e0f7fa'
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    ticks: {
+                        color: '#e0f7fa'
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                },
+                x: {
+                    ticks: {
+                        color: '#e0f7fa'
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                }
+            }
+        }
+    });
+
+    // Create species trends chart
+    const speciesCtx = document.createElement('canvas');
+    chartContainer.appendChild(speciesCtx);
+    new Chart(speciesCtx, {
+        type: 'bar',
+        data: {
+            labels: data.species_trends.map(item => item.species__common_name),
+            datasets: [{
+                label: 'Total Detections',
+                data: data.species_trends.map(item => item.total_detections),
+                backgroundColor: '#00bcd4'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Species-wise Detection Trends',
+                    color: '#e0f7fa',
+                    font: {
+                        size: 16
+                    }
+                },
+                legend: {
+                    labels: {
+                        color: '#e0f7fa'
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    ticks: {
+                        color: '#e0f7fa'
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                },
+                x: {
+                    ticks: {
+                        color: '#e0f7fa'
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                }
+            }
+        }
+    });
+}
+
+function createForecastingCharts(data) {
+    const chartContainer = document.getElementById('chart-container');
+    const dataTable = document.getElementById('data-table');
+
+    // Create monthly patterns chart
+    const monthlyCtx = document.createElement('canvas');
+    chartContainer.appendChild(monthlyCtx);
+    new Chart(monthlyCtx, {
+        type: 'line',
+        data: {
+            labels: data.monthly_patterns.map(item => new Date(item.month).toLocaleDateString()),
+            datasets: [{
+                label: 'Detection Count',
+                data: data.monthly_patterns.map(item => item.detection_count),
+                borderColor: '#00bcd4',
+                backgroundColor: 'rgba(0, 188, 212, 0.1)',
+                tension: 0.1,
+                fill: true
+            }, {
+                label: 'Average Confidence',
+                data: data.monthly_patterns.map(item => item.avg_confidence),
+                borderColor: '#0097a7',
+                backgroundColor: 'rgba(0, 151, 167, 0.1)',
+                tension: 0.1,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Monthly Detection Patterns',
+                    color: '#e0f7fa',
+                    font: {
+                        size: 16
+                    }
+                },
+                legend: {
+                    labels: {
+                        color: '#e0f7fa'
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    ticks: {
+                        color: '#e0f7fa'
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                },
+                x: {
+                    ticks: {
+                        color: '#e0f7fa'
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                }
+            }
+        }
+    });
+
+    // Create site patterns chart
+    const siteCtx = document.createElement('canvas');
+    chartContainer.appendChild(siteCtx);
+    new Chart(siteCtx, {
+        type: 'bar',
+        data: {
+            labels: data.site_patterns.map(item => item.species__family__name),
+            datasets: [{
+                label: 'Total Detections',
+                data: data.site_patterns.map(item => item.total_detections),
+                backgroundColor: '#00bcd4'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Site-wise Detection Patterns',
+                    color: '#e0f7fa',
+                    font: {
+                        size: 16
+                    }
+                },
+                legend: {
+                    labels: {
+                        color: '#e0f7fa'
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    ticks: {
+                        color: '#e0f7fa'
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                },
+                x: {
+                    ticks: {
+                        color: '#e0f7fa'
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                }
+            }
+        }
+    });
+}
+
+function createSiteAnalysisCharts(data) {
+    const chartContainer = document.getElementById('chart-container');
+    const dataTable = document.getElementById('data-table');
+
+    // Create site statistics chart
+    const statsCtx = document.createElement('canvas');
+    chartContainer.appendChild(statsCtx);
+    new Chart(statsCtx, {
+        type: 'bar',
+        data: {
+            labels: data.site_stats.map(item => item.name),
+            datasets: [{
+                label: 'Total Detections',
+                data: data.site_stats.map(item => item.total_detections),
+                backgroundColor: '#00bcd4'
+            }, {
+                label: 'Unique Species',
+                data: data.site_stats.map(item => item.unique_species),
+                backgroundColor: '#0097a7'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Site Statistics',
+                    color: '#e0f7fa',
+                    font: {
+                        size: 16
+                    }
+                },
+                legend: {
+                    labels: {
+                        color: '#e0f7fa'
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    ticks: {
+                        color: '#e0f7fa'
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                },
+                x: {
+                    ticks: {
+                        color: '#e0f7fa'
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                }
+            }
+        }
+    });
+
+    // Create species per site chart
+    const speciesCtx = document.createElement('canvas');
+    chartContainer.appendChild(speciesCtx);
+    new Chart(speciesCtx, {
+        type: 'bar',
+        data: {
+            labels: data.species_per_site.map(item => `${item.species__common_name} (${item.site__name})`),
+            datasets: [{
+                label: 'Detections',
+                data: data.species_per_site.map(item => item.count),
+                backgroundColor: '#00bcd4'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Species Distribution per Site',
+                    color: '#e0f7fa',
+                    font: {
+                        size: 16
+                    }
+                },
+                legend: {
+                    labels: {
+                        color: '#e0f7fa'
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    ticks: {
+                        color: '#e0f7fa'
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                },
+                x: {
+                    ticks: {
+                        color: '#e0f7fa'
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                }
+            }
+        }
+    });
+}
+</script>
 {% endblock %} 
