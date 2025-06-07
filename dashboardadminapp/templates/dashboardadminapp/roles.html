@@ -54,16 +54,152 @@
             </tr>
           </thead>
           <tbody>
-            {% for i in '12345'|make_list %}
             <tr>
-              <td class="roles-table__td">ROLE-{{ forloop.counter }}</td>
-              <td class="roles-table__td">5</td>
+              <td class="roles-table__td">
+                <div class="roles-flex-row">
+                  <span>1. View report management</span>
+                  <label class="switch">
+                    <input type="checkbox" checked>
+                    <span class="slider round"></span>
+                  </label>
+                </div>
+              </td>
+              <td class="roles-table__td">
+                <div class="roles-flex-row">
+                  <span>1.1 Generate reports</span>
+                  <label class="switch">
+                    <input type="checkbox" checked>
+                    <span class="slider round"></span>
+                  </label>
+                </div>
+              </td>
             </tr>
-            {% endfor %}
+            <tr>
+              <td class="roles-table__td">
+                <div class="roles-flex-row">
+                  <span>2. View species management</span>
+                  <label class="switch">
+                    <input type="checkbox" checked>
+                    <span class="slider round"></span>
+                  </label>
+                </div>
+              </td>
+              <td class="roles-table__td">
+                <div class="roles-flex-row">
+                  <span>2.1 Modify data</span>
+                  <label class="switch">
+                    <input type="checkbox" checked>
+                    <span class="slider round"></span>
+                  </label>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td class="roles-table__td">
+                <div class="roles-flex-row">
+                  <span>3. View site management</span>
+                  <label class="switch">
+                    <input type="checkbox" checked>
+                    <span class="slider round"></span>
+                  </label>
+                </div>
+              </td>
+              <td class="roles-table__td">
+                <div class="roles-flex-row">
+                  <span>3.1 Add sites</span>
+                  <label class="switch">
+                    <input type="checkbox" checked>
+                    <span class="slider round"></span>
+                  </label>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td class="roles-table__td">
+                <div class="roles-flex-row">
+                  <span>4. View bird census management</span>
+                  <label class="switch">
+                    <input type="checkbox" checked>
+                    <span class="slider round"></span>
+                  </label>
+                </div>
+              </td>
+              <td class="roles-table__td">
+                <div class="roles-flex-row">
+                  <span>4.1 Add birds</span>
+                  <label class="switch">
+                    <input type="checkbox" checked>
+                    <span class="slider round"></span>
+                  </label>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td class="roles-table__td">
+                <div class="roles-flex-row">
+                  <span>5. View image processing</span>
+                  <label class="switch">
+                    <input type="checkbox" checked>
+                    <span class="slider round"></span>
+                  </label>
+                </div>
+              </td>
+              <td class="roles-table__td">
+                <div class="roles-flex-row">
+                  <span>5.1 Generate data</span>
+                  <label class="switch">
+                    <input type="checkbox" checked>
+                    <span class="slider round"></span>
+                  </label>
+                </div>
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
     </div>
   </section>
 </div>
+<!-- Toggle Switch CSS -->
+<style>
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 24px;
+  margin-left: 12px;
+}
+.switch input {display:none;}
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #444;
+  transition: .4s;
+  border-radius: 24px;
+}
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+input:checked + .slider {
+  background-color: #00c853;
+}
+input:checked + .slider:before {
+  transform: translateX(16px);
+}
+.roles-flex-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+</style>
 {% endblock %}
