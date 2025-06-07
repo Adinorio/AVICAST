@@ -156,6 +156,7 @@ body {
     border-top: 1px solid rgba(255, 255, 255, 0.1); /* Subtle separator line */
     width: 100% !important; /* Ensure details section takes full width */
     box-sizing: border-box; /* Include padding and border in width */
+    position: relative;
 }
 
 .right-sidebar .section-header {
@@ -665,6 +666,7 @@ input[type="file"] {
     border-radius: 4px;
     color: #e0e0e0;
     cursor: pointer;
+    box-sizing: border-box; /* Added to include padding and border within the width */
 }
 
 input[type="file"]:disabled {
@@ -691,3 +693,17 @@ input[type="file"]:disabled::-webkit-file-upload-button {
     background-color: #555;
     cursor: not-allowed;
 }
+
+/* Form ribbon specific styles */
+.details-section {
+    position: relative;
+}
+
+.details-section .conservation-ribbon {
+    display: none !important; /* Explicitly hide the ribbon within the details section */
+    width: 6px;
+    right: -3px;
+    border-radius: 3px 0 0 3px;
+}
+
+/* Ensure the ribbon doesn't overlap with content */

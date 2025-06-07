@@ -40,12 +40,6 @@
         position: relative;
     }
 
-    .details-section .conservation-ribbon {
-        width: 6px;
-        right: -3px;
-        border-radius: 3px 0 0 3px;
-    }
-
     /* Ensure the ribbon doesn't overlap with content */
     .bird-info {
         padding-right: 12px;
@@ -410,9 +404,6 @@
         isAddingMode = false;
         isEditingMode = false;
         currentSpeciesId = null;
-        // Buttons now transform, so no need to explicitly set display here
-        // addBirdBtn.style.display = 'inline-block';
-        // editBirdBtn.style.display = 'inline-block';
         
         // Remove any existing ribbon from the form
         const formRibbon = document.querySelector('.details-section .conservation-ribbon');
@@ -470,11 +461,11 @@
                 descriptionHelp.style.display = 'none';
             }
 
-            // Update ribbon color in the form
-            const formRibbon = document.createElement('div');
-            formRibbon.className = 'conservation-ribbon';
-            updateRibbonColor(formRibbon, details.conservation_status);
-            document.querySelector('.details-section').appendChild(formRibbon);
+            // Remove any existing ribbon from the form
+            const formRibbon = document.querySelector('.details-section .conservation-ribbon');
+            if (formRibbon) {
+                formRibbon.remove();
+            }
 
         } catch (error) {
             console.error('Error fetching bird details:', error);
@@ -579,14 +570,6 @@
                     displayEditMode(speciesId);
                 }
             }
-        }
-    });
-
-    // Add event listener for conservation status changes (for the form ribbon)
-    conservationStatusSelect.addEventListener('change', function() {
-        const formRibbon = document.querySelector('.details-section .conservation-ribbon');
-        if (formRibbon) {
-            updateRibbonColor(formRibbon, this.value);
         }
     });
 
