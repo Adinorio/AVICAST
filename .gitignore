@@ -110,10 +110,32 @@ Desktop.ini
 *.tar
 *.7z
 
+# Media files to keep permanently
+media/site_images/
+media/site_images/banquerohan-mudflats.jpg
+media/site_images/banquerohan-ponds.jpg
+media/site_images/cadiz-viejo-ponds.jpg
+media/site_images/daga-mudflats.jpg
+media/site_images/kabilang-bilangan-island.jpg
+media/site_images/lakawon-island.jpg
+media/site_images/sicaba-luna-ponds.jpg
+media/site_images/tinampa-an-ponds.jpg
+media/site_images/zone-2-3-ponds.jpg
+
 # Keep these files
 !models/trained_model.pt
 !models/README.md
 !/superadminloginapp/static/images/Bird_Background.jpg
 !/static/admindashboard/images/background_image.jpg
+!/media/site_images/
+!/media/site_images/banquerohan-mudflats.jpg
+!/media/site_images/banquerohan-ponds.jpg
+!/media/site_images/cadiz-viejo-ponds.jpg
+!/media/site_images/daga-mudflats.jpg
+!/media/site_images/kabilang-bilangan-island.jpg
+!/media/site_images/lakawon-island.jpg
+!/media/site_images/sicaba-luna-ponds.jpg
+!/media/site_images/tinampa-an-ponds.jpg
+!/media/site_images/zone-2-3-ponds.jpg
 
 # Add any other necessary exclusion rules here 
