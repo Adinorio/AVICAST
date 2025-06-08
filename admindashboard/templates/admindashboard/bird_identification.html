@@ -81,7 +81,7 @@
   
     <!-- Action Buttons at the Bottom -->
     <div class="bottom-action-buttons">
-      <button id="uploadBtn" class="action-button primary-button" disabled>Upload</button>
+      <button id="uploadBtn" class="action-button primary-button" disabled data-state="upload">Upload</button>
       <button id="clearBtn" class="action-button secondary-button" disabled>Clear All</button>
   </div>
 </div>
@@ -168,12 +168,12 @@
 
     <!-- Modernized Review Controls and Table Styles -->
     <div class="review-controls-container">
-      <div class="review-filter-group">
-        <button class="review-filter-btn" data-filter="all">All</button>
-        <button class="review-filter-btn" data-filter="approved">Approved</button>
-        <button class="review-filter-btn" data-filter="rejected">Rejected</button>
-        <button class="review-filter-btn" data-filter="pending">Pending</button>
-        <button class="review-filter-btn" data-filter="error">Error</button>
+      <div class="filter-tabs">
+        <button class="filter-tab-button active" data-filter="all">All</button>
+        <button class="filter-tab-button" data-filter="approved">Approved</button>
+        <button class="filter-tab-button" data-filter="rejected">Rejected</button>
+        <button class="filter-tab-button" data-filter="pending">Pending</button>
+        <button class="filter-tab-button" data-filter="error">Error</button>
         <input type="text" id="reviewSearchInput" placeholder="Search filename...">
       </div>
     </div>
@@ -524,52 +524,70 @@ function formatFileSize(bytes) {
 
 // Modify upload button event to include progress tracking
 uploadBtn.addEventListener('click', async function() {
-  if (selectedFiles.length === 0) {
-    resultBox.innerHTML = `<p style='color:red;'>Please select files to upload.</p>`;
-    return;
-  }
-  // Show progress container
-  document.getElementById('upload-progress').style.display = 'block';
-  uploadBtn.disabled = true;
-  clearBtn.disabled = true;
-  const totalFiles = selectedFiles.length;
-  let completedFiles = 0;
-  // Initialize progress tracking
-  const progressBar = document.getElementById('upload-progress-bar');
-  const progressPercentage = document.getElementById('upload-percentage');
-  const uploadStatus = document.getElementById('upload-status');
-  const fileProgressList = document.getElementById('file-progress-list');
-  fileProgressList.innerHTML = '';
-  selectedFiles.forEach((file, index) => {
-    const progressItem = document.createElement('div');
-    progressItem.classList.add('file-progress-item');
-    progressItem.innerHTML = `
-      <span class="file-name">${file.name}</span>
-      <div class="file-progress-bar">
-        <div class="file-progress-fill" data-index="${index}"></div>
-      </div>
-      <span class="file-progress-text" data-index="${index}">0%</span>
-    `;
-    fileProgressList.appendChild(progressItem);
-  });
-  // Simulate upload progress (replace with actual upload logic if needed)
-  for (let i = 0; i < selectedFiles.length; i++) {
-    const file = selectedFiles[i];
-    // Only simulate upload, do not process images here
-    uploadStatus.textContent = `Uploading ${i + 1} of ${totalFiles}: ${file.name}`;
-    for (let progress = 0; progress <= 100; progress += 10) {
-      await new Promise(resolve => setTimeout(resolve, 60));
-      updateFileProgress(i, progress);
-      updateOverallProgress();
+  // Only proceed if button is in 'upload' state, meaning a new upload is intended
+  if (this.dataset.state === 'upload') { // This check is important
+    if (selectedFiles.length === 0) {
+      resultBox.innerHTML = `<p style='color:red;'>Please select files to upload.</p>`;
+      return;
     }
-    completedFiles++;
+
+    // Show progress container
+    document.getElementById('upload-progress').style.display = 'block';
+    uploadBtn.disabled = true; // Disable during upload
+    clearBtn.disabled = true; // Disable during upload
+
+    const totalFiles = selectedFiles.length;
+    let completedFiles = 0;
+
+    // Initialize progress tracking UI elements
+    const progressBar = document.getElementById('upload-progress-bar');
+    const progressPercentage = document.getElementById('upload-percentage');
+    const uploadStatus = document.getElementById('upload-status');
+    const fileProgressList = document.getElementById('file-progress-list');
+    fileProgressList.innerHTML = ''; // Clear previous file progress list
+
+    // Populate individual file progress items
+    selectedFiles.forEach((file, index) => {
+      const progressItem = document.createElement('div');
+      progressItem.classList.add('file-progress-item');
+      progressItem.innerHTML = `
+        <span class="file-name">${file.name}</span>
+        <div class="file-progress-bar">
+          <div class="file-progress-fill" data-index="${index}"></div>
+        </div>
+        <span class="file-progress-text" data-index="${index}">0%</span>
+      `;
+      fileProgressList.appendChild(progressItem);
+    });
+
+    // Simulate upload progress for each file
+    for (let i = 0; i < totalFiles; i++) {
+      const file = selectedFiles[i];
+      uploadStatus.textContent = `Uploading ${i + 1} of ${totalFiles}: ${file.name}`;
+      for (let progress = 0; progress <= 100; progress += 10) {
+        await new Promise(resolve => setTimeout(resolve, 60)); // Simulate delay
+        updateFileProgress(i, progress);
+        updateOverallProgress();
+      }
+      completedFiles++;
+    }
+
+    uploadStatus.textContent = `Completed: ${completedFiles} of ${totalFiles} files uploaded`;
+
+    // After upload simulation is complete:
+    uploadBtn.textContent = 'Save'; // Change button text
+    uploadBtn.dataset.state = 'save'; // Update button state
+    uploadBtn.disabled = false; // Re-enable the Save button
+    
+    // (REMOVED) Now move to the process data tab immediately
+    // showTab('process-data');
+    // updateProcessDataView(); // This will populate the table with the uploaded images
   }
-  uploadStatus.textContent = `Completed: ${completedFiles} of ${totalFiles} files uploaded`;
-  uploadBtn.disabled = false;
-  clearBtn.disabled = false;
-  // (REMOVED) Now switch to Process Data tab and show images (unprocessed)
-  // showTab('process-data');
-  updateProcessDataView();
+  // If data-state is 'save', clicking again will trigger the tab switch
+  else if (this.dataset.state === 'save') {
+    showTab('process-data');
+    updateProcessDataView();
+  }
 });
 
 // Add function to update individual file progress
@@ -618,14 +636,19 @@ document.getElementById('clearBtn').addEventListener('click', function() {
 function updateUploadButtonState() {
   const uploadBtn = document.getElementById('uploadBtn');
   const clearBtn = document.getElementById('clearBtn');
-  
+
   if (selectedFiles.length > 0) {
     uploadBtn.disabled = false;
-    clearBtn.disabled = false;
+    // Always reset to 'Upload' text and state when files are selected initially or after clearing
+    uploadBtn.textContent = 'Upload';
+    uploadBtn.dataset.state = 'upload';
   } else {
     uploadBtn.disabled = true;
-    clearBtn.disabled = true;
+    // Keep it 'Upload' when no files
+    uploadBtn.textContent = 'Upload';
+    uploadBtn.dataset.state = 'upload';
   }
+  clearBtn.disabled = (selectedFiles.length === 0); // Clear button state
 }
 
 // New function to remove a selected file
@@ -946,35 +969,29 @@ function updateProcessDataView() {
   }
 
   selectedFiles.forEach((file, index) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onloadend = function() {
-      const row = imageTableBody.insertRow();
-      row.dataset.index = index; // Store index for later reference
-      row.innerHTML = `
-        <td><img src="${reader.result}" class="thumbnail-table" alt="${file.name}"></td>
-        <td>${file.name}</td>
-        <td class="status-cell status-ready">Ready</td>
-        <td>-</td>
-        <td><button class="action-button small-button process-single-btn" data-index="${index}">Process</button></td>
-      `;
+    const fileEntry = imageProcessingStatus[index]; // Get the pre-loaded fileEntry
+    if (!fileEntry || !fileEntry.dataUrl) return; // Ensure dataUrl is available
 
-      // Add click listener for thumbnail to display in large preview
-      row.querySelector('.thumbnail-table').addEventListener('click', () => {
-        previewImageForProcessing(imageProcessingStatus[index]);
-      });
+    const row = imageTableBody.insertRow();
+    row.dataset.index = index; // Store index for later reference
+    row.innerHTML = `
+      <td><img src="${fileEntry.dataUrl}" class="thumbnail-table" alt="${file.name}"></td>
+      <td>${file.name}</td>
+      <td class="status-cell status-ready">Ready</td>
+      <td>-</td>
+      <td><button class="action-button small-button process-single-btn" data-index="${index}">Process</button></td>
+    `;
 
-      // Add click listener for individual process button
-      row.querySelector('.process-single-btn').addEventListener('click', async (e) => {
-        const imageIndex = e.target.dataset.index;
-        await displayImageForProcessing(imageProcessingStatus[imageIndex]);
-      });
+    // Add click listener for thumbnail to display in large preview
+    row.querySelector('.thumbnail-table').addEventListener('click', () => {
+      previewImageForProcessing(imageProcessingStatus[index]);
+    });
 
-      // (REMOVED) Do NOT auto-display the first image in the large preview
-      // if (index === 0) {
-      //   displayImageForProcessing(imageProcessingStatus[index]);
-      // }
-    };
+    // Add click listener for individual process button
+    row.querySelector('.process-single-btn').addEventListener('click', async (e) => {
+      const imageIndex = e.target.dataset.index;
+      await displayImageForProcessing(imageProcessingStatus[imageIndex]);
+    });
   });
   processAllImagesBtn.disabled = false; // Enable process all button once table is populated
   updateGalleryNavigation();
@@ -1313,9 +1330,9 @@ function updateReviewDataView() {
 }
 
 // --- Filtering and Search Event Listeners ---
-document.querySelectorAll('.review-filter-btn').forEach(btn => {
+document.querySelectorAll('.filter-tab-button').forEach(btn => {
   btn.addEventListener('click', function() {
-    document.querySelectorAll('.review-filter-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.filter-tab-button').forEach(b => b.classList.remove('active'));
     this.classList.add('active');
     updateReviewDataView();
   });
@@ -1734,13 +1751,35 @@ reviewModernStyle.textContent = `
   justify-content: flex-start;
   flex-direction: column;
 }
-.review-filter-group {
+
+.review-controls-container .filter-tabs {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px 8px;
+  gap: 10px;
   align-items: center;
   margin-bottom: 18px;
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+  border-radius: 0;
 }
+
+.review-controls-container input[type="text"] {
+  background: #2c2f33;
+  color: #e0e0e0;
+  border: 1px solid #4a69bd;
+  border-radius: 6px;
+  padding: 8px 15px;
+  font-size: 0.95em;
+  outline: none;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.review-controls-container input[type="text"]:focus {
+  border-color: #3e58a3;
+  box-shadow: 0 0 0 3px rgba(74, 105, 189, 0.4);
+}
+
 .review-batch-group-wrapper {
   display: flex;
   flex-direction: column;
@@ -1780,7 +1819,7 @@ reviewModernStyle.textContent = `
     gap: 18px 32px;
     justify-content: space-between;
   }
-  .review-filter-group {
+  .review-controls-container .filter-tabs {
     margin-bottom: 0;
   }
   .review-batch-group-wrapper {
