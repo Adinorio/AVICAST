@@ -69,7 +69,6 @@ class Site(models.Model):
     ]
 
     name = models.CharField(max_length=100)
-    code = models.CharField(max_length=20, unique=True)
     location = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
@@ -81,7 +80,7 @@ class Site(models.Model):
         ordering = ['name']
 
     def __str__(self):
-        return f"{self.name} ({self.code})"
+        return self.name
 
 class BirdDetection(models.Model):
     site = models.ForeignKey(Site, on_delete=models.CASCADE, related_name='bird_detections', null=True, blank=True)

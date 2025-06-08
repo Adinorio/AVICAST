@@ -13,17 +13,18 @@
     <div class="main-area">
         <div class="sites-container">
             {% for site in sites %}
-            <a href="#" class="dashboard-box site-card" data-site-id="{{ site.id }}" data-site-name="{{ site.name }}" data-site-code="{{ site.code }}" data-site-location="{{ site.location }}" data-site-status="{{ site.status }}">
-                <div class="site-image-container">
+            <a href="#" class="dashboard-box site-card" data-site-id="{{ site.id }}" data-site-name="{{ site.name }}" data-site-location="{{ site.location }}" data-site-status="{{ site.status }}">
+                <div class="site-image-container" data-site-id="{{ site.id }}">
                     {% if site.image %}
                     <img src="{{ site.image.url }}" alt="Site Image" class="site-image">
                     {% else %}
                     <img src="{% static 'admindashboard/images/site-example.jpg' %}" alt="Default Site Image" class="site-image">
                     {% endif %}
                     <div class="site-status">{{ site.get_status_display }}</div>
+                    <div class="site-image-preview" style="display: none;">Preview</div>
                 </div>
                 <div class="site-info">
-                    <h3 class="site-name">{{ site.name }} <span class="site-code">({{ site.code }})</span></h3>
+                    <h3 class="site-name">{{ site.name }}</h3>
                     <div class="site-details">
                         <div class="detail-item">
                             <i class="fas fa-map-marker-alt"></i>
@@ -70,12 +71,12 @@
                 <form id="addSiteForm" method="POST" action="{% url 'admindashboard:add_site' %}">
                     {% csrf_token %}
                     <div class="form-group">
-                        <label for="site_name">Site Name</label>
-                        <input type="text" id="site_name" name="name" placeholder="Enter Site Name" disabled required>
+                        <label for="site_image">Site Image</label>
+                        <input type="file" id="site_image" name="image" accept="image/*" disabled>
                     </div>
                     <div class="form-group">
-                        <label for="site_code">Site Code</label>
-                        <input type="text" id="site_code" name="code" placeholder="Enter Site Code" disabled required>
+                        <label for="site_name">Site Name</label>
+                        <input type="text" id="site_name" name="name" placeholder="Enter Site Name" disabled required>
                     </div>
                     <div class="form-group">
                         <label for="location">Location</label>
@@ -87,12 +88,7 @@
                             <option value="">Select Status</option>
                             <option value="active">Active</option>
                             <option value="inactive">Inactive</option>
-                            <option value="maintenance">Under Maintenance</option>
                         </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="site_image">Site Image</label>
-                        <input type="file" id="site_image" name="image" accept="image/*" disabled>
                     </div>
                     <input type="hidden" id="site_id" name="site_id" value="">
                     <div class="button-group">
@@ -118,6 +114,11 @@
         <button class="btn btn-modern" id="viewMonthlyDataBtn">View Monthly Data</button>
     </div>
 </div>
+
+<!-- Expanded Image Modal -->
+<div class="expanded-image-modal" style="display: none;">
+    <img src="" alt="Expanded Site Image" class="expanded-image">
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -133,8 +134,6 @@
             console.log('addSiteForm:', addSiteForm); // Debugging
             const siteNameInput = document.getElementById('site_name');
             console.log('siteNameInput:', siteNameInput); // Debugging
-            const siteCodeInput = document.getElementById('site_code');
-            console.log('siteCodeInput:', siteCodeInput); // Debugging
             const locationInput = document.getElementById('location');
             console.log('locationInput:', locationInput); // Debugging
             const statusSelect = document.getElementById('status');
@@ -143,7 +142,7 @@
             console.log('siteImageInput:', siteImageInput); // Debugging
             const siteIdInput = document.getElementById('site_id'); // New: hidden input for site ID
             console.log('siteIdInput:', siteIdInput); // Debugging
-            const formInputs = [siteNameInput, siteCodeInput, locationInput, statusSelect, siteImageInput];
+            const formInputs = [siteNameInput, locationInput, statusSelect, siteImageInput];
 
             // Year Selection Modal elements
             const yearSelectionModal = document.getElementById('yearSelectionModal');
@@ -168,12 +167,8 @@
                 console.log('populateForm called with:', siteData); // Debugging
                 siteIdInput.value = siteData.id || '';
                 siteNameInput.value = siteData.name || '';
-                siteCodeInput.value = siteData.code || '';
                 locationInput.value = siteData.location || '';
                 statusSelect.value = siteData.status || '';
-                // Image input cannot be pre-populated for security reasons, but we can display existing image if any
-                // For displaying existing image, you would typically have a separate <img> tag or logic.
-                // For now, the file input will just be clear.
             }
             console.log('populateForm function defined.'); // Debugging: confirm function definition
 
@@ -256,7 +251,6 @@
                         const siteData = {
                             id: this.dataset.siteId,
                             name: this.dataset.siteName,
-                            code: this.dataset.siteCode,
                             location: this.dataset.siteLocation,
                             status: this.dataset.siteStatus,
                         };
@@ -453,12 +447,12 @@
                         addSiteForm.innerHTML = `
                             {% csrf_token %}
                             <div class="form-group">
-                                <label for="site_name">Site Name</label>
-                                <input type="text" id="site_name" name="name" placeholder="Enter Site Name" disabled required>
+                                <label for="site_image">Site Image</label>
+                                <input type="file" id="site_image" name="image" accept="image/*" disabled>
                             </div>
                             <div class="form-group">
-                                <label for="site_code">Site Code</label>
-                                <input type="text" id="site_code" name="code" placeholder="Enter Site Code" disabled required>
+                                <label for="site_name">Site Name</label>
+                                <input type="text" id="site_name" name="name" placeholder="Enter Site Name" disabled required>
                             </div>
                             <div class="form-group">
                                 <label for="location">Location</label>
@@ -470,12 +464,7 @@
                                     <option value="">Select Status</option>
                                     <option value="active">Active</option>
                                     <option value="inactive">Inactive</option>
-                                    <option value="maintenance">Under Maintenance</option>
                                 </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="site_image">Site Image</label>
-                                <input type="file" id="site_image" name="image" accept="image/*" disabled>
                             </div>
                             <input type="hidden" id="site_id" name="site_id" value="">
                             <div class="button-group"></div>
@@ -487,13 +476,12 @@
                         // A safer way would be to wrap the form in a reusable function that also returns the elements.
                         // For this iteration, we'll re-get, but be aware of potential issues if not done carefully.
                         window.siteNameInput = document.getElementById('site_name');
-                        window.siteCodeInput = document.getElementById('site_code');
                         window.locationInput = document.getElementById('location');
                         window.statusSelect = document.getElementById('status');
                         window.siteImageInput = document.getElementById('site_image');
                         window.siteIdInput = document.getElementById('site_id');
                         // Re-initialize formInputs array - this is crucial
-                        window.formInputs = [window.siteNameInput, window.siteCodeInput, window.locationInput, window.statusSelect, window.siteImageInput];
+                        window.formInputs = [window.siteNameInput, window.locationInput, window.statusSelect, window.siteImageInput];
 
                         // Re-add event listeners if elements were replaced (e.g., for add/edit buttons on the form)
                         // This current setup is for the mainAddSiteBtn and cancelEditBtn being outside the replaced form area.
@@ -576,6 +564,62 @@
                     mainAddSiteBtn.disabled = false;
                     cancelEditBtn.disabled = false;
                 });
+            });
+
+            // --- Site Image Preview on Hover (2s delay) ---
+            const previewTimers = new Map(); // Store timers for each container
+
+            document.querySelectorAll('.site-image-container').forEach(function(container) {
+                const preview = container.querySelector('.site-image-preview');
+                const expandedModal = document.querySelector('.expanded-image-modal');
+                const expandedImage = expandedModal.querySelector('.expanded-image');
+                const siteImage = container.querySelector('.site-image');
+
+                if (!preview || !expandedModal || !expandedImage || !siteImage) {
+                    console.error('Required elements not found for image preview');
+                    return;
+                }
+
+                // Mouse enter handler
+                container.addEventListener('mouseenter', function() {
+                    // Clear any existing timer for this container
+                    if (previewTimers.has(container)) {
+                        clearTimeout(previewTimers.get(container));
+                    }
+
+                    // Set new timer
+                    const timer = setTimeout(function() {
+                        try {
+                            preview.style.display = 'flex';
+                            expandedImage.src = siteImage.src;
+                            expandedModal.style.display = 'flex';
+                        } catch (error) {
+                            console.error('Error showing preview:', error);
+                        }
+                    }, 2000);
+
+                    // Store the timer
+                    previewTimers.set(container, timer);
+                });
+
+                // Mouse leave handler
+                container.addEventListener('mouseleave', function() {
+                    // Clear timer
+                    if (previewTimers.has(container)) {
+                        clearTimeout(previewTimers.get(container));
+                        previewTimers.delete(container);
+                    }
+
+                    // Hide preview and modal
+                    preview.style.display = 'none';
+                    expandedModal.style.display = 'none';
+                });
+            });
+
+            // Clean up timers when leaving the page
+            window.addEventListener('beforeunload', function() {
+                previewTimers.forEach((timer) => clearTimeout(timer));
+                previewTimers.clear();
             });
         } catch (error) {
             console.error('Error in DOMContentLoaded block:', error);

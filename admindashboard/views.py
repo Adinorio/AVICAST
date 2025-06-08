@@ -475,7 +475,7 @@ def add_site(request):
             print("Form is valid.") # Debugging log
             site = form.save(commit=False)
             site.save()
-            print(f"Site saved: {site.name} ({site.code})") # Debugging log
+            print(f"Site saved: {site.name}") # Debugging log
             messages.success(request, 'Site added successfully!')
             return JsonResponse({'success': True, 'message': 'Site added successfully!'})
         else:
@@ -497,7 +497,7 @@ def edit_site(request, site_id):
         if form.is_valid():
             print("Edit form is valid.") # Debugging log
             form.save()
-            print(f"Site updated: {site.name} ({site.code})") # Debugging log
+            print(f"Site updated: {site.name}") # Debugging log
             messages.success(request, 'Site updated successfully!')
             return JsonResponse({'success': True, 'message': 'Site updated successfully!'})
         else:

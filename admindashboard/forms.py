@@ -26,12 +26,10 @@ class SpeciesForm(forms.ModelForm):
 class SiteForm(forms.ModelForm):
     class Meta:
         model = Site
-        fields = ['name', 'code', 'location', 'description', 'status', 'image']
+        fields = ['name', 'location', 'status', 'image']
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Site Name'}),
-            'code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Site Code'}),
-            'location': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Location'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Description', 'rows': 2}),
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter Site Name'}),
+            'location': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter Location'}),
             'status': forms.Select(attrs={'class': 'form-control'}),
             'image': forms.FileInput(attrs={'class': 'form-control'}),
         }
