@@ -60,6 +60,9 @@
                 <div class="filter-row">
                     <button class="btn btn-outline-modern filter-btn"><i class="fas fa-filter"></i> Filter</button>
                     <button class="btn btn-outline-modern edit-btn" id="cancelEditBtn" type="button">Edit</button>
+                    <a href="{% url 'admindashboard:import_data' %}" class="btn btn-outline-modern import-btn">
+                        <i class="fas fa-file-import"></i> Import Data
+                    </a>
                 </div>
             </div>
 
@@ -118,6 +121,15 @@
 <!-- Expanded Image Modal -->
 <div class="expanded-image-modal" style="display: none;">
     <img src="" alt="Expanded Site Image" class="expanded-image">
+</div>
+
+<!-- Monthly Detail Modal -->
+<div id="monthlyDetailModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <span class="close-button" id="monthlyDetailCloseButton">&times;</span>
+        <h3 id="monthlyDetailModalTitle"></h3>
+        <div id="monthlyDetailContent" class="monthly-detail-content"></div>
+    </div>
 </div>
 {% endblock %}
 
@@ -200,10 +212,8 @@
 
             // Function to fetch and populate years for the modal
             async function populateYears(siteId) {
-                let yearsToDisplay = [2023, 2024, 2025]; // Hardcoded years for UI demonstration
+                let yearsToDisplay = []; 
                 
-                // You can still fetch from backend and combine, but for now, prioritize hardcoded
-                /*
                 try {
                     const response = await fetch(`/admindashboard/api/sites/${siteId}/years/`);
                     if (!response.ok) {
@@ -211,15 +221,15 @@
                     }
                     const data = await response.json();
                     if (data.years && data.years.length > 0) {
-                        // Merge unique years, prioritizing newer ones
-                        const fetchedYears = data.years.map(y => parseInt(y));
-                        yearsToDisplay = [...new Set([...fetchedYears, ...yearsToDisplay])].sort((a,b) => b - a);
+                        yearsToDisplay = data.years.map(y => parseInt(y)).sort((a,b) => b - a);
+                    } else {
+                        yearsToDisplay = [new Date().getFullYear()]; // Default to current year if no data
                     }
                 } catch (error) {
-                    console.error('Error fetching years, using hardcoded defaults:', error);
+                    console.error('Error fetching years, defaulting to current year:', error);
+                    yearsToDisplay = [new Date().getFullYear()]; // Fallback to current year
                 }
-                */
-
+                
                 let yearsHtml = '<option value="">Select a year</option>';
                 yearsToDisplay.forEach(year => {
                     yearsHtml += `<option value="${year}">${year}</option>`;
@@ -392,10 +402,12 @@
                         if (data.monthly_data && data.monthly_data.length > 0) {
                             data.monthly_data.forEach(month => {
                                 monthCardsHtml += `
-                                    <div class="dashboard-box monthly-card">
+                                    <div class="dashboard-box monthly-card clickable-month-card" 
+                                         data-month-number="${month.month_number}"
+                                         data-month-name="${month.month_name}"
+                                         data-site-id="${currentSelectedSite.id}"
+                                         data-year="${selectedYear}">
                                         <h3>${month.month_name}</h3>
-                                        <p>Total Detections: ${month.total_detections}</p>
-                                        <p>Unique Species: ${month.unique_species}</p>
                                     </div>
                                 `;
                             });
@@ -403,6 +415,41 @@
                             monthCardsHtml = '<p>No monthly data available for this site and year.</p>';
                         }
                         monthlyCardsGrid.innerHTML = monthCardsHtml;
+
+                        // Add event listeners for new clickable monthly cards
+                        document.querySelectorAll('.clickable-month-card').forEach(monthCard => {
+                            monthCard.addEventListener('click', function() {
+                                const clickedMonthNumber = this.dataset.monthNumber;
+                                const clickedMonthName = this.dataset.monthName;
+                                const clickedSiteId = this.dataset.siteId;
+                                const clickedYear = this.dataset.year;
+
+                                const monthData = data.monthly_data.find(m => m.month_number == clickedMonthNumber);
+
+                                if (monthData) {
+                                    document.getElementById('monthlyDetailModalTitle').textContent = `${clickedMonthName} Bird Detections - ${clickedYear}`;
+                                    let detailHtml = '';
+                                    for (const familyName in monthData.species_data) {
+                                        if (monthData.species_data.hasOwnProperty(familyName)) {
+                                            detailHtml += `
+                                                <h4>${familyName}</h4>
+                                                <ul class="species-list">
+                                            `;
+                                            monthData.species_data[familyName].forEach(species => {
+                                                detailHtml += `
+                                                    <li>${species.species_name}: ${species.count}</li>
+                                                `;
+                                            });
+                                            detailHtml += `</ul>`;
+                                        }
+                                    }
+                                    document.getElementById('monthlyDetailContent').innerHTML = detailHtml;
+                                    document.getElementById('monthlyDetailModal').style.display = 'flex';
+                                } else {
+                                    alert('No detailed data found for this month.');
+                                }
+                            });
+                        });
 
                     } catch (error) {
                         console.error('Error fetching monthly data:', error);
@@ -620,6 +667,22 @@
             window.addEventListener('beforeunload', function() {
                 previewTimers.forEach((timer) => clearTimeout(timer));
                 previewTimers.clear();
+            });
+
+            // Close modal button for monthly details
+            const monthlyDetailCloseButton = document.getElementById('monthlyDetailCloseButton');
+            if (monthlyDetailCloseButton) {
+                monthlyDetailCloseButton.addEventListener('click', function() {
+                    document.getElementById('monthlyDetailModal').style.display = 'none';
+                });
+            }
+
+            // Click outside monthly detail modal to close
+            window.addEventListener('click', function(event) {
+                const monthlyDetailModal = document.getElementById('monthlyDetailModal');
+                if (event.target == monthlyDetailModal) {
+                    monthlyDetailModal.style.display = 'none';
+                }
             });
         } catch (error) {
             console.error('Error in DOMContentLoaded block:', error);

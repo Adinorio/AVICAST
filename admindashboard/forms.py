@@ -33,3 +33,22 @@ class SiteForm(forms.ModelForm):
             'status': forms.Select(attrs={'class': 'form-control'}),
             'image': forms.FileInput(attrs={'class': 'form-control'}),
         }
+
+class ImportDataForm(forms.Form):
+    excel_file = forms.FileField(
+        label='Excel File',
+        help_text='Upload an Excel file (.xlsx) containing site data',
+        widget=forms.FileInput(attrs={
+            'accept': '.xlsx',
+            'class': 'form-control'
+        })
+    )
+    sheet_name = forms.CharField(
+        label='Sheet Name',
+        required=False,
+        help_text='Name of the sheet containing the data (leave empty for first sheet)',
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Sheet1'
+        })
+    )

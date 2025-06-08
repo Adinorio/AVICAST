@@ -1,0 +1,204 @@
+.import-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.import-container .dashboard-box {
+    background: rgba(65, 69, 79, 0.9);
+    border: 1px solid rgba(88, 88, 88, 0.5);
+    box-shadow: 0px 0px 8px 4px rgba(0,0,0,0.35);
+    border-radius: 12px;
+    padding: 2rem;
+}
+
+.import-container h2 {
+    color: #FFFFFF;
+    margin-bottom: 2rem;
+    text-align: center;
+    font-size: 1.8rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    color: #e0e0e0;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    font-size: 1.1rem;
+}
+
+.form-group input[type="file"],
+.form-group input[type="text"] {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid #555;
+    border-radius: 4px;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    font-size: 1rem;
+}
+
+.form-group input[type="file"]::-webkit-file-upload-button {
+    background-color: #17a2b8;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    padding: 0.6rem 1rem;
+    cursor: pointer;
+    margin-right: 1rem;
+    transition: background-color 0.2s ease;
+}
+
+.form-group input[type="file"]::-webkit-file-upload-button:hover {
+    background-color: #138496;
+}
+
+.form-text {
+    color: #b0b0b0;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
+
+.format-info {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+}
+
+.format-info p {
+    color: #e0e0e0;
+    margin-bottom: 1rem;
+}
+
+.format-info ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0 0 1rem 0;
+}
+
+.format-info li {
+    color: #e0e0e0;
+    padding: 0.3rem 0;
+    position: relative;
+    padding-left: 1.5rem;
+}
+
+.format-info li:before {
+    content: "•";
+    color: #17a2b8;
+    position: absolute;
+    left: 0;
+}
+
+.example-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.example-table th,
+.example-table td {
+    padding: 0.8rem;
+    text-align: left;
+    border: 1px solid #555;
+    color: #e0e0e0;
+}
+
+.example-table th {
+    background: rgba(23, 162, 184, 0.2);
+    font-weight: 600;
+}
+
+.button-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+    justify-content: center;
+}
+
+.btn {
+    padding: 0.8rem 2rem;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn i {
+    font-size: 1.1rem;
+}
+
+.btn-modern {
+    background-color: #17a2b8;
+    color: white;
+    border: none;
+}
+
+.btn-modern:hover {
+    background-color: #138496;
+}
+
+.btn-outline-modern {
+    background-color: transparent;
+    color: #17a2b8;
+    border: 1px solid #17a2b8;
+}
+
+.btn-outline-modern:hover {
+    background-color: #17a2b8;
+    color: white;
+}
+
+/* Preview Section Styles */
+.preview-section {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.preview-section h3 {
+    color: #FFFFFF;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    font-size: 1.5rem;
+}
+
+#previewContent {
+    max-height: 400px;
+    overflow-y: auto;
+    margin-bottom: 1.5rem;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+/* Loading State */
+.btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .import-container {
+        padding: 1rem;
+    }
+
+    .button-group {
+        flex-direction: column;
+    }
+
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+} 

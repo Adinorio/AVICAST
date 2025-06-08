@@ -1,0 +1,182 @@
+{% extends "admindashboard/base.html" %}
+{% load static %}
+
+{% block title %}Import Data - Admin Dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'admindashboard/css/import_data.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="import-container">
+    <div class="dashboard-box">
+        <h2>Import Site Data</h2>
+        
+        <form id="importForm" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="excel_file">Excel File</label>
+                {{ form.excel_file }}
+                <small class="form-text">Upload an Excel file (.xlsx) containing site data</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="sheet_name">Sheet Name (Optional)</label>
+                {{ form.sheet_name }}
+                <small class="form-text">Name of the sheet containing the data (leave empty for first sheet)</small>
+            </div>
+
+            <div class="format-info">
+                <p><strong>Expected Excel Format:</strong></p>
+                <ul>
+                    <li>Ensure the file contains the site name and year (e.g., "DAGA 2021") in a prominent cell.</li>
+                    <li>Month headers (e.g., "SEPTEMBER", "OCTOBER", "NOVEMBER") should be in a single row.</li>
+                    <li>A "SPECIES" column should list the bird species.</li>
+                    <li>Counts for each species per month should be in the corresponding month columns.</li>
+                    <li>Category rows (e.g., "HERONS AND EGRETS") and empty rows will be skipped.</li>
+                </ul>
+                
+                <p><strong>Example:</strong></p>
+                <table class="example-table">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>SEPTEMBER</th>
+                            <th>OCTOBER</th>
+                            <th>NOVEMBER</th>
+                            <th>TOTAL</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>DAGA 2021</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td><br/>HERONS AND EGRETS</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>JAVAN POND HERON</td>
+                            <td>15</td>
+                            <td>5</td>
+                            <td>18</td>
+                            <td>38</td>
+                        </tr>
+                        <tr>
+                            <td>STRIATED (LITTLE GREEN) HERON BUTORIDES STRIATUS</td>
+                            <td>6</td>
+                            <td>7</td>
+                            <td></td>
+                            <td>13</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="button-group">
+                <button type="submit" class="btn btn-modern" id="importBtn">
+                    <i class="fas fa-file-import"></i> Import Data
+                </button>
+                <a href="{% url 'admindashboard:site_list' %}" class="btn btn-outline-modern">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+
+        <div class="preview-section" style="display: none;">
+            <h3>Data Preview</h3>
+            <div id="previewContent"></div>
+            <div class="button-group">
+                <button class="btn btn-modern" id="confirmImportBtn">
+                    <i class="fas fa-check"></i> Confirm Import
+                </button>
+                <button class="btn btn-outline-modern" id="cancelImportBtn">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const importForm = document.getElementById('importForm');
+    const importBtn = document.getElementById('importBtn');
+    const previewSection = document.querySelector('.preview-section');
+    const previewContent = document.getElementById('previewContent');
+    const confirmImportBtn = document.getElementById('confirmImportBtn');
+    const cancelImportBtn = document.getElementById('cancelImportBtn');
+
+    importForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(importForm);
+        importBtn.disabled = true;
+        importBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+        fetch('{% url "admindashboard:import_data" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // Show preview
+                let previewHtml = '<table class="example-table">';
+                previewHtml += '<thead><tr><th>Site</th><th>Year</th><th>Month</th><th>Species</th><th>Count</th></tr></thead>';
+                previewHtml += '<tbody>';
+                
+                data.data.forEach(row => {
+                    previewHtml += `<tr>
+                        <td>${row.site}</td>
+                        <td>${row.year}</td>
+                        <td>${row.month}</td>
+                        <td>${row.species}</td>
+                        <td>${row.count}</td>
+                    </tr>`;
+                });
+                
+                previewHtml += '</tbody></table>';
+                previewContent.innerHTML = previewHtml;
+                previewSection.style.display = 'block';
+                importForm.style.display = 'none';
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while processing the file.');
+        })
+        .finally(() => {
+            importBtn.disabled = false;
+            importBtn.innerHTML = '<i class="fas fa-file-import"></i> Import Data';
+        });
+    });
+
+    confirmImportBtn.addEventListener('click', function() {
+        // Here you would typically send another request to confirm the import
+        // For now, we'll just redirect back to the sites list
+        window.location.href = '{% url "admindashboard:site_list" %}';
+    });
+
+    cancelImportBtn.addEventListener('click', function() {
+        previewSection.style.display = 'none';
+        importForm.style.display = 'block';
+    });
+});
+</script>
+{% endblock %} 

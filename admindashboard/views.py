@@ -9,7 +9,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import logout
 from django.views.decorators.http import require_POST
 from .models import Family, Species, Site, BirdDetection
-from .forms import FamilyForm, SpeciesForm, SiteForm
+from .forms import FamilyForm, SpeciesForm, SiteForm, ImportDataForm
 from django.contrib import messages
 import json
 import torch
@@ -29,6 +29,8 @@ from django.db.models.functions import TruncMonth, TruncYear
 from django.utils import timezone
 from datetime import timedelta
 from django.conf import settings
+import pandas as pd
+from datetime import datetime
 
 # Get the base directory of the project
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -640,28 +642,64 @@ def get_site_years(request, site_id):
     return JsonResponse({'years': year_list})
 
 def get_monthly_detections(request, site_id, year):
-    """API to get monthly bird detection data for a specific site and year."""
-    site = get_object_or_404(Site, id=site_id)
-    detections = BirdDetection.objects.filter(
-        site=site,
-        detection_date__year=year
-    ).annotate(
-        month=TruncMonth('detection_date')
-    ).values('month').annotate(
-        total_detections=Count('id'),
-        unique_species=Count('species', distinct=True)
-    ).order_by('month')
+    try:
+        print(f"DEBUG: get_monthly_detections called for Site ID: {site_id}, Year: {year}")
+        site = Site.objects.get(id=site_id)
+        detections = BirdDetection.objects.filter(
+            site=site,
+            detection_date__year=year
+        ).select_related('species', 'species__family').order_by('detection_date')
 
-    # Format for frontend
-    monthly_data = []
-    for entry in detections:
-        monthly_data.append({
-            'month_name': entry['month'].strftime('%B'), # Full month name
-            'month_number': entry['month'].month,
-            'total_detections': entry['total_detections'],
-            'unique_species': entry['unique_species'],
-        })
-    return JsonResponse({'monthly_data': monthly_data})
+        print(f"DEBUG: Found {detections.count()} detections for Site {site_id} in {year}")
+
+        monthly_data = []
+        # Use a dictionary to store detections per month, then convert to list
+        months_dict = {}
+
+        for detection in detections:
+            print(f"DEBUG: Processing detection ID: {detection.id}, Species: {detection.species.common_name}, Count: {detection.count}, Date: {detection.detection_date}")
+            month_number = detection.detection_date.month
+            month_name = datetime(year, month_number, 1).strftime('%B')
+
+            if month_number not in months_dict:
+                months_dict[month_number] = {
+                    'month_number': month_number,
+                    'month_name': month_name,
+                    'total_detections': 0,
+                    'unique_species': set(),
+                    'species_data': {}
+                }
+            
+            months_dict[month_number]['total_detections'] += detection.count
+            months_dict[month_number]['unique_species'].add(detection.species.common_name)
+            
+            family_name = detection.species.family.name if detection.species.family else 'Uncategorized'
+            print(f"DEBUG:   Family Name for {detection.species.common_name}: {family_name}")
+            
+            if family_name not in months_dict[month_number]['species_data']:
+                months_dict[month_number]['species_data'][family_name] = []
+            
+            months_dict[month_number]['species_data'][family_name].append({
+                'species_name': detection.species.common_name,
+                'count': detection.count
+            })
+        
+        # Convert set to list for JSON serialization and sort unique species
+        for month_num in months_dict:
+            months_dict[month_num]['unique_species'] = sorted(list(months_dict[month_num]['unique_species']))
+            # Sort species within each family for consistent display
+            for family in months_dict[month_num]['species_data']:
+                months_dict[month_num]['species_data'][family].sort(key=lambda x: x['species_name'])
+
+        # Convert dictionary to list and sort by month number
+        monthly_data = sorted(list(months_dict.values()), key=lambda x: x['month_number'])
+
+        return JsonResponse({'monthly_data': monthly_data})
+
+    except Site.DoesNotExist:
+        return JsonResponse({'error': 'Site not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
 @csrf_exempt
 def check_species_dependencies(request, species_id):
@@ -714,3 +752,217 @@ def delete_species(request, species_id):
             'success': False,
             'message': f'Error deleting species: {str(e)}'
         }, status=500)
+
+def import_data(request):
+    if request.method == 'POST':
+        form = ImportDataForm(request.POST, request.FILES)
+        if form.is_valid():
+            excel_file = request.FILES['excel_file']
+            sheet_name = form.cleaned_data.get('sheet_name')
+            
+            try:
+                xls = pd.ExcelFile(excel_file)
+                if sheet_name:
+                    df_raw = xls.parse(sheet_name, header=None)
+                else:
+                    df_raw = xls.parse(xls.sheet_names[0], header=None)
+                
+                # Ensure a default family exists for species without explicit family data
+                unknown_family, _ = Family.objects.get_or_create(name='Unknown Family', defaults={'description': 'For species without a specified family.'})
+
+                # --- Step 1: Find Site Name and Year --- #
+                site_year_cell = None
+                site_name = 'Unknown Site' # Default if not found
+                year = datetime.now().year # Default to current year if not found
+
+                for r_idx, row in df_raw.iterrows():
+                    for c_idx, cell_value in enumerate(row):
+                        if pd.notna(cell_value) and isinstance(cell_value, str) and "DAGA" in cell_value.upper():
+                            site_year_cell = cell_value.strip()
+                            parts = site_year_cell.split()
+                            if len(parts) >= 2 and parts[-1].isdigit():
+                                year = int(parts[-1])
+                                site_name = " ".join(parts[:-1])
+                            else:
+                                site_name = site_year_cell
+                            print(f"DEBUG: Found Site/Year cell: '{site_year_cell}', Parsed Site: '{site_name}', Year: {year}")
+                            break
+                    if site_year_cell: break
+                
+                if not site_year_cell:
+                    print("DEBUG: Site name and year (e.g., DAGA 2021) not found, using defaults.")
+
+                # --- Step 2: Find Month Headers --- #
+                header_row_idx = -1
+                month_columns_info = {}
+                for r_idx, row in df_raw.iterrows():
+                    row_values = [str(v).upper().strip() if pd.notna(v) and isinstance(v, str) else v for v in row.tolist()]
+                    print(f"DEBUG: Checking row {r_idx + 1} for month headers: {row_values}")
+                    # Check for *full* month names as per user's latest image
+                    if 'SEPTEMBER' in row_values and 'OCTOBER' in row_values and 'NOVEMBER' in row_values:
+                        header_row_idx = r_idx
+                        print(f"DEBUG: Found month header row at index: {header_row_idx + 1}")
+                        for c_idx, val in enumerate(row_values):
+                            if val == 'SEPTEMBER': month_columns_info[c_idx] = 9 # September
+                            elif val == 'OCTOBER': month_columns_info[c_idx] = 10
+                            elif val == 'NOVEMBER': month_columns_info[c_idx] = 11 # November
+                        break
+                
+                if header_row_idx == -1 or not month_columns_info:
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': 'Could not find month headers (SEPTEMBE, OCTOBER, NOVEMBE) in the Excel file. Please ensure they are spelled correctly and without extra spaces.'
+                    })
+
+                # --- Step 3: Find SPECIES Column --- #
+                species_col_idx = -1
+                for r_idx_species_search, row_species_search in df_raw.head(10).iterrows():
+                    row_values_species_search = [str(v).upper().strip() if pd.notna(v) and isinstance(v, str) else v for v in row_species_search.tolist()]
+                    print(f"DEBUG: Checking row {r_idx_species_search + 1} for SPECIES header: {row_values_species_search}")
+                    for c_idx, val in enumerate(row_values_species_search):
+                        if isinstance(val, str) and val == 'SPECIES':
+                            species_col_idx = c_idx
+                            print(f"DEBUG: Found SPECIES column at index: {species_col_idx} in row {r_idx_species_search + 1}")
+                            break
+                    if species_col_idx != -1: break
+                
+                if species_col_idx == -1:
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': 'Could not find the SPECIES column in the Excel file. Please ensure a column is titled "SPECIES" (case-insensitive, no extra spaces).'
+                    })
+
+                if species_col_idx in month_columns_info:
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': 'Internal error: SPECIES column index overlaps with a month column index. Please check your Excel structure.'
+                    })
+
+                processed_data = []
+                current_family_obj = None # Initialize current family
+
+                # Define a mapping for common family names to scientific family names
+                family_name_mapping = {
+                    'HERONS AND EGRETS': 'Ardeidae',
+                    # Add other mappings here as needed, e.g.:
+                    # 'DUCKS AND GEESE': 'Anatidae',
+                }
+
+                for r_idx_actual in range(header_row_idx + 1, len(df_raw)):
+                    row = df_raw.iloc[r_idx_actual]
+
+                    if species_col_idx >= len(row):
+                        print(f"DEBUG: Skipping row {r_idx_actual + 1}: SPECIES column index {species_col_idx} out of bounds for row with {len(row)} columns.")
+                        continue
+
+                    species_name_raw = row.iloc[species_col_idx]
+
+                    # Check if this row is a family header
+                    is_potential_family_header = False
+                    if pd.notna(species_name_raw) and isinstance(species_name_raw, str) and species_name_raw.strip().isupper():
+                        # Check if all month count cells in this row are empty or non-numeric
+                        all_counts_empty = True
+                        for col_idx_month in month_columns_info.keys():
+                            if col_idx_month < len(row):
+                                val = row.iloc[col_idx_month]
+                                if pd.notna(val) and isinstance(val, (int, float)) and val > 0:
+                                    all_counts_empty = False
+                                    break
+                        if all_counts_empty:
+                            is_potential_family_header = True
+
+                    if is_potential_family_header:
+                        excel_family_name = species_name_raw.strip()
+                        # Use the mapping to get the scientific family name
+                        scientific_family_name = family_name_mapping.get(excel_family_name, excel_family_name)
+                        
+                        current_family_obj, created = Family.objects.get_or_create(name=scientific_family_name)
+                        if created:
+                            print(f"DEBUG: Created new family: {scientific_family_name} from Excel header '{excel_family_name}' at Excel row {r_idx_actual + 1}.")
+                        else:
+                            print(f"DEBUG: Identified existing family: {scientific_family_name} from Excel header '{excel_family_name}' at Excel row {r_idx_actual + 1}.")
+                        
+                        continue # Skip to next row, as this is a family header, not a species entry
+
+                    if pd.isna(species_name_raw) or not isinstance(species_name_raw, str) or species_name_raw.strip() == '':
+                        continue
+
+                    species_name = species_name_raw.strip()
+                    
+                    for col_idx, month_number in month_columns_info.items():
+                        if col_idx >= len(row):
+                            print(f"DEBUG: Skipping column {col_idx} in row {r_idx_actual + 1}: Out of bounds.")
+                            continue
+
+                        count_value_candidate = row.iloc[col_idx]
+                        
+                        print(f"DEBUG: Processing Site: '{site_name}', Year: {year}, Row Index: {r_idx_actual + 1}")
+                        print(f"DEBUG:   Species Name Raw: '{species_name_raw}'")
+                        print(f"DEBUG:   Checking Month: {month_number} ({datetime(year, month_number, 1).strftime('%B')}), Column Index: {col_idx}, Value Candidate: '{count_value_candidate}', Type: {type(count_value_candidate)}")
+
+                        count = 0
+                        if pd.notna(count_value_candidate):
+                            try:
+                                count = int(count_value_candidate)
+                            except ValueError:
+                                error_msg = f"Data conversion error: Expected a number for count, but found non-numeric value '{count_value_candidate}' for species '{species_name}' in month {datetime(year, month_number, 1).strftime('%B')} of year {year} at Excel row {r_idx_actual + 1}. Please correct your Excel file." 
+                                print(f"ERROR: {error_msg}")
+                                return JsonResponse({'status': 'error', 'message': error_msg})
+                            except TypeError:
+                                error_msg = f"Data type error: Expected a number for count, but found incompatible type for '{count_value_candidate}' for species '{species_name}' in month {datetime(year, month_number, 1).strftime('%B')} of year {year} at Excel row {r_idx_actual + 1}. Please correct your Excel file." 
+                                print(f"ERROR: {error_msg}")
+                                return JsonResponse({'status': 'error', 'message': error_msg})
+
+                        if count > 0:
+                            try:
+                                site, _ = Site.objects.get_or_create(
+                                    name=site_name,
+                                    defaults={'location': 'Unknown', 'status': 'Active'}
+                                )
+
+                                # Use current_family_obj if available, otherwise fallback to unknown_family
+                                species_family = current_family_obj if current_family_obj else unknown_family
+                                species, _ = Species.objects.get_or_create(
+                                    common_name=species_name,
+                                    defaults={'family': species_family, 'description': ''}
+                                )
+                                
+                                BirdDetection.objects.create(
+                                    site=site,
+                                    species=species,
+                                    detection_date=datetime(year, month_number, 1),
+                                    count=count
+                                )
+
+                                processed_data.append({
+                                    'site': site.name,
+                                    'year': year,
+                                    'month': month_number,
+                                    'species': species.common_name,
+                                    'count': count
+                                })
+                            except Exception as e:
+                                error_msg = f'Database operation error: {str(e)} while processing {species_name} for {site_name} (Year: {year}, Month: {month_number}) at Excel row {r_idx_actual + 1}.'
+                                print(f"ERROR: {error_msg}")
+                                return JsonResponse({'status': 'error', 'message': error_msg})
+
+                if not processed_data:
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': 'No valid bird detection data found in the Excel file after processing. Please check format and ensure counts are present.'
+                    })
+
+                return JsonResponse({
+                    'status': 'success',
+                    'data': processed_data
+                })
+                
+            except Exception as e:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'Error reading or processing Excel file: {str(e)}'
+                })
+    else:
+        form = ImportDataForm()
+    
+    return render(request, 'admindashboard/import_data.html', {'form': form})

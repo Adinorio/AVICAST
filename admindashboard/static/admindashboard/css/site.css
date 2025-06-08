@@ -542,6 +542,51 @@ body {
     color: #B0BEC5;
 }
 
+/* Monthly data display area */
+.monthly-data-container {
+    padding: 1.5rem;
+}
+
+.monthly-data-container h2 {
+    color: #FFFFFF;
+    margin-bottom: 2rem;
+    text-align: center;
+    font-size: 2rem;
+}
+
+.monthly-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+    padding: 1rem;
+}
+
+.species-details {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: left;
+}
+
+.species-details h4 {
+    color: #00bcd4;
+    font-size: 1.1em;
+    margin-bottom: 8px;
+    margin-top: 15px;
+}
+
+.species-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.species-list li {
+    color: #B0BEC5;
+    font-size: 0.95em;
+    padding: 3px 0;
+}
+
 /* Styling for new month management form in right sidebar */
 .details-section .form-group input#monthInput {
     width: 100%;
@@ -631,4 +676,57 @@ body {
     max-width: 90%;
     max-height: 90%;
     object-fit: contain;
+}
+
+/* Styling for clickable monthly cards (simplified view) */
+.monthly-card.clickable-month-card {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 150px; /* Adjust as needed */
+}
+
+.monthly-card.clickable-month-card h3 {
+    margin: 0;
+    font-size: 1.8em;
+}
+
+/* Styling for the monthly detail modal content */
+.monthly-detail-content {
+    max-height: 70vh; /* Limit height to allow scrolling */
+    overflow-y: auto;
+    margin-top: 20px;
+    padding: 0 10px;
+    text-align: left;
+}
+
+.monthly-detail-content h4 {
+    color: #00bcd4; /* Accent color for family names */
+    font-size: 1.2em;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 5px;
+}
+
+.monthly-detail-content .species-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.monthly-detail-content .species-list li {
+    color: #e0f7fa; /* Light text for species details */
+    font-size: 1em;
+    padding: 4px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.monthly-detail-content .species-list li:nth-child(odd) {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+    padding: 4px 8px;
 } 

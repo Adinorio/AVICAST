@@ -85,10 +85,11 @@ class Site(models.Model):
 class BirdDetection(models.Model):
     site = models.ForeignKey(Site, on_delete=models.CASCADE, related_name='bird_detections', null=True, blank=True)
     species = models.ForeignKey(Species, on_delete=models.CASCADE, related_name='detections')
-    image = models.ImageField(upload_to='detection_images/')
-    confidence = models.FloatField()
+    image = models.ImageField(upload_to='detection_images/', null=True, blank=True)
+    confidence = models.FloatField(null=True, blank=True)
     detection_date = models.DateTimeField(default=timezone.now)
-    coordinates = models.JSONField()  # Store bounding box coordinates
+    coordinates = models.JSONField(null=True, blank=True)  # Store bounding box coordinates
+    count = models.IntegerField(default=1)
 
     def __str__(self):
         return f"{self.species.name} - {self.detection_date}"

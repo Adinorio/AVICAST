@@ -38,4 +38,5 @@ urlpatterns = [
     path('api/sites/<int:site_id>/months/<int:year>/', views.get_monthly_detections, name='get_monthly_detections'),
     # Report URL
     path('reports/', views.report_view, name='reports'),
+    path('import-data/', views.import_data, name='import_data'),
 ]
