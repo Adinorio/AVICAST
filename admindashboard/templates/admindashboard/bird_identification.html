@@ -241,7 +241,7 @@ let batchProgressBar = document.getElementById('batchProgressBar');
 let batchProgressCount = document.getElementById('batchProgressCount');
 let uploadedImageCount = document.getElementById('uploadedImageCount');
 let retryAllFailedBtn = document.getElementById('retryAllFailedBtn');
-let processAllImagesBtn = document.getElementById('processAllImagesBtn');
+let processAllImagesBtn = document.getElementById('processAllImagesExplicitBtn'); // Corrected ID
 
 // Initialize arrays
 let selectedFiles = [];
@@ -286,7 +286,7 @@ function initializeElements() {
   batchProgressCount = ensureElement(batchProgressCount, 'batchProgressCount');
   uploadedImageCount = ensureElement(uploadedImageCount, 'uploadedImageCount');
   retryAllFailedBtn = ensureElement(retryAllFailedBtn, 'retryAllFailedBtn');
-  processAllImagesBtn = ensureElement(processAllImagesBtn, 'processAllImagesBtn');
+  processAllImagesBtn = ensureElement(processAllImagesBtn, 'processAllImagesExplicitBtn'); // Corrected ID
   
   // Set initial states
   if (noFilesSelectedMessage) {
@@ -318,7 +318,11 @@ function handleImageError(img) {
 async function handleFiles(files) {
   try {
     console.log('handleFiles called with:', files);
-    if (gallery) gallery.innerHTML = '';
+    if (gallery) { // Robustly clear gallery
+      while (gallery.firstChild) {
+        gallery.removeChild(gallery.firstChild);
+      }
+    }
     if (resultBox) resultBox.innerHTML = '';
     if (selectedFilesDisplay) {
       selectedFilesDisplay.innerHTML = '';
@@ -957,45 +961,76 @@ function updateProcessDataView() {
   batchProgressBar.style.width = '0%';
   imageTableBody.innerHTML = ''; // Clear previous table content
 
-  // Clear gallery and result box, show placeholder
-  if (gallery) gallery.innerHTML = '<div style="color:#b0b0b0;text-align:center;padding:40px 0;">Select an image to preview or process.</div>';
-  if (resultBox) resultBox.innerHTML = '<div style="color:#b0b0b0;text-align:center;padding:40px 0;font-size:1.2em;">Details and AI results will appear here after processing.</div>';
+  // No longer unconditionally clear gallery and result box here.
+  // They will be updated by previewImageInGallery or retain last state.
 
   if (selectedFiles.length === 0) {
     imageTableBody.innerHTML = '<tr><td colspan="5">No images uploaded.</td></tr>';
     processAllImagesBtn.disabled = true;
     retryAllFailedBtn.style.display = 'none';
+    // Clear gallery and result box, show placeholder if no files
+    if (gallery) gallery.innerHTML = '<div style="color:#b0b0b0;text-align:center;padding:40px 0;">No image to preview. Upload files first.</div>';
+    if (resultBox) resultBox.innerHTML = '<div style="color:#b0b0b0;text-align:center;padding:40px 0;font-size:1.2em;">No images to process.</div>';
     return;
   }
 
   selectedFiles.forEach((file, index) => {
-    const fileEntry = imageProcessingStatus[index]; // Get the pre-loaded fileEntry
-    if (!fileEntry || !fileEntry.dataUrl) return; // Ensure dataUrl is available
+    const fileEntry = imageProcessingStatus[index];
+    if (!fileEntry || !fileEntry.dataUrl) return;
 
-    const row = imageTableBody.insertRow();
-    row.dataset.index = index; // Store index for later reference
-    row.innerHTML = `
+    let statusText = fileEntry.status;
+    let statusClass = `status-${fileEntry.status.toLowerCase()}`;
+    let aiResultsText = '';
+    let actionButtonHtml = `<button class="action-button small-button process-single-btn" data-index="${index}">Process</button>`;
+    let actionButtonDisabled = false;
+
+    if (fileEntry.status === 'Completed') {
+      statusText = 'Completed';
+      aiResultsText = `${fileEntry.results.length} detections`;
+      actionButtonHtml = '<button class="action-button small-button" disabled style="display:none;">Processed</button>';
+    } else if (fileEntry.status === 'Processing') {
+      statusText = '<span class="spinner-small"></span> Processing';
+      actionButtonHtml = '<button class="action-button small-button" disabled>Processing</button>';
+      actionButtonDisabled = true;
+    } else if (fileEntry.status === 'Error') {
+      statusText = 'Error';
+      aiResultsText = 'Failed';
+      actionButtonHtml = '<button class="action-button small-button process-single-btn" data-index="${index}">Retry</button>';
+    }
+
+      const row = imageTableBody.insertRow();
+      row.dataset.index = index; // Store index for later reference
+      row.innerHTML = `
       <td><img src="${fileEntry.dataUrl}" class="thumbnail-table" alt="${file.name}"></td>
-      <td>${file.name}</td>
-      <td class="status-cell status-ready">Ready</td>
-      <td>-</td>
-      <td><button class="action-button small-button process-single-btn" data-index="${index}">Process</button></td>
-    `;
+        <td>${file.name}</td>
+      <td class="status-cell ${statusClass}">${statusText}</td>
+      <td>${aiResultsText}</td>
+      <td>${actionButtonHtml}</td>
+      `;
 
-    // Add click listener for thumbnail to display in large preview
-    row.querySelector('.thumbnail-table').addEventListener('click', () => {
-      previewImageForProcessing(imageProcessingStatus[index]);
+      // Add click listener for thumbnail to display in large preview
+      row.querySelector('.thumbnail-table').addEventListener('click', () => {
+      previewImageInGallery(imageProcessingStatus[index]); // Changed to previewImageInGallery
     });
 
-    // Add click listener for individual process button
-    row.querySelector('.process-single-btn').addEventListener('click', async (e) => {
-      const imageIndex = e.target.dataset.index;
-      await displayImageForProcessing(imageProcessingStatus[imageIndex]);
-    });
+    // Add click listener for individual process/retry button if it exists and is not disabled
+    const processSingleBtn = row.querySelector('.process-single-btn');
+    if (processSingleBtn && !actionButtonDisabled) { // Check actionButtonDisabled
+      processSingleBtn.addEventListener('click', async (e) => {
+        const imageIndex = e.target.dataset.index;
+        await displayImageForProcessing(imageProcessingStatus[imageIndex]);
+      });
+      }
   });
   processAllImagesBtn.disabled = false; // Enable process all button once table is populated
   updateGalleryNavigation();
   updateProcessAllBtnState();
+
+  // After populating the table, ensure the gallery shows the first image if available
+  if (selectedFiles.length > 0) {
+    const initialIndex = currentGalleryIndex !== undefined && imageProcessingStatus[currentGalleryIndex] ? currentGalleryIndex : 0;
+    previewImageInGallery(imageProcessingStatus[initialIndex]); // Changed to previewImageInGallery
+  }
 }
 
 // Function to process a single image
@@ -1132,6 +1167,12 @@ processAllImagesBtn.addEventListener('click', async function() {
     }
   }
   processAllImagesBtn.disabled = false;
+  updateProcessAllBtnState();
+
+  // After batch processing, update the gallery for the first image if available
+  if (imageProcessingStatus.length > 0) {
+    previewImageInGallery(imageProcessingStatus[0]); // Changed to previewImageInGallery
+  }
 });
 
 // Retry All Failed button event
@@ -1224,20 +1265,8 @@ showTab('upload');
 function updateReviewDataView() {
   reviewTableBody.innerHTML = '';
   const searchValue = document.getElementById('reviewSearchInput')?.value?.toLowerCase() || '';
-  const activeFilterBtn = document.querySelector('.review-filter-btn.active');
+  const activeFilterBtn = document.querySelector('.filter-tab-button.active');
   const statusFilter = activeFilterBtn ? activeFilterBtn.dataset.filter : 'all';
-
-  // (REMOVED) Header row with Select All checkbox (now in HTML)
-  // const headerRow = document.createElement('tr');
-  // headerRow.innerHTML = `
-  //   <th><input type="checkbox" id="selectAllReview"></th>
-  //   <th>Thumbnail</th>
-  //   <th>Filename</th>
-  //   <th>Status</th>
-  //   <th>AI Results</th>
-  //   <th>Actions</th>
-  // `;
-  // reviewTableBody.appendChild(headerRow);
 
   let anyRows = false;
   imageProcessingStatus.forEach((entry, index) => {
@@ -1319,6 +1348,7 @@ function updateReviewDataView() {
   // Select All logic
   const selectAllBox = document.getElementById('selectAllReview');
   const checkboxes = document.querySelectorAll('.review-select-checkbox');
+  selectAllBox.checked = false; // Ensure it's unchecked initially
   selectAllBox.addEventListener('change', function() {
     checkboxes.forEach(cb => { cb.checked = selectAllBox.checked; });
     updateBatchButtonsState();
@@ -1379,22 +1409,22 @@ function updateModelDisplayInProcessTab() {
 // Add styles for image error state
 const style = document.createElement('style');
 style.textContent = `
-  .image-load-error {
-    border: 2px solid #dc3545;
-    padding: 5px;
-    background-color: #f8d7da;
-  }
-  
-  .selected-file-item.error {
-    background-color: #f8d7da;
-    border-color: #dc3545;
-  }
-  
-  .error-message {
-    color: #dc3545;
-    font-size: 0.9em;
-    margin-left: 10px;
-  }
+.image-load-error {
+  border: 2px solid #dc3545;
+  padding: 5px;
+  background-color: #f8d7da;
+}
+
+.selected-file-item.error {
+  background-color: #f8d7da;
+  border-color: #dc3545;
+}
+
+.error-message {
+  color: #dc3545;
+  font-size: 0.9em;
+  margin-left: 10px;
+}
 `;
 document.head.appendChild(style);
 
@@ -1435,14 +1465,14 @@ function updateGalleryNavigation() {
 galleryPrevBtn.addEventListener('click', function() {
   if (currentGalleryIndex > 0) {
     currentGalleryIndex--;
-    previewImageForProcessing(imageProcessingStatus[currentGalleryIndex]);
+    previewImageInGallery(imageProcessingStatus[currentGalleryIndex]);
     updateGalleryNavigation();
   }
 });
 galleryNextBtn.addEventListener('click', function() {
   if (currentGalleryIndex < imageProcessingStatus.length - 1) {
     currentGalleryIndex++;
-    previewImageForProcessing(imageProcessingStatus[currentGalleryIndex]);
+    previewImageInGallery(imageProcessingStatus[currentGalleryIndex]);
     updateGalleryNavigation();
   }
 });
@@ -1482,6 +1512,11 @@ galleryStyle.textContent = `
   cursor: not-allowed;
   opacity: 0.7;
 }
+.gallery-nav-btn:hover:not(:disabled) {
+  background: #3e58a3;
+  box-shadow: 0 4px 12px rgba(74,105,189,0.18);
+  transform: translateY(-2px) scale(1.04);
+}
 .gallery-counter {
   color: #e0e0e0;
   font-size: 1.1em;
@@ -1512,7 +1547,7 @@ processAllImagesExplicitBtn.addEventListener('click', async function() {
 
   // After batch processing, update the gallery for the first image if available
   if (imageProcessingStatus.length > 0) {
-    previewImageForProcessing(imageProcessingStatus[0]);
+    previewImageInGallery(imageProcessingStatus[0]);
   }
 });
 
@@ -1558,7 +1593,7 @@ processAllBtnStyle.textContent = `
 document.head.appendChild(processAllBtnStyle);
 
 // Add preview-only function for image preview in gallery or thumbnail clicks
-function previewImageForProcessing(fileEntry) {
+function previewImageInGallery(fileEntry) {
   currentProcessedImage = fileEntry.file;
   currentProcessedImageDataUrl = null;
   currentGalleryIndex = imageProcessingStatus.indexOf(fileEntry);
@@ -1572,10 +1607,14 @@ function previewImageForProcessing(fileEntry) {
     galleryCard.style.position = 'relative';
     galleryCard.appendChild(overlay);
   }
-  overlay.style.opacity = '0';
-  overlay.style.visibility = 'hidden';
 
-  gallery.innerHTML = '';
+  // Find existing canvas or create new one
+  let canvas = document.getElementById('processingCanvas');
+  if (!canvas) { // If canvas does not exist, create it
+    canvas = document.createElement('canvas');
+    canvas.id = 'processingCanvas';
+    gallery.appendChild(canvas); // Append only if new
+  }
 
   const reader = new FileReader();
   reader.readAsDataURL(fileEntry.file);
@@ -1584,8 +1623,6 @@ function previewImageForProcessing(fileEntry) {
     const img = new Image();
     img.src = currentProcessedImageDataUrl;
     img.onload = function() {
-      const canvas = document.createElement('canvas');
-      canvas.id = 'processingCanvas';
       canvas.width = img.width;
       canvas.height = img.height;
       canvas.style.maxWidth = '100%';
@@ -1597,6 +1634,7 @@ function previewImageForProcessing(fileEntry) {
       canvas.style.transition = 'opacity 0.3s';
       setTimeout(() => { canvas.style.opacity = '1'; }, 10);
       const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear existing content
       ctx.drawImage(img, 0, 0);
       // Draw detections if available
       if (fileEntry.status === 'Completed' && fileEntry.results && fileEntry.results.length > 0) {
@@ -1617,20 +1655,23 @@ function previewImageForProcessing(fileEntry) {
         modalImage.src = canvas.toDataURL();
         modal.style.display = 'block';
       });
-      gallery.appendChild(canvas);
+
+      // Overlay visibility needs to be set after the image has loaded, in case status changed during load
+      if (fileEntry.status === 'Processing') {
+        overlay.innerHTML = `<span class='gallery-overlay-text'><span class='spinner'></span> Processing now...</span>`;
+        overlay.style.opacity = '1';
+        overlay.style.visibility = 'visible';
+      } else {
+        overlay.style.opacity = '0';
+        overlay.style.visibility = 'hidden';
+      }
     };
   };
 
-  // Show overlay if not processed
-  if (fileEntry.status !== 'Completed') {
-    overlay.style.opacity = '1';
-    overlay.style.visibility = 'visible';
-  } else {
-    overlay.style.opacity = '0';
-    overlay.style.visibility = 'hidden';
-  }
-
+  // Update processed image preview details box immediately
   updateProcessedImagePreview(fileEntry);
+
+  // Highlight the active thumbnail
   document.querySelectorAll('.thumbnail').forEach(thumb => {
     thumb.classList.remove('active-thumbnail');
   });
@@ -1647,92 +1688,14 @@ async function displayImageForProcessing(fileEntry) {
   currentProcessedImageDataUrl = null;
   currentGalleryIndex = imageProcessingStatus.indexOf(fileEntry);
 
-  let overlay = document.getElementById('gallery-overlay');
-  if (!overlay) {
-    overlay = document.createElement('div');
-    overlay.id = 'gallery-overlay';
-    overlay.className = 'gallery-overlay';
-    overlay.innerHTML = `<span class='gallery-overlay-text'><span class='spinner'></span> Not processed yet. Processing now...</span>`;
-    galleryCard.style.position = 'relative';
-    galleryCard.appendChild(overlay);
-  }
-  overlay.style.opacity = '0';
-  overlay.style.visibility = 'hidden';
+  // Set the status to Processing and update the UI immediately via previewImageInGallery
+  fileEntry.status = 'Processing';
+  previewImageInGallery(fileEntry); // Call once to set processing state and preview
 
-  gallery.innerHTML = '';
+  await processSingleImage(currentGalleryIndex); // Perform the actual processing
 
-  const reader = new FileReader();
-  reader.readAsDataURL(fileEntry.file);
-  reader.onloadend = function() {
-    currentProcessedImageDataUrl = reader.result;
-    const img = new Image();
-    img.src = currentProcessedImageDataUrl;
-    img.onload = function() {
-      const canvas = document.createElement('canvas');
-      canvas.id = 'processingCanvas';
-      canvas.width = img.width;
-      canvas.height = img.height;
-      canvas.style.maxWidth = '100%';
-      canvas.style.display = 'block';
-      canvas.style.margin = '0 auto 10px';
-      canvas.style.borderRadius = '10px';
-      canvas.style.boxShadow = '0 2px 12px rgba(0,0,0,0.25)';
-      canvas.style.opacity = '0';
-      canvas.style.transition = 'opacity 0.3s';
-      setTimeout(() => { canvas.style.opacity = '1'; }, 10);
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0);
-      // Draw detections if available
-      if (fileEntry.status === 'Completed' && fileEntry.results && fileEntry.results.length > 0) {
-        fileEntry.results.forEach(det => {
-          let [x1, y1, x2, y2] = det.coordinates;
-          ctx.lineWidth = 2;
-          ctx.strokeStyle = 'red';
-          ctx.font = "16px Arial";
-          ctx.fillStyle = 'red';
-          ctx.beginPath();
-          ctx.rect(x1, y1, x2 - x1, y2 - y1);
-          ctx.stroke();
-          const label = `${det.class} (${(det.confidence * 100).toFixed(1)}%)`;
-          ctx.fillText(label, x1, y1 > 15 ? y1 - 5 : y1 + 15);
-        });
-      }
-      canvas.addEventListener('click', function() {
-        modalImage.src = canvas.toDataURL();
-        modal.style.display = 'block';
-      });
-      gallery.appendChild(canvas);
-    };
-  };
-
-  // Only process if not already processing or completed
-  if (fileEntry.status !== 'Completed' && fileEntry.status !== 'Processing') {
-    overlay.style.opacity = '1';
-    overlay.style.visibility = 'visible';
-    fileEntry.status = 'Processing';
-    await processSingleImage(currentGalleryIndex);
-    overlay.style.opacity = '0';
-    overlay.style.visibility = 'hidden';
-    // After processing, show the preview again (now with results)
-    previewImageForProcessing(imageProcessingStatus[currentGalleryIndex]);
-    return;
-  } else if (fileEntry.status === 'Processing') {
-    overlay.style.opacity = '1';
-    overlay.style.visibility = 'visible';
-  } else {
-    overlay.style.opacity = '0';
-    overlay.style.visibility = 'hidden';
-  }
-
-  updateProcessedImagePreview(fileEntry);
-  document.querySelectorAll('.thumbnail').forEach(thumb => {
-    thumb.classList.remove('active-thumbnail');
-  });
-  const activeThumbnail = document.querySelector(`.thumbnail[data-index="${imageProcessingStatus.indexOf(fileEntry)}"]`);
-  if (activeThumbnail) {
-    activeThumbnail.classList.add('active-thumbnail');
-  }
-  updateGalleryNavigation();
+  // After processing, preview again to show results/error
+  previewImageInGallery(imageProcessingStatus[currentGalleryIndex]);
 }
 
 /* Modernized Review Controls and Table Styles */
