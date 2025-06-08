@@ -419,15 +419,6 @@ def help_view(request):
     """Help page view"""
     return render(request, "admindashboard/help.html")
 
-def image_processing_view(request):
-    return render(request, 'admindashboard/image_processing.html')
-
-def image_processing_next_view(request):
-    return render(request, 'admindashboard/image_processing_next.html')
-
-def review_dashboard_view(request):
-    return render(request, 'admindashboard/review_dashboard.html')
-
 def site_list(request):
     """View for displaying all sites and their details."""
     sites = Site.objects.all().order_by('name')

@@ -16,9 +16,6 @@ urlpatterns = [
     path('species/<int:species_id>/restore/', views.restore_species, name='restore_species'),
     path('edit-family/<int:family_id>/', views.edit_family, name='edit_family'),
     path('help/', views.help_view, name='help'),
-    path('image-processing/', views.image_processing_view, name='image_processing'),
-    path('image-processing-next/', views.image_processing_next_view, name='image_processing_next'),
-    path('review-dashboard/', views.review_dashboard_view, name='review_dashboard'),
     # API for Bird Species
     path('api/birds/add/', views.add_species_view, name='add_species_api'),
     path('api/birds/edit/<int:species_id>/', views.edit_species_view, name='edit_species_api'),
