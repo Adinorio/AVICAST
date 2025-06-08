@@ -41,7 +41,7 @@
         <li><i class="fas fa-check"></i> Minimum resolution: 800x600</li>
         <li><i class="fas fa-check"></i> Maximum batch size: 50 images</li>
       </ul>
-    </div>
+  </div>
   
     <!-- Image Upload & Drop Zone -->
     <div class="drop-zone-container" id="drop-area">
@@ -110,17 +110,22 @@
       <span class="progress-count" id="batchProgressCount">0/0</span>
     </div>
 
-    <div class="filter-tabs">
-      <button class="filter-tab-button active" data-filter="all">All</button>
-      <button class="filter-tab-button" data-filter="processing">Processing</button>
-      <button class="filter-tab-button" data-filter="completed">Completed</button>
-      <button class="filter-tab-button" data-filter="error">Error</button>
+    <!-- New container for filters and process button -->
+    <div class="process-data-controls">
+      <div class="filter-tabs">
+        <button class="filter-tab-button active" data-filter="all">All</button>
+        <button class="filter-tab-button" data-filter="processing">Processing</button>
+        <button class="filter-tab-button" data-filter="completed">Completed</button>
+        <button class="filter-tab-button" data-filter="error">Error</button>
+      </div>
+      <button id="processAllImagesExplicitBtn" class="action-button primary-button">Process All Images</button>
     </div>
 
     <!-- Add Process All Images button above the gallery in Process Data tab -->
-    <div class="process-all-btn-container" style="text-align:center; margin-bottom: 18px;">
+    <!-- (REMOVED) Original process all button container -->
+    <!-- <div class="process-all-btn-container" style="text-align:center; margin-bottom: 18px;">
       <button id="processAllImagesExplicitBtn" class="action-button primary-button" style="min-width:200px;">Generate/Process All Images</button>
-    </div>
+    </div> -->
     <div id="gallery-card" class="gallery-card" style="margin-bottom: 24px; display: none;">
       <div class="gallery-controls" id="gallery-controls" style="display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 10px;">
         <button id="gallery-prev" class="gallery-nav-btn" style="display: none;">&#8592; Prev</button>
@@ -160,10 +165,32 @@
     </h2>
     <p class="review-instructions">Review and approve or reject processed images below.</p>
 
+    <!-- Modernized Review Controls and Table Styles -->
+    <div class="review-controls-container">
+      <div class="review-filter-group">
+        <button class="review-filter-btn" data-filter="all">All</button>
+        <button class="review-filter-btn" data-filter="approved">Approved</button>
+        <button class="review-filter-btn" data-filter="rejected">Rejected</button>
+        <button class="review-filter-btn" data-filter="pending">Pending</button>
+        <button class="review-filter-btn" data-filter="error">Error</button>
+        <input type="text" id="reviewSearchInput" placeholder="Search filename...">
+      </div>
+    </div>
+    <!-- Batch Actions Card (hidden by default) -->
+    <div id="batchActionsCard" class="batch-actions-card" style="display:none;">
+      <div class="batch-actions-label">Batch Actions</div>
+      <div class="review-batch-group">
+        <button id="approveSelectedBtn" class="action-button small-button" disabled>Approve Selected</button>
+        <button id="rejectSelectedBtn" class="action-button small-button" disabled>Reject Selected</button>
+        <button id="overrideSelectedBtn" class="action-button small-button" disabled>Override Selected</button>
+      </div>
+    </div>
+
     <div class="review-table-container">
       <table class="review-table">
         <thead>
           <tr>
+            <th><input type="checkbox" id="selectAllReview"></th>
             <th>Thumbnail</th>
             <th>Filename</th>
             <th>Status</th>
@@ -220,6 +247,8 @@ let selectedFiles = [];
 let imageProcessingStatus = [];
 let currentImage = null;
 let currentImageDataUrl = null;
+let currentProcessedImage = null; // Initialize currentProcessedImage
+let currentProcessedImageDataUrl = null; // Initialize currentProcessedImageDataUrl
 
 // Add error handling for missing elements
 function ensureElement(element, fallbackId) {
@@ -537,8 +566,8 @@ uploadBtn.addEventListener('click', async function() {
   uploadStatus.textContent = `Completed: ${completedFiles} of ${totalFiles} files uploaded`;
   uploadBtn.disabled = false;
   clearBtn.disabled = false;
-  // Now switch to Process Data tab and show images (unprocessed)
-  showTab('process-data');
+  // (REMOVED) Now switch to Process Data tab and show images (unprocessed)
+  // showTab('process-data');
   updateProcessDataView();
 });
 
@@ -848,6 +877,17 @@ galleryOverlayStyle.textContent = `
   margin-right: 10px;
   display: inline-block;
 }
+.spinner-small {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #b0b0b0;
+  border-top: 2px solid #4a69bd;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 6px;
+  display: inline-block;
+  vertical-align: middle;
+}
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
@@ -942,6 +982,7 @@ function updateProcessDataView() {
 
 // Function to process a single image
 async function processSingleImage(index) {
+  // (REMOVED) console.log('Inside processSingleImage: currentProcessedImage =', currentProcessedImage);
   const imageEntry = imageProcessingStatus[index];
   if (!imageEntry) return;
 
@@ -949,7 +990,7 @@ async function processSingleImage(index) {
   const row = imageTableBody.querySelector(`tr[data-index="${index}"]`);
   if (row) {
     const statusCell = row.querySelector('.status-cell');
-    statusCell.textContent = 'Processing';
+    statusCell.innerHTML = '<span class="spinner-small"></span> Processing'; // Add spinner
     statusCell.classList.remove('status-ready', 'status-completed', 'status-error');
     statusCell.classList.add('status-processing');
     row.querySelector('td:nth-child(4)').textContent = '-'; // Clear AI Results
@@ -973,7 +1014,7 @@ async function processSingleImage(index) {
       imageEntry.error = data.error;
       if (row) {
         const statusCell = row.querySelector('.status-cell');
-        statusCell.textContent = 'Error';
+        statusCell.innerHTML = 'Error'; // Remove spinner
         statusCell.classList.remove('status-processing');
         statusCell.classList.add('status-error');
         row.querySelector('td:nth-child(4)').textContent = 'Failed';
@@ -985,7 +1026,7 @@ async function processSingleImage(index) {
       imageEntry.results = data.detections; // Store detections
       if (row) {
         const statusCell = row.querySelector('.status-cell');
-        statusCell.textContent = 'Completed';
+        statusCell.innerHTML = 'Completed'; // Remove spinner
         statusCell.classList.remove('status-processing');
         statusCell.classList.add('status-completed');
         row.querySelector('td:nth-child(4)').textContent = `${data.detections.length} detections`;
@@ -998,7 +1039,7 @@ async function processSingleImage(index) {
     imageEntry.error = error.message;
     if (row) {
       const statusCell = row.querySelector('.status-cell');
-      statusCell.textContent = 'Error';
+      statusCell.innerHTML = 'Error'; // Remove spinner
       statusCell.classList.remove('status-processing');
       statusCell.classList.add('status-error');
       row.querySelector('td:nth-child(4)').textContent = 'Error';
@@ -1008,8 +1049,8 @@ async function processSingleImage(index) {
   } finally {
     updateBatchProgress();
     checkAllProcessed();
-    // If this was the currently displayed image in the large preview, update its result
-    if (currentProcessedImage && currentProcessedImage.name === imageEntry.file.name) {
+    // Safely check if currentProcessedImage is defined before accessing its properties
+    if (typeof currentProcessedImage !== 'undefined' && currentProcessedImage && currentProcessedImage.name === imageEntry.file.name) {
       updateProcessedImagePreview(imageEntry);
     }
   }
@@ -1054,8 +1095,8 @@ function checkAllProcessed() {
   if (total > 0 && processedCount === total) {
     console.log('All images processed. You can now review the results.');
     // Potentially enable Review tab or prompt user to go to Review tab
-    // For now, let's automatically switch to review tab when all are processed
-    showTab('review');
+    // (REMOVED) For now, let's automatically switch to review tab when all are processed
+    // showTab('review');
     updateReviewDataView();
   }
 }
@@ -1161,38 +1202,56 @@ showTab('upload');
 
 // New function to update the Review tab view
 function updateReviewDataView() {
-  reviewTableBody.innerHTML = ''; // Clear previous table content
+  reviewTableBody.innerHTML = '';
+  const searchValue = document.getElementById('reviewSearchInput')?.value?.toLowerCase() || '';
+  const activeFilterBtn = document.querySelector('.review-filter-btn.active');
+  const statusFilter = activeFilterBtn ? activeFilterBtn.dataset.filter : 'all';
 
-  if (imageProcessingStatus.length === 0) {
-    reviewTableBody.innerHTML = '<tr><td colspan="5">No images to review. Please process images first.</td></tr>';
-    return;
-    }
+  // (REMOVED) Header row with Select All checkbox (now in HTML)
+  // const headerRow = document.createElement('tr');
+  // headerRow.innerHTML = `
+  //   <th><input type="checkbox" id="selectAllReview"></th>
+  //   <th>Thumbnail</th>
+  //   <th>Filename</th>
+  //   <th>Status</th>
+  //   <th>AI Results</th>
+  //   <th>Actions</th>
+  // `;
+  // reviewTableBody.appendChild(headerRow);
 
+  let anyRows = false;
   imageProcessingStatus.forEach((entry, index) => {
-    const row = reviewTableBody.insertRow();
+    // Filtering logic
+    let status = 'pending';
+    if (entry.status === 'Completed' && entry.approved) status = 'approved';
+    else if (entry.status === 'Completed' && entry.rejected) status = 'rejected';
+    else if (entry.status === 'Error') status = 'error';
+    else if (entry.status === 'Completed') status = 'pending';
+    else if (entry.status === 'Ready' || entry.status === 'Processing') status = 'pending';
+    if (statusFilter !== 'all' && status !== statusFilter) return;
+    if (searchValue && !entry.file.name.toLowerCase().includes(searchValue)) return;
+    anyRows = true;
+
+    const row = document.createElement('tr');
     row.dataset.index = index;
     let statusHtml = '';
     let aiResultsHtml = '';
-
-    if (entry.status === 'Completed') {
-      statusHtml = `<span class="status-cell status-completed"><i class="fas fa-check-circle"></i> Completed</span>`;
+    if (status === 'approved') statusHtml = `<span class="status-cell status-completed"><i class="fas fa-check-circle"></i> Approved</span>`;
+    else if (status === 'rejected') statusHtml = `<span class="status-cell status-error"><i class="fas fa-times-circle"></i> Rejected</span>`;
+    else if (status === 'error') statusHtml = `<span class="status-cell status-error"><i class="fas fa-times-circle"></i> Error</span>`;
+    else if (status === 'pending') statusHtml = `<span class="status-cell status-ready">Pending</span>`;
       if (entry.results && entry.results.length > 0) {
         const totalDetections = entry.results.length;
         const sumConfidence = entry.results.reduce((sum, det) => sum + det.confidence, 0);
         const avgConfidence = sumConfidence / totalDetections;
         aiResultsHtml = `<a href="#" class="ai-results-link" data-index="${index}">Birds: ${totalDetections}, Confidence: ${(avgConfidence * 100).toFixed(1)}%</a>`;
-      } else {
-        aiResultsHtml = 'No detections';
-      }
     } else if (entry.status === 'Error') {
-      statusHtml = `<span class="status-cell status-error"><i class="fas fa-times-circle"></i> Error</span>`;
       aiResultsHtml = `Processing failed: ${entry.error || 'Unknown error'}`;
     } else {
-      statusHtml = `<span class="status-cell status-ready">${entry.status}</span>`;
       aiResultsHtml = 'N/A';
     }
-
     row.innerHTML = `
+      <td><input type="checkbox" class="review-select-checkbox" data-index="${index}"></td>
       <td><img src="${entry.dataUrl || ''}" class="thumbnail-table" alt="${entry.file.name}"></td>
       <td>${entry.file.name}</td>
       <td>${statusHtml}</td>
@@ -1203,28 +1262,26 @@ function updateReviewDataView() {
         <button class="action-button small-button override-btn" data-index="${index}">Override</button>
       </td>
     `;
-    // Store the dataUrl for the image entry for use in the review table
+    // Set up image preview
     const reader = new FileReader();
     reader.readAsDataURL(entry.file);
     reader.onloadend = function() {
       entry.dataUrl = reader.result;
       row.querySelector('.thumbnail-table').src = reader.result;
     };
-
-    // Add event listeners for action buttons
+    // Action buttons
     row.querySelector('.approve-btn').addEventListener('click', () => {
-      alert(`Approved ${entry.file.name}`);
-      // Implement actual approve logic (e.g., API call, update status)
+      entry.approved = true; entry.rejected = false;
+      updateReviewDataView();
     });
     row.querySelector('.reject-btn').addEventListener('click', () => {
-      alert(`Rejected ${entry.file.name}`);
-      // Implement actual reject logic
+      entry.rejected = true; entry.approved = false;
+      updateReviewDataView();
     });
     row.querySelector('.override-btn').addEventListener('click', () => {
       alert(`Override ${entry.file.name}`);
-      // Implement actual override logic (e.g., open a modal for manual editing)
     });
-    // Add click listener for AI Results link to show more details (optional)
+    // AI Results link
     const aiResultsLink = row.querySelector('.ai-results-link');
     if (aiResultsLink) {
       aiResultsLink.addEventListener('click', (e) => {
@@ -1232,8 +1289,67 @@ function updateReviewDataView() {
         alert(`Detailed AI Results for ${entry.file.name}:\n${JSON.stringify(entry.results, null, 2)}`);
   });
     }
-});
+    reviewTableBody.appendChild(row);
+  });
+  if (!anyRows) {
+    const emptyRow = document.createElement('tr');
+    emptyRow.innerHTML = `<td colspan="6" style="text-align:center; color:#b0b0b0;">No images to review. Please process images first.</td>`;
+    reviewTableBody.appendChild(emptyRow);
+  }
+  // Select All logic
+  const selectAllBox = document.getElementById('selectAllReview');
+  const checkboxes = document.querySelectorAll('.review-select-checkbox');
+  selectAllBox.addEventListener('change', function() {
+    checkboxes.forEach(cb => { cb.checked = selectAllBox.checked; });
+    updateBatchButtonsState();
+  });
+  checkboxes.forEach(cb => {
+    cb.addEventListener('change', updateBatchButtonsState);
+  });
+  updateBatchButtonsState();
 }
+
+// --- Filtering and Search Event Listeners ---
+document.querySelectorAll('.review-filter-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.review-filter-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    updateReviewDataView();
+  });
+});
+document.getElementById('reviewSearchInput').addEventListener('input', updateReviewDataView);
+
+// --- Batch Action Buttons Logic ---
+function getSelectedReviewIndexes() {
+  return Array.from(document.querySelectorAll('.review-select-checkbox:checked')).map(cb => parseInt(cb.dataset.index));
+}
+function updateBatchButtonsState() {
+  const selected = getSelectedReviewIndexes();
+  const batchCard = document.getElementById('batchActionsCard');
+  if (selected.length === 0) {
+    document.getElementById('approveSelectedBtn').disabled = true;
+    document.getElementById('rejectSelectedBtn').disabled = true;
+    document.getElementById('overrideSelectedBtn').disabled = true;
+    if (batchCard) batchCard.style.display = 'none';
+  } else {
+    document.getElementById('approveSelectedBtn').disabled = false;
+    document.getElementById('rejectSelectedBtn').disabled = false;
+    document.getElementById('overrideSelectedBtn').disabled = false;
+    if (batchCard) batchCard.style.display = 'block';
+  }
+}
+document.getElementById('approveSelectedBtn').addEventListener('click', () => {
+  getSelectedReviewIndexes().forEach(idx => { imageProcessingStatus[idx].approved = true; imageProcessingStatus[idx].rejected = false; });
+  updateReviewDataView();
+});
+document.getElementById('rejectSelectedBtn').addEventListener('click', () => {
+  getSelectedReviewIndexes().forEach(idx => { imageProcessingStatus[idx].rejected = true; imageProcessingStatus[idx].approved = false; });
+  updateReviewDataView();
+});
+document.getElementById('overrideSelectedBtn').addEventListener('click', () => {
+  getSelectedReviewIndexes().forEach(idx => { alert(`Override ${imageProcessingStatus[idx].file.name}`); });
+  updateReviewDataView();
+});
 
 // New function to update the model display in the Process Data tab
 function updateModelDisplayInProcessTab() {
@@ -1373,15 +1489,32 @@ processAllImagesExplicitBtn.addEventListener('click', async function() {
   }
   processAllImagesExplicitBtn.disabled = false;
   updateProcessAllBtnState();
+
+  // After batch processing, update the gallery for the first image if available
+  if (imageProcessingStatus.length > 0) {
+    previewImageForProcessing(imageProcessingStatus[0]);
+  }
 });
 
 // Add CSS for the process all button container
 const processAllBtnStyle = document.createElement('style');
 processAllBtnStyle.textContent = `
-.process-all-btn-container {
-  text-align: center;
+.process-data-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 18px;
+  flex-wrap: wrap; /* Allow wrapping on smaller screens */
+  gap: 15px; /* Space between filter group and button */
 }
+
+.filter-tabs {
+  margin-bottom: 0; /* Remove default margin-bottom */
+  display: flex; /* Ensure it's a flex container */
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
 #processAllImagesExplicitBtn {
   font-size: 1.1em;
   font-weight: 600;
@@ -1581,6 +1714,182 @@ async function displayImageForProcessing(fileEntry) {
   }
   updateGalleryNavigation();
 }
+
+/* Modernized Review Controls and Table Styles */
+const reviewModernStyle = document.createElement('style');
+reviewModernStyle.textContent = `
+.review-controls-container {
+  background: rgba(44, 62, 80, 0.85);
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+  padding: 18px 20px 12px 20px;
+  margin-bottom: 24px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 32px;
+  align-items: flex-start;
+  justify-content: flex-start;
+  flex-direction: column;
+}
+.review-filter-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 8px;
+  align-items: center;
+  margin-bottom: 18px;
+}
+.review-batch-group-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-top: 4px;
+  margin-bottom: 2px;
+}
+.batch-actions-label {
+  color: #b0b0b0;
+  font-size: 0.98em;
+  font-weight: 600;
+  margin-bottom: 7px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-left: 2px;
+}
+.review-batch-group {
+  display: flex;
+  gap: 12px;
+}
+.review-batch-group .action-button {
+  border-radius: 6px;
+  font-size: 1em;
+  font-weight: 600;
+  padding: 9px 22px;
+  margin-left: 0;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.review-batch-group .action-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+@media (min-width: 700px) {
+  .review-controls-container {
+    flex-direction: row;
+    align-items: flex-end;
+    gap: 18px 32px;
+    justify-content: space-between;
+  }
+  .review-filter-group {
+    margin-bottom: 0;
+  }
+  .review-batch-group-wrapper {
+    margin-top: 0;
+    margin-bottom: 0;
+    align-items: flex-end;
+  }
+}
+.review-table-container {
+  background: #23272a;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+  padding: 0 0 18px 0;
+  margin-bottom: 30px;
+  overflow-x: auto;
+}
+.review-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  color: #e0e0e0;
+  min-width: 800px;
+}
+.review-table th, .review-table td {
+  padding: 14px 16px;
+  text-align: left;
+  border-bottom: 1px solid #3e444b;
+  background: transparent;
+}
+.review-table th {
+  background: #2c2f33;
+  font-weight: 700;
+  color: #b0b0b0;
+  text-transform: uppercase;
+  font-size: 0.98em;
+  letter-spacing: 0.5px;
+}
+.review-table tbody tr:hover {
+  background-color: #2f3338;
+}
+.review-table .action-button {
+  min-width: 90px;
+  margin-right: 6px;
+  font-size: 0.98em;
+  padding: 8px 0;
+}
+.review-table .approve-btn { background: #28a745; color: #fff; }
+.review-table .approve-btn:hover { background: #218838; }
+.review-table .reject-btn { background: #dc3545; color: #fff; }
+.review-table .reject-btn:hover { background: #b52a37; }
+.review-table .override-btn { background: #ffc107; color: #333; }
+.review-table .override-btn:hover { background: #e0a800; color: #222; }
+.review-table input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #4a69bd;
+  border-radius: 4px;
+  margin-right: 0;
+}
+@media (max-width: 700px) {
+  .review-table, .review-table th, .review-table td {
+    font-size: 0.95em;
+    padding: 10px 6px;
+  }
+  .review-controls-container { padding: 8px 2px 6px 2px; }
+}
+`;
+document.head.appendChild(reviewModernStyle);
+
+/* Add CSS for the new batch actions card */
+const batchActionsCardStyle = document.createElement('style');
+batchActionsCardStyle.textContent = `
+.batch-actions-card {
+  background: rgba(44, 62, 80, 0.92);
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+  padding: 18px 20px 12px 20px;
+  margin-bottom: 24px;
+  margin-top: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  transition: box-shadow 0.2s;
+}
+.batch-actions-label {
+  color: #b0b0b0;
+  font-size: 0.98em;
+  font-weight: 600;
+  margin-bottom: 7px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-left: 2px;
+}
+.review-batch-group {
+  display: flex;
+  gap: 12px;
+}
+.review-batch-group .action-button {
+  border-radius: 6px;
+  font-size: 1em;
+  font-weight: 600;
+  padding: 9px 22px;
+  margin-left: 0;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.review-batch-group .action-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+`;
+document.head.appendChild(batchActionsCardStyle);
 </script>
 
 <style>
@@ -2464,5 +2773,13 @@ body {
   font-size: 0.8em;
   margin-left: 10px;
 }
+
+/* Add minimal CSS for new controls */
+.review-controls-container { margin-bottom: 18px; }
+.review-filter-btn { background: #36393f; color: #e0e0e0; border: none; border-radius: 5px; padding: 7px 18px; margin-right: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+.review-filter-btn.active, .review-filter-btn:hover { background: #4a69bd; color: #fff; }
+.review-batch-group .action-button { margin-left: 8px; }
+.review-batch-group .action-button:disabled { opacity: 0.6; cursor: not-allowed; }
+.review-filter-group input[type="text"] { background: #23272a; color: #e0e0e0; border: 1px solid #4a69bd; border-radius: 5px; }
 </style>
 {% endblock %}
