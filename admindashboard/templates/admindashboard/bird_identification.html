@@ -327,10 +327,7 @@ async function handleFiles(files) {
     if (selectedFilesDisplay) {
       selectedFilesDisplay.innerHTML = '';
     }
-    selectedFiles = [];
-    imageProcessingStatus = [];
-    currentImage = null;
-    currentImageDataUrl = null;
+    
     if (!files || files.length === 0) {
       if (noFilesSelectedMessage) {
         noFilesSelectedMessage.style.display = 'block';
@@ -344,8 +341,22 @@ async function handleFiles(files) {
     if (noFilesSelectedMessage) {
       noFilesSelectedMessage.style.display = 'none';
     }
+
+    // Check for duplicate files
+    const duplicateFiles = [];
     for (const file of files) {
       if (file.type.startsWith('image/')) {
+        // Check if file with same name and size already exists
+        const isDuplicate = selectedFiles.some(existingFile => 
+          existingFile.name === file.name && 
+          existingFile.size === file.size
+        );
+        
+        if (isDuplicate) {
+          duplicateFiles.push(file.name);
+          continue;
+        }
+
         try {
           await validateFile(file);
           selectedFiles.push(file);
@@ -354,7 +365,13 @@ async function handleFiles(files) {
             status: 'Ready',
             results: null,
             error: null,
-            progress: 0
+            progress: 0,
+            approved: false,
+            rejected: false,
+            overridden: false,
+            overriddenCount: null,
+            originalResults: null,
+            editingOverride: false
           };
           imageProcessingStatus.push(fileEntry);
           if (selectedFilesDisplay) {
@@ -405,8 +422,16 @@ async function handleFiles(files) {
         }
       }
     }
+
+    // Show warning if there were duplicate files
+    if (duplicateFiles.length > 0) {
+      const duplicateMessage = duplicateFiles.length === 1 
+        ? `The file "${duplicateFiles[0]}" was skipped because it's already in the list.`
+        : `The following files were skipped because they're already in the list:\n${duplicateFiles.join('\n')}`;
+      alert(duplicateMessage);
+    }
+
     updateUploadButtonState();
-    // Removed updateProcessDataView and updateModelDisplayInProcessTab from here
   } catch (error) {
     console.error('Error in handleFiles:', error);
     alert('An error occurred while processing files. Please try again.');
@@ -582,10 +607,6 @@ uploadBtn.addEventListener('click', async function() {
     uploadBtn.textContent = 'Save'; // Change button text
     uploadBtn.dataset.state = 'save'; // Update button state
     uploadBtn.disabled = false; // Re-enable the Save button
-    
-    // (REMOVED) Now move to the process data tab immediately
-    // showTab('process-data');
-    // updateProcessDataView(); // This will populate the table with the uploaded images
   }
   // If data-state is 'save', clicking again will trigger the tab switch
   else if (this.dataset.state === 'save') {
@@ -642,13 +663,22 @@ function updateUploadButtonState() {
   const clearBtn = document.getElementById('clearBtn');
 
   if (selectedFiles.length > 0) {
-    uploadBtn.disabled = false;
-    // Always reset to 'Upload' text and state when files are selected initially or after clearing
-    uploadBtn.textContent = 'Upload';
-    uploadBtn.dataset.state = 'upload';
+    // Check if any files have been processed
+    const hasProcessedFiles = imageProcessingStatus.some(entry => entry.status === 'Completed' || entry.status === 'Processing');
+    
+    if (hasProcessedFiles) {
+      // If files have been processed, disable the save button
+      uploadBtn.disabled = true;
+      uploadBtn.textContent = 'Save';
+      uploadBtn.dataset.state = 'save';
+    } else {
+      // If no files have been processed, enable the upload button
+      uploadBtn.disabled = false;
+      uploadBtn.textContent = 'Upload';
+      uploadBtn.dataset.state = 'upload';
+    }
   } else {
     uploadBtn.disabled = true;
-    // Keep it 'Upload' when no files
     uploadBtn.textContent = 'Upload';
     uploadBtn.dataset.state = 'upload';
   }
@@ -961,14 +991,10 @@ function updateProcessDataView() {
   batchProgressBar.style.width = '0%';
   imageTableBody.innerHTML = ''; // Clear previous table content
 
-  // No longer unconditionally clear gallery and result box here.
-  // They will be updated by previewImageInGallery or retain last state.
-
   if (selectedFiles.length === 0) {
     imageTableBody.innerHTML = '<tr><td colspan="5">No images uploaded.</td></tr>';
     processAllImagesBtn.disabled = true;
     retryAllFailedBtn.style.display = 'none';
-    // Clear gallery and result box, show placeholder if no files
     if (gallery) gallery.innerHTML = '<div style="color:#b0b0b0;text-align:center;padding:40px 0;">No image to preview. Upload files first.</div>';
     if (resultBox) resultBox.innerHTML = '<div style="color:#b0b0b0;text-align:center;padding:40px 0;font-size:1.2em;">No images to process.</div>';
     return;
@@ -986,7 +1012,12 @@ function updateProcessDataView() {
 
     if (fileEntry.status === 'Completed') {
       statusText = 'Completed';
-      aiResultsText = `${fileEntry.results.length} detections`;
+      if (fileEntry.overridden) { // New: Indicate overridden status in Process Data tab
+        aiResultsText = `Overridden: ${(fileEntry.overriddenCount !== null) ? fileEntry.overriddenCount : (fileEntry.originalResults ? fileEntry.originalResults.length : 0)} detections`;
+        statusText += ' <i class="fas fa-pencil-alt" style="color: #ffc107; margin-left: 5px;"></i>'; // Add override icon
+      } else {
+        aiResultsText = `${fileEntry.results.length} detections`;
+      }
       actionButtonHtml = '<button class="action-button small-button" disabled style="display:none;">Processed</button>';
     } else if (fileEntry.status === 'Processing') {
       statusText = '<span class="spinner-small"></span> Processing';
@@ -998,38 +1029,37 @@ function updateProcessDataView() {
       actionButtonHtml = '<button class="action-button small-button process-single-btn" data-index="${index}">Retry</button>';
     }
 
-      const row = imageTableBody.insertRow();
-      row.dataset.index = index; // Store index for later reference
-      row.innerHTML = `
+    const row = imageTableBody.insertRow();
+    row.dataset.index = index;
+    row.innerHTML = `
       <td><img src="${fileEntry.dataUrl}" class="thumbnail-table" alt="${file.name}"></td>
-        <td>${file.name}</td>
+      <td>${file.name}</td>
       <td class="status-cell ${statusClass}">${statusText}</td>
       <td>${aiResultsText}</td>
       <td>${actionButtonHtml}</td>
-      `;
+    `;
 
-      // Add click listener for thumbnail to display in large preview
-      row.querySelector('.thumbnail-table').addEventListener('click', () => {
-      previewImageInGallery(imageProcessingStatus[index]); // Changed to previewImageInGallery
+    // Add click listener for thumbnail to display in large preview
+    row.querySelector('.thumbnail-table').addEventListener('click', () => {
+      previewImageInGallery(imageProcessingStatus[index]);
     });
 
     // Add click listener for individual process/retry button if it exists and is not disabled
     const processSingleBtn = row.querySelector('.process-single-btn');
-    if (processSingleBtn && !actionButtonDisabled) { // Check actionButtonDisabled
+    if (processSingleBtn && !actionButtonDisabled) {
       processSingleBtn.addEventListener('click', async (e) => {
         const imageIndex = e.target.dataset.index;
         await displayImageForProcessing(imageProcessingStatus[imageIndex]);
       });
-      }
+    }
   });
-  processAllImagesBtn.disabled = false; // Enable process all button once table is populated
+  processAllImagesBtn.disabled = false;
   updateGalleryNavigation();
   updateProcessAllBtnState();
 
-  // After populating the table, ensure the gallery shows the first image if available
   if (selectedFiles.length > 0) {
     const initialIndex = currentGalleryIndex !== undefined && imageProcessingStatus[currentGalleryIndex] ? currentGalleryIndex : 0;
-    previewImageInGallery(imageProcessingStatus[initialIndex]); // Changed to previewImageInGallery
+    previewImageInGallery(imageProcessingStatus[initialIndex]);
   }
 }
 
@@ -1238,9 +1268,9 @@ function showTab(tabName) {
       updateReviewDataView(); // Update review tab content when shown
     } else if (tabName === 'process-data') { // Add this condition
       updateProcessDataView(); // Ensure process data view is updated on tab switch
-    }
-    // Remove any large preview image when switching to upload tab
-    if (tabName === 'upload') {
+    } else if (tabName === 'upload') {
+      // Update upload button state when returning to upload tab
+      updateUploadButtonState();
       if (gallery) gallery.innerHTML = '';
       if (resultBox) resultBox.innerHTML = '';
     }
@@ -1270,35 +1300,73 @@ function updateReviewDataView() {
 
   let anyRows = false;
   imageProcessingStatus.forEach((entry, index) => {
-    // Filtering logic
-    let status = 'pending';
-    if (entry.status === 'Completed' && entry.approved) status = 'approved';
-    else if (entry.status === 'Completed' && entry.rejected) status = 'rejected';
-    else if (entry.status === 'Error') status = 'error';
-    else if (entry.status === 'Completed') status = 'pending';
-    else if (entry.status === 'Ready' || entry.status === 'Processing') status = 'pending';
-    if (statusFilter !== 'all' && status !== statusFilter) return;
+    // Review Status Logic
+    let reviewStatus = 'pending';
+    let buttonsEnabled = false; // General button enablement for Approve/Reject
+    let overrideButtonEnabled = false; // Separate enablement for Override/Cancel button
+    let rowClass = '';
+
+    if (entry.approved) {
+      reviewStatus = 'approved';
+    } else if (entry.rejected) {
+      reviewStatus = 'rejected';
+    } else if (entry.editingOverride) { // New: If actively editing override
+      reviewStatus = 'overridden-editing'; // Special status for editing
+      rowClass = 'overridden-editing-row';
+      buttonsEnabled = false; // Disable Approve/Reject when editing override
+      overrideButtonEnabled = true; // Enable Cancel button
+    } else if (entry.overridden) { // New: If already overridden (but not editing)
+      reviewStatus = 'overridden';
+      rowClass = 'overridden-row';
+      buttonsEnabled = true; // Approve/Reject can be re-enabled after override
+      overrideButtonEnabled = true; // Enable Edit button
+    } else if (entry.status === 'Error') {
+      reviewStatus = 'error';
+    } else if (entry.status === 'Completed' && !entry.approved && !entry.rejected && !entry.overridden) {
+      reviewStatus = 'pending';
+      buttonsEnabled = true; // Enable buttons for pending completed images
+      overrideButtonEnabled = true; // Enable Override button
+    } else if (entry.status === 'Ready' || entry.status === 'Processing') {
+      return; // Do not show non-processed images in review tab
+    }
+    
+    // Filtering logic based on reviewStatus
+    if (statusFilter !== 'all' && reviewStatus !== statusFilter) return;
     if (searchValue && !entry.file.name.toLowerCase().includes(searchValue)) return;
     anyRows = true;
 
     const row = document.createElement('tr');
     row.dataset.index = index;
+    if (rowClass) {
+      row.classList.add(rowClass);
+    }
     let statusHtml = '';
     let aiResultsHtml = '';
-    if (status === 'approved') statusHtml = `<span class="status-cell status-completed"><i class="fas fa-check-circle"></i> Approved</span>`;
-    else if (status === 'rejected') statusHtml = `<span class="status-cell status-error"><i class="fas fa-times-circle"></i> Rejected</span>`;
-    else if (status === 'error') statusHtml = `<span class="status-cell status-error"><i class="fas fa-times-circle"></i> Error</span>`;
-    else if (status === 'pending') statusHtml = `<span class="status-cell status-ready">Pending</span>`;
-      if (entry.results && entry.results.length > 0) {
-        const totalDetections = entry.results.length;
-        const sumConfidence = entry.results.reduce((sum, det) => sum + det.confidence, 0);
-        const avgConfidence = sumConfidence / totalDetections;
-        aiResultsHtml = `<a href="#" class="ai-results-link" data-index="${index}">Birds: ${totalDetections}, Confidence: ${(avgConfidence * 100).toFixed(1)}%</a>`;
+    
+    if (reviewStatus === 'approved') statusHtml = `<span class="status-cell status-completed"><i class="fas fa-check-circle"></i> Approved</span>`;
+    else if (reviewStatus === 'rejected') statusHtml = `<span class="status-cell status-error"><i class="fas fa-times-circle"></i> Rejected</span>`;
+    else if (reviewStatus === 'error') statusHtml = `<span class="status-cell status-error"><i class="fas fa-times-circle"></i> Error</span>`;
+    else if (reviewStatus === 'overridden-editing') statusHtml = `<span class="status-cell status-overridden-editing"><span class="spinner-small"></span> Editing Override</span>`; // New: for active editing
+    else if (reviewStatus === 'overridden') statusHtml = `<span class="status-cell status-overridden"><i class="fas fa-pencil-alt"></i> Overridden</span>`;
+    else if (reviewStatus === 'pending') statusHtml = `<span class="status-cell status-ready">Pending</span>`;
+
+    // AI Results display logic
+    if (entry.editingOverride) { // New: Editable input for active override editing
+      const currentCount = (entry.overriddenCount !== null) ? entry.overriddenCount : (entry.originalResults ? entry.originalResults.length : 0);
+      aiResultsHtml = `<input type="number" class="override-count-input" data-index="${index}" value="${currentCount}" min="0">`;
+    } else if (entry.overridden) { // New: Display overridden count when not editing
+      aiResultsHtml = `Overridden: ${(entry.overriddenCount !== null) ? entry.overriddenCount : (entry.originalResults ? entry.originalResults.length : 0)} detections`;
+    } else if (entry.results && entry.results.length > 0) {
+      const totalDetections = entry.results.length;
+      const sumConfidence = entry.results.reduce((sum, det) => sum + det.confidence, 0);
+      const avgConfidence = sumConfidence / totalDetections;
+      aiResultsHtml = `<a href="#" class="ai-results-link" data-index="${index}">Birds: ${totalDetections}, Confidence: ${(avgConfidence * 100).toFixed(1)}%</a>`;
     } else if (entry.status === 'Error') {
       aiResultsHtml = `Processing failed: ${entry.error || 'Unknown error'}`;
     } else {
       aiResultsHtml = 'N/A';
     }
+
     row.innerHTML = `
       <td><input type="checkbox" class="review-select-checkbox" data-index="${index}"></td>
       <td><img src="${entry.dataUrl || ''}" class="thumbnail-table" alt="${entry.file.name}"></td>
@@ -1306,37 +1374,139 @@ function updateReviewDataView() {
       <td>${statusHtml}</td>
       <td>${aiResultsHtml}</td>
       <td>
-        <button class="action-button small-button approve-btn" data-index="${index}">Approve</button>
-        <button class="action-button small-button reject-btn" data-index="${index}">Reject</button>
-        <button class="action-button small-button override-btn" data-index="${index}">Override</button>
+        <button class="action-button small-button approve-btn" data-index="${index}" ${(entry.approved || entry.editingOverride) ? 'disabled' : ''}>Approve</button>
+        <button class="action-button small-button reject-btn" data-index="${index}" ${(entry.rejected || entry.editingOverride) ? 'disabled' : ''}>Reject</button>
+        <button class="action-button small-button override-btn" data-index="${index}">
+          ${entry.editingOverride ? (entry.overriddenCount === (entry.originalResults ? entry.originalResults.length : 0) ? 'Save' : 'Cancel') : (entry.overridden ? 'Edit' : 'Override')}
+        </button>
       </td>
     `;
-    // Set up image preview
-    const reader = new FileReader();
-    reader.readAsDataURL(entry.file);
-    reader.onloadend = function() {
-      entry.dataUrl = reader.result;
-      row.querySelector('.thumbnail-table').src = reader.result;
-    };
+    
     // Action buttons
-    row.querySelector('.approve-btn').addEventListener('click', () => {
-      entry.approved = true; entry.rejected = false;
-      updateReviewDataView();
+    const approveBtn = row.querySelector('.approve-btn');
+    const rejectBtn = row.querySelector('.reject-btn');
+    const overrideBtn = row.querySelector('.override-btn');
+    
+    if (approveBtn) {
+      approveBtn.addEventListener('click', () => {
+        entry.approved = true;
+        entry.rejected = false;
+        updateReviewDataView();
+      });
+    }
+    if (rejectBtn) {
+      rejectBtn.addEventListener('click', () => {
+        entry.rejected = true;
+        entry.approved = false;
+        updateReviewDataView();
+      });
+    }
+    if (overrideBtn) {
+      overrideBtn.addEventListener('click', () => {
+        if (entry.editingOverride) { // If currently editing
+          // Check if the value is back to original
+          const currentCount = entry.overriddenCount;
+          const originalCount = entry.originalResults ? entry.originalResults.length : 0;
+          
+          if (currentCount === originalCount) {
+            // If value is back to original, clear override status
+            entry.editingOverride = false;
+            entry.overridden = false;
+            entry.overriddenCount = null;
+          } else {
+            // If value is different, keep override status
+            entry.editingOverride = false;
+            entry.overridden = true;
+          }
+        } else { // This is either the Override or Edit button
+          entry.editingOverride = true; // Enter editing mode
+          entry.overridden = true; // Mark as overridden (if not already)
+          entry.approved = false; // Clear approved/rejected state
+          entry.rejected = false;
+          // Store original results if not already stored, and set initial overriddenCount
+          if (!entry.originalResults && entry.results) {
+            entry.originalResults = JSON.parse(JSON.stringify(entry.results));
+            entry.overriddenCount = entry.originalResults.length; // Set initial count from AI detections
+          } else if (entry.overriddenCount === null && entry.results) { // If no overrideCount yet, use results length
+            entry.overriddenCount = entry.results.length;
+          }
+        }
+        updateReviewDataView();
+      });
+    }
+
+    // Add event listener for override count input
+    const overrideInput = row.querySelector('.override-count-input');
+    if (overrideInput) {
+      overrideInput.addEventListener('change', (e) => {
+        const newCount = parseInt(e.target.value);
+        if (!isNaN(newCount) && newCount >= 0) {
+          // Only update the temporary count, don't save it yet
+          entry.overriddenCount = newCount;
+        }
+      });
+    }
+
+    // Add event listener for tab switching to handle unsaved changes
+    document.querySelectorAll('.tab-button').forEach(button => {
+      button.addEventListener('click', () => {
+        // Find any entries that are in editing mode
+        const editingEntries = imageProcessingStatus.filter(entry => entry.editingOverride);
+        if (editingEntries.length > 0) {
+          // Revert any unsaved changes
+          editingEntries.forEach(entry => {
+            // Store the original count before reverting
+            const originalCount = entry.originalResults ? entry.originalResults.length : 0;
+            
+            // Exit editing mode
+            entry.editingOverride = false;
+            
+            // If the count was changed from original, revert it
+            if (entry.overriddenCount !== originalCount) {
+              entry.overriddenCount = originalCount;
+              // If the count is back to original, clear override status
+              entry.overridden = false;
+            }
+          });
+          updateReviewDataView();
+        }
+      });
     });
-    row.querySelector('.reject-btn').addEventListener('click', () => {
-      entry.rejected = true; entry.approved = false;
-      updateReviewDataView();
+
+    // Also add a click event listener to the document to handle clicks outside the override input
+    document.addEventListener('click', (e) => {
+      // Check if the click was outside any override input
+      if (!e.target.closest('.override-count-input') && !e.target.closest('.override-btn')) {
+        // Find any entries that are in editing mode
+        const editingEntries = imageProcessingStatus.filter(entry => entry.editingOverride);
+        if (editingEntries.length > 0) {
+          // Revert any unsaved changes
+          editingEntries.forEach(entry => {
+            // Store the original count before reverting
+            const originalCount = entry.originalResults ? entry.originalResults.length : 0;
+            
+            // Exit editing mode
+            entry.editingOverride = false;
+            
+            // If the count was changed from original, revert it
+            if (entry.overriddenCount !== originalCount) {
+              entry.overriddenCount = originalCount;
+              // If the count is back to original, clear override status
+              entry.overridden = false;
+            }
+          });
+          updateReviewDataView();
+        }
+      }
     });
-    row.querySelector('.override-btn').addEventListener('click', () => {
-      alert(`Override ${entry.file.name}`);
-    });
+
     // AI Results link
     const aiResultsLink = row.querySelector('.ai-results-link');
     if (aiResultsLink) {
       aiResultsLink.addEventListener('click', (e) => {
         e.preventDefault();
-        alert(`Detailed AI Results for ${entry.file.name}:\n${JSON.stringify(entry.results, null, 2)}`);
-  });
+        alert(`Detailed AI Results for ${entry.file.name}:\n${JSON.stringify(entry.originalResults || entry.results, null, 2)}`);
+      });
     }
     reviewTableBody.appendChild(row);
   });
@@ -2786,5 +2956,38 @@ body {
 .review-batch-group .action-button { margin-left: 8px; }
 .review-batch-group .action-button:disabled { opacity: 0.6; cursor: not-allowed; }
 .review-filter-group input[type="text"] { background: #23272a; color: #e0e0e0; border: 1px solid #4a69bd; border-radius: 5px; }
+
+/* New CSS for overridden states */
+.status-overridden {
+  color: #ffc107; /* Yellow/Orange for overridden status */
+  font-weight: 600;
+}
+
+.status-overridden-editing {
+  color: #4a90e2; /* Blue for active editing */
+  font-weight: 600;
+}
+
+.overridden-row {
+  background-color: #36393f; /* Slightly different background for overridden rows */
+  border-left: 4px solid #ffc107; /* Left border highlight */
+}
+
+.override-count-input {
+  background: #2c2f33;
+  color: #e0e0e0;
+  border: 1px solid #4a69bd;
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 0.9em;
+  width: 60px;
+  text-align: center;
+}
+
+.override-count-input:focus {
+  border-color: #3e58a3;
+  box-shadow: 0 0 0 3px rgba(74, 105, 189, 0.4);
+  outline: none;
+}
 </style>
 {% endblock %}
