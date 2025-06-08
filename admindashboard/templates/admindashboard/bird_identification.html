@@ -16,21 +16,32 @@
       <i class="fas fa-cloud-upload-alt icon-left"></i> IMAGE UPLOAD & PROCESSING
     </h2>
     
-    <!-- Model Info and Error Display - Moved from Process Data Tab -->
-    <div class="model-info-error-display" style="margin-bottom: 16px; padding: 10px; background: #2f3338; border: 1px solid #4a69bd; border-radius: 6px; color: #e0e0e0;">
+    <!-- Model Info and Error Display -->
+    <div class="model-info-error-display">
     <strong>Model in use:</strong>
     <span id="currentModel">Chinese Egret</span>
-      <select id="modelSelect" class="model-select" style="margin-left: 10px; padding: 4px 8px; border: 1px solid #4a69bd; border-radius: 4px; background: #36393f; color: #e0e0e0;">
+      <select id="modelSelect" class="model-select">
       <option value="chinese_egret">Chinese Egret</option>
       <option value="whiskered_tern">Whiskered Tern</option>
       <option value="great_knot">Great Knot</option>
     </select>
     {% if model_load_error %}
-        <div class="error-message" style="margin-top: 10px; padding: 8px; background: #4a3838; border: 1px solid #cc4e4e; border-radius: 4px; color: #ff9e9e;">
+        <div class="error-message">
         <strong>Error:</strong> {{ model_load_error }}
       </div>
     {% endif %}
   </div>
+
+    <!-- File Validation Rules -->
+    <div class="validation-rules">
+      <h3>Upload Requirements:</h3>
+      <ul>
+        <li><i class="fas fa-check"></i> Supported formats: JPG, PNG, JPEG</li>
+        <li><i class="fas fa-check"></i> Maximum file size: 10MB</li>
+        <li><i class="fas fa-check"></i> Minimum resolution: 800x600</li>
+        <li><i class="fas fa-check"></i> Maximum batch size: 50 images</li>
+      </ul>
+    </div>
   
     <!-- Image Upload & Drop Zone -->
     <div class="drop-zone-container" id="drop-area">
@@ -41,7 +52,7 @@
       <p class="drop-zone-or">or</p>
       <div class="button-group">
         <label for="fileElem" class="action-button primary-button">Select Files</label>
-        <input type="file" id="fileElem" accept="image/*" multiple style="display: none;">
+        <input type="file" id="fileElem" accept="image/jpeg,image/png,image/jpg" multiple style="display: none;">
         <label for="folderElem" class="action-button secondary-button">Select Folder</label>
         <input type="file" id="folderElem" webkitdirectory mozdirectory msdirectory odirectory directory style="display: none;">
       </div>
@@ -53,26 +64,25 @@
       <!-- Selected files will be displayed here dynamically -->
   </div>
   
-    <!-- Hidden file preview and result containers (initially hidden) -->
-    <div id="columns-container" style="display: none;">
-    <!-- Left Column: File Preview -->
-    <div class="dashboard-box column" id="preview-container">
-      <h3>File Preview:</h3>
-      <div id="gallery"></div>
+    <!-- Upload Progress -->
+    <div id="upload-progress" class="upload-progress-container" style="display: none;">
+      <div class="progress-header">
+        <h3>Upload Progress</h3>
+        <span id="upload-status">Preparing files...</span>
     </div>
-    
-    <!-- Right Column: Result -->
-    <div class="dashboard-box column" id="result-container">
-      <h3>Result:</h3>
-      <div id="result-box">
-        <!-- Processed result will be displayed here -->
+      <div class="progress-bar-container">
+        <div class="progress-bar" id="upload-progress-bar"></div>
+        <span id="upload-percentage">0%</span>
       </div>
+      <div class="file-progress-list" id="file-progress-list">
+        <!-- Individual file progress will be shown here -->
     </div>
   </div>
   
     <!-- Action Buttons at the Bottom -->
     <div class="bottom-action-buttons">
-      <button id="uploadBtn" class="action-button primary-button">Upload</button>
+      <button id="uploadBtn" class="action-button primary-button" disabled>Upload</button>
+      <button id="clearBtn" class="action-button secondary-button" disabled>Clear All</button>
   </div>
 </div>
 
@@ -106,6 +116,20 @@
       <button class="filter-tab-button" data-filter="completed">Completed</button>
       <button class="filter-tab-button" data-filter="error">Error</button>
     </div>
+
+    <!-- Add Process All Images button above the gallery in Process Data tab -->
+    <div class="process-all-btn-container" style="text-align:center; margin-bottom: 18px;">
+      <button id="processAllImagesExplicitBtn" class="action-button primary-button" style="min-width:200px;">Generate/Process All Images</button>
+    </div>
+    <div id="gallery-card" class="gallery-card" style="margin-bottom: 24px; display: none;">
+      <div class="gallery-controls" id="gallery-controls" style="display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 10px;">
+        <button id="gallery-prev" class="gallery-nav-btn" style="display: none;">&#8592; Prev</button>
+        <span id="gallery-counter" class="gallery-counter"></span>
+        <button id="gallery-next" class="gallery-nav-btn" style="display: none;">Next &#8594;</button>
+      </div>
+      <div id="gallery" style="display: flex; justify-content: center; align-items: center;"></div>
+    </div>
+    <div id="result-box"></div>
 
     <div class="image-processing-table-container">
       <table class="image-processing-table">
@@ -165,47 +189,242 @@
 </div>
 
 <script>
-// DOM element references
-const dropArea = document.getElementById('drop-area');
-const fileInput = document.getElementById('fileElem');
-const folderInput = document.getElementById('folderElem'); // New folder input
-const gallery = document.getElementById('gallery');
-const identifyBtn = document.getElementById('identifyBtn'); // Keep for now, will rename/repurpose
-const resultBox = document.getElementById('result-box');
-const modelSelect = document.getElementById('modelSelect');
-const currentModelSpan = document.getElementById('currentModel');
-const columnsContainer = document.getElementById('columns-container'); // New reference for columns container
-const uploadBtn = document.getElementById('uploadBtn'); // New upload button
-const continueBtn = document.getElementById('continueBtn'); // New continue button
+// DOM element references - Use let instead of const for elements that might need reassignment
+let dropArea = document.getElementById('drop-area');
+let fileInput = document.getElementById('fileElem');
+let folderInput = document.getElementById('folderElem');
+let gallery = document.getElementById('gallery');
+let resultBox = document.getElementById('result-box');
+let modelSelect = document.getElementById('modelSelect');
+let currentModelSpan = document.getElementById('currentModel');
+let currentModelProcessDataSpan = document.getElementById('currentModelProcessData');
+let selectedFilesDisplay = document.getElementById('selected-files-display');
+let noFilesSelectedMessage = document.getElementById('no-files-selected-message');
+let uploadBtn = document.getElementById('uploadBtn');
+let clearBtn = document.getElementById('clearBtn');
+let filterTabButtons = document.querySelectorAll('.filter-tab-button');
+let tabButtons = document.querySelectorAll('.tab-button');
+let uploadContent = document.getElementById('upload-content');
+let processDataContent = document.getElementById('process-data-content');
+let reviewContent = document.getElementById('review-content');
+let imageTableBody = document.getElementById('imageTableBody');
+let reviewTableBody = document.getElementById('reviewTableBody');
+let batchProgressBar = document.getElementById('batchProgressBar');
+let batchProgressCount = document.getElementById('batchProgressCount');
+let uploadedImageCount = document.getElementById('uploadedImageCount');
+let retryAllFailedBtn = document.getElementById('retryAllFailedBtn');
+let processAllImagesBtn = document.getElementById('processAllImagesBtn');
 
-// New: Tab elements
-const tabButtons = document.querySelectorAll('.tab-button');
-const uploadContent = document.getElementById('upload-content');
-const processDataContent = document.getElementById('process-data-content');
-const reviewContent = document.getElementById('review-content');
-const processImagesBtn = document.getElementById('processImagesBtn');
-const processGallery = document.getElementById('process-gallery');
-const reviewResults = document.getElementById('review-results');
-const uploadedImageCount = document.getElementById('uploadedImageCount'); // New element
-const batchProgressBar = document.getElementById('batchProgressBar'); // New element
-const batchProgressCount = document.getElementById('batchProgressCount'); // New element
-const filterTabButtons = document.querySelectorAll('.filter-tab-button'); // New elements
-const imageTableBody = document.getElementById('imageTableBody'); // New element
-const retryAllFailedBtn = document.getElementById('retryAllFailedBtn'); // New element
-const processAllImagesBtn = document.getElementById('processAllImagesBtn'); // New element
-const reviewTableBody = document.getElementById('reviewTableBody'); // New element
-const currentModelProcessDataSpan = document.getElementById('currentModelProcessData'); // New span for process data tab
-const selectedFilesDisplay = document.getElementById('selected-files-display'); // New element
-const noFilesSelectedMessage = document.getElementById('no-files-selected-message'); // New element
-
-let currentImage = null;
-let currentImageDataUrl = null;  // store the image data URL for redrawing on canvas
-let selectedFiles = []; // New array to hold multiple files
-let currentProcessedImage = null; // To store the currently displayed image in process tab
-let currentProcessedImageDataUrl = null; // Data URL for redrawing
-
-// Array to store processing status and results for each image
+// Initialize arrays
+let selectedFiles = [];
 let imageProcessingStatus = [];
+let currentImage = null;
+let currentImageDataUrl = null;
+
+// Add error handling for missing elements
+function ensureElement(element, fallbackId) {
+  if (!element) {
+    console.warn(`Element ${fallbackId} not found, creating fallback`);
+    const fallback = document.createElement('div');
+    fallback.id = fallbackId;
+    document.body.appendChild(fallback);
+    return fallback;
+  }
+  return element;
+}
+
+// Initialize elements with fallbacks
+function initializeElements() {
+  // Initialize required elements
+  gallery = ensureElement(gallery, 'gallery');
+  resultBox = ensureElement(resultBox, 'result-box');
+  selectedFilesDisplay = ensureElement(selectedFilesDisplay, 'selected-files-display');
+  noFilesSelectedMessage = ensureElement(noFilesSelectedMessage, 'no-files-selected-message');
+  currentModelProcessDataSpan = ensureElement(currentModelProcessDataSpan, 'currentModelProcessData');
+
+  // Initialize tab-related elements
+  filterTabButtons = document.querySelectorAll('.filter-tab-button');
+  tabButtons = document.querySelectorAll('.tab-button');
+  uploadContent = ensureElement(uploadContent, 'upload-content');
+  processDataContent = ensureElement(processDataContent, 'process-data-content');
+  reviewContent = ensureElement(reviewContent, 'review-content');
+  
+  // Initialize table and progress elements
+  imageTableBody = ensureElement(imageTableBody, 'imageTableBody');
+  reviewTableBody = ensureElement(reviewTableBody, 'reviewTableBody');
+  batchProgressBar = ensureElement(batchProgressBar, 'batchProgressBar');
+  batchProgressCount = ensureElement(batchProgressCount, 'batchProgressCount');
+  uploadedImageCount = ensureElement(uploadedImageCount, 'uploadedImageCount');
+  retryAllFailedBtn = ensureElement(retryAllFailedBtn, 'retryAllFailedBtn');
+  processAllImagesBtn = ensureElement(processAllImagesBtn, 'processAllImagesBtn');
+  
+  // Set initial states
+  if (noFilesSelectedMessage) {
+    noFilesSelectedMessage.style.display = 'block';
+  }
+  if (retryAllFailedBtn) {
+    retryAllFailedBtn.style.display = 'none';
+  }
+  if (processAllImagesBtn) {
+    processAllImagesBtn.disabled = true;
+  }
+}
+
+// Call initialization
+initializeElements();
+
+// Add error handling for image loading
+function handleImageError(img) {
+  img.onerror = function() {
+    console.warn('Failed to load image:', img.src);
+    // Replace with a default/placeholder image
+    img.src = '{% static "admindashboard/images/placeholder.png" %}';
+    img.alt = 'Image failed to load';
+    img.classList.add('image-load-error');
+  };
+}
+
+// Modify handleFiles function to ensure no large preview is shown during upload
+async function handleFiles(files) {
+  try {
+    console.log('handleFiles called with:', files);
+    if (gallery) gallery.innerHTML = '';
+    if (resultBox) resultBox.innerHTML = '';
+    if (selectedFilesDisplay) {
+      selectedFilesDisplay.innerHTML = '';
+    }
+    selectedFiles = [];
+    imageProcessingStatus = [];
+    currentImage = null;
+    currentImageDataUrl = null;
+    if (!files || files.length === 0) {
+      if (noFilesSelectedMessage) {
+        noFilesSelectedMessage.style.display = 'block';
+      }
+      return;
+    }
+    if (files.length > 50) {
+      alert('Maximum batch size is 50 images. Please select fewer files.');
+      return;
+    }
+    if (noFilesSelectedMessage) {
+      noFilesSelectedMessage.style.display = 'none';
+    }
+    for (const file of files) {
+      if (file.type.startsWith('image/')) {
+        try {
+          await validateFile(file);
+          selectedFiles.push(file);
+          const fileEntry = {
+            file: file,
+            status: 'Ready',
+            results: null,
+            error: null,
+            progress: 0
+          };
+          imageProcessingStatus.push(fileEntry);
+          if (selectedFilesDisplay) {
+            const fileItem = document.createElement('div');
+            fileItem.classList.add('selected-file-item');
+            fileItem.dataset.index = imageProcessingStatus.indexOf(fileEntry);
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onloadend = function() {
+              fileEntry.dataUrl = reader.result;
+              const img = document.createElement('img');
+              img.src = reader.result;
+              img.classList.add('selected-file-thumbnail');
+              handleImageError(img);
+              fileItem.appendChild(img);
+            };
+            const fileNameSpan = document.createElement('span');
+            fileNameSpan.textContent = file.name;
+            fileNameSpan.classList.add('selected-file-name');
+            fileItem.appendChild(fileNameSpan);
+            const fileSizeSpan = document.createElement('span');
+            fileSizeSpan.textContent = formatFileSize(file.size);
+            fileSizeSpan.classList.add('selected-file-size');
+            fileItem.appendChild(fileSizeSpan);
+            const removeButton = document.createElement('button');
+            removeButton.innerHTML = '<i class="fas fa-times"></i>';
+            removeButton.classList.add('remove-file-button');
+            removeButton.addEventListener('click', (e) => {
+              const indexToRemove = parseInt(e.currentTarget.closest('.selected-file-item').dataset.index);
+              removeSelectedFile(indexToRemove);
+            });
+            fileItem.appendChild(removeButton);
+            selectedFilesDisplay.appendChild(fileItem);
+          }
+        } catch (error) {
+          console.error(`Validation failed for ${file.name}:`, error);
+          if (selectedFilesDisplay) {
+            const errorItem = document.createElement('div');
+            errorItem.classList.add('selected-file-item', 'error');
+            errorItem.innerHTML = `
+              <i class="fas fa-exclamation-circle"></i>
+              <span class="selected-file-name">${file.name}</span>
+              <span class="error-message">${error}</span>
+              <button class="remove-file-button"><i class="fas fa-times"></i></button>
+            `;
+            selectedFilesDisplay.appendChild(errorItem);
+          }
+        }
+      }
+    }
+    updateUploadButtonState();
+    // Removed updateProcessDataView and updateModelDisplayInProcessTab from here
+  } catch (error) {
+    console.error('Error in handleFiles:', error);
+    alert('An error occurred while processing files. Please try again.');
+  }
+}
+
+// Add error handling to file input event listeners
+if (fileInput) {
+  fileInput.addEventListener('change', (e) => {
+    try {
+      handleFiles(e.target.files);
+    } catch (error) {
+      console.error('Error in file input change handler:', error);
+      alert('An error occurred while selecting files. Please try again.');
+    }
+  });
+}
+
+if (folderInput) {
+  folderInput.addEventListener('change', (e) => {
+    try {
+      handleFiles(e.target.files);
+    } catch (error) {
+      console.error('Error in folder input change handler:', error);
+      alert('An error occurred while selecting folder. Please try again.');
+    }
+  });
+}
+
+// Add error handling to drag and drop events
+if (dropArea) {
+  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    dropArea.addEventListener(eventName, (e) => {
+      try {
+        preventDefaults(e);
+      } catch (error) {
+        console.error(`Error in ${eventName} handler:`, error);
+      }
+    }, false);
+  });
+
+  dropArea.addEventListener('drop', (e) => {
+    try {
+      const dt = e.dataTransfer;
+      const files = dt.files;
+      handleFiles(files);
+    } catch (error) {
+      console.error('Error in drop handler:', error);
+      alert('An error occurred while dropping files. Please try again.');
+    }
+  }, false);
+}
 
 // Model selection change handler
 modelSelect.addEventListener('change', function() {
@@ -233,89 +452,150 @@ function preventDefaults(e) {
   dropArea.addEventListener(eventName, () => dropArea.classList.remove('highlight'), false);
 });
 
-// Handle dropped files
-dropArea.addEventListener('drop', handleDrop, false);
-function handleDrop(e) {
-  const dt = e.dataTransfer;
-  const files = dt.files;
-  handleFiles(files);
+// Add new file validation functions
+function validateFile(file) {
+  const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+  const maxSize = 10 * 1024 * 1024; // 10MB
+  const minWidth = 800;
+  const minHeight = 600;
+
+  return new Promise((resolve, reject) => {
+    if (!validTypes.includes(file.type)) {
+      reject(`Invalid file type: ${file.type}. Supported types are: JPG, PNG, JPEG`);
+      return;
+    }
+
+    if (file.size > maxSize) {
+      reject(`File too large: ${(file.size / 1024 / 1024).toFixed(2)}MB. Maximum size is 10MB`);
+      return;
+    }
+
+    const img = new Image();
+    img.onload = function() {
+      if (img.width < minWidth || img.height < minHeight) {
+        reject(`Image resolution too low: ${img.width}x${img.height}. Minimum is 800x600`);
+        return;
+      }
+      resolve(true);
+    };
+    img.onerror = () => reject('Failed to load image for validation');
+    img.src = URL.createObjectURL(file);
+  });
 }
 
-// Also handle files selected via the file input
-fileInput.addEventListener('change', (e) => {
-  handleFiles(e.target.files);
-});
+// Add helper function to format file size
+function formatFileSize(bytes) {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
 
-folderInput.addEventListener('change', (e) => {
-  handleFiles(e.target.files);
-});
-
-function handleFiles(files) {
-  console.log('handleFiles called with:', files); // DEBUG: Log files passed to function
-  // Clear previous previews and results if needed
-  gallery.innerHTML = '';
-  resultBox.innerHTML = '';
-  selectedFiles = []; // Clear previous selection
-  imageProcessingStatus = []; // Clear previous processing status
-  currentImage = null; // Clear single image reference
-  currentImageDataUrl = null;
-
-  selectedFilesDisplay.innerHTML = ''; // Clear current display
-
-  if (files.length === 0) {
-    noFilesSelectedMessage.style.display = 'block'; // Show message if no files
-  } else {
-    noFilesSelectedMessage.style.display = 'none'; // Hide message if files are selected
+// Modify upload button event to include progress tracking
+uploadBtn.addEventListener('click', async function() {
+  if (selectedFiles.length === 0) {
+    resultBox.innerHTML = `<p style='color:red;'>Please select files to upload.</p>`;
+    return;
   }
-
-  Array.from(files).forEach(file => {
-    if (file.type.startsWith('image/')) {
-      selectedFiles.push(file);
-      const fileEntry = { file: file, status: 'Ready', results: null, error: null };
-      imageProcessingStatus.push(fileEntry);
-
-      const fileItem = document.createElement('div');
-      fileItem.classList.add('selected-file-item');
-      fileItem.dataset.index = imageProcessingStatus.indexOf(fileEntry); // Store index
-
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onloadend = function() {
-        fileEntry.dataUrl = reader.result; // Store data URL directly in entry
-        const img = document.createElement('img');
-        img.src = reader.result;
-        img.classList.add('selected-file-thumbnail');
-        fileItem.appendChild(img);
-      };
-
-      const fileNameSpan = document.createElement('span');
-      fileNameSpan.textContent = file.name;
-      fileNameSpan.classList.add('selected-file-name');
-      fileItem.appendChild(fileNameSpan);
-
-      const removeButton = document.createElement('button');
-      removeButton.innerHTML = '<i class="fas fa-times"></i>'; // X icon
-      removeButton.classList.add('remove-file-button');
-      removeButton.addEventListener('click', (e) => {
-        const indexToRemove = parseInt(e.currentTarget.closest('.selected-file-item').dataset.index);
-        removeSelectedFile(indexToRemove);
-      });
-      fileItem.appendChild(removeButton);
-
-      selectedFilesDisplay.appendChild(fileItem);
-    }
+  // Show progress container
+  document.getElementById('upload-progress').style.display = 'block';
+  uploadBtn.disabled = true;
+  clearBtn.disabled = true;
+  const totalFiles = selectedFiles.length;
+  let completedFiles = 0;
+  // Initialize progress tracking
+  const progressBar = document.getElementById('upload-progress-bar');
+  const progressPercentage = document.getElementById('upload-percentage');
+  const uploadStatus = document.getElementById('upload-status');
+  const fileProgressList = document.getElementById('file-progress-list');
+  fileProgressList.innerHTML = '';
+  selectedFiles.forEach((file, index) => {
+    const progressItem = document.createElement('div');
+    progressItem.classList.add('file-progress-item');
+    progressItem.innerHTML = `
+      <span class="file-name">${file.name}</span>
+      <div class="file-progress-bar">
+        <div class="file-progress-fill" data-index="${index}"></div>
+      </div>
+      <span class="file-progress-text" data-index="${index}">0%</span>
+    `;
+    fileProgressList.appendChild(progressItem);
   });
+  // Simulate upload progress (replace with actual upload logic if needed)
+  for (let i = 0; i < selectedFiles.length; i++) {
+    const file = selectedFiles[i];
+    // Only simulate upload, do not process images here
+    uploadStatus.textContent = `Uploading ${i + 1} of ${totalFiles}: ${file.name}`;
+    for (let progress = 0; progress <= 100; progress += 10) {
+      await new Promise(resolve => setTimeout(resolve, 60));
+      updateFileProgress(i, progress);
+      updateOverallProgress();
+    }
+    completedFiles++;
+  }
+  uploadStatus.textContent = `Completed: ${completedFiles} of ${totalFiles} files uploaded`;
+  uploadBtn.disabled = false;
+  clearBtn.disabled = false;
+  // Now switch to Process Data tab and show images (unprocessed)
+  showTab('process-data');
+  updateProcessDataView();
+});
+
+// Add function to update individual file progress
+function updateFileProgress(index, progress, isError = false) {
+  const progressFill = document.querySelector(`.file-progress-fill[data-index="${index}"]`);
+  const progressText = document.querySelector(`.file-progress-text[data-index="${index}"]`);
   
-  console.log('selectedFiles after processing:', selectedFiles); // DEBUG: Log selectedFiles array
+  if (progressFill && progressText) {
+    progressFill.style.width = `${progress}%`;
+    progressText.textContent = `${progress}%`;
+    
+    if (isError) {
+      progressFill.classList.add('error');
+      progressText.textContent = 'Error';
+    }
+  }
+}
+
+// Add function to update overall progress
+function updateOverallProgress() {
+  const progressBars = document.querySelectorAll('.file-progress-fill');
+  const totalProgress = Array.from(progressBars).reduce((sum, bar) => {
+    const width = parseInt(bar.style.width) || 0;
+    return sum + width;
+  }, 0);
+  
+  const averageProgress = totalProgress / progressBars.length;
+  const progressBar = document.getElementById('upload-progress-bar');
+  const progressPercentage = document.getElementById('upload-percentage');
+  
+  progressBar.style.width = `${averageProgress}%`;
+  progressPercentage.textContent = `${Math.round(averageProgress)}%`;
+}
+
+// Add clear button functionality
+document.getElementById('clearBtn').addEventListener('click', function() {
+  selectedFiles = [];
+  imageProcessingStatus = [];
+  selectedFilesDisplay.innerHTML = '';
+  noFilesSelectedMessage.style.display = 'block';
+  document.getElementById('upload-progress').style.display = 'none';
+  updateUploadButtonState();
+});
+
+// Add function to update upload button state
+function updateUploadButtonState() {
+  const uploadBtn = document.getElementById('uploadBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  
   if (selectedFiles.length > 0) {
     uploadBtn.disabled = false;
-    console.log('Upload button enabled.'); // DEBUG: Log when upload button is enabled
+    clearBtn.disabled = false;
   } else {
     uploadBtn.disabled = true;
-    console.log('Upload button disabled (no files selected).'); // DEBUG: Log when upload button is disabled
+    clearBtn.disabled = true;
   }
-  updateProcessDataView(); // Update the process data view after files are handled
-  updateModelDisplayInProcessTab(); // Update the model display in the process tab
 }
 
 // New function to remove a selected file
@@ -392,42 +672,93 @@ function previewFile(file) {
   }
 }
 
-// New function to display a specific image for processing in the large preview area
+// Add overlay/message for unprocessed images and auto-process on preview
 function displayImageForProcessing(fileEntry) {
   currentProcessedImage = fileEntry.file;
   currentProcessedImageDataUrl = null; // Clear previous data URL
+  currentGalleryIndex = imageProcessingStatus.indexOf(fileEntry);
+
+  // Remove any previous overlay (but don't remove the node, just hide it)
+  let overlay = document.getElementById('gallery-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'gallery-overlay';
+    overlay.className = 'gallery-overlay';
+    overlay.innerHTML = `<span class='gallery-overlay-text'><span class='spinner'></span> Not processed yet. Processing now...</span>`;
+    galleryCard.style.position = 'relative';
+    galleryCard.appendChild(overlay);
+  }
+  overlay.style.opacity = '0';
+  overlay.style.visibility = 'hidden';
+
+  // Fade in effect for canvas
+  gallery.innerHTML = '';
+  // resultBox.innerHTML = ''; // Do NOT clear details/results box
 
   const reader = new FileReader();
   reader.readAsDataURL(fileEntry.file);
   reader.onloadend = function() {
     currentProcessedImageDataUrl = reader.result;
-
-    gallery.innerHTML = ''; // Clear previous preview
-    resultBox.innerHTML = ''; // Clear previous results
-
     const img = new Image();
     img.src = currentProcessedImageDataUrl;
     img.onload = function() {
       const canvas = document.createElement('canvas');
-      canvas.id = 'processingCanvas'; // Unique ID for canvas in process tab
+      canvas.id = 'processingCanvas';
       canvas.width = img.width;
       canvas.height = img.height;
       canvas.style.maxWidth = '100%';
       canvas.style.display = 'block';
       canvas.style.margin = '0 auto 10px';
-      
+      canvas.style.borderRadius = '10px';
+      canvas.style.boxShadow = '0 2px 12px rgba(0,0,0,0.25)';
+      canvas.style.opacity = '0';
+      canvas.style.transition = 'opacity 0.3s';
+      setTimeout(() => { canvas.style.opacity = '1'; }, 10);
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0);
-      
+      // Draw detections if available
+      if (fileEntry.status === 'Completed' && fileEntry.results && fileEntry.results.length > 0) {
+        fileEntry.results.forEach(det => {
+          let [x1, y1, x2, y2] = det.coordinates;
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = 'red';
+          ctx.font = "16px Arial";
+          ctx.fillStyle = 'red';
+          ctx.beginPath();
+          ctx.rect(x1, y1, x2 - x1, y2 - y1);
+          ctx.stroke();
+          const label = `${det.class} (${(det.confidence * 100).toFixed(1)}%)`;
+          ctx.fillText(label, x1, y1 > 15 ? y1 - 5 : y1 + 15);
+        });
+      }
       canvas.addEventListener('click', function() {
         modalImage.src = canvas.toDataURL();
         modal.style.display = 'block';
       });
-      
       gallery.appendChild(canvas);
-      // processImagesBtn.disabled = false; // Enable process button when an image is selected
     };
   };
+
+  // Overlay/message for unprocessed images
+  if (fileEntry.status !== 'Completed') {
+    overlay.style.opacity = '1';
+    overlay.style.visibility = 'visible';
+    // Automatically process the image if not already processing
+    if (fileEntry.status !== 'Processing') {
+      fileEntry.status = 'Processing';
+      processSingleImage(currentGalleryIndex).then(() => {
+        overlay.style.opacity = '0';
+        overlay.style.visibility = 'hidden';
+        displayImageForProcessing(imageProcessingStatus[currentGalleryIndex]);
+      });
+    }
+  } else {
+    overlay.style.opacity = '0';
+    overlay.style.visibility = 'hidden';
+  }
+
+  // Always update the details/results box for the current image
+  updateProcessedImagePreview(fileEntry);
 
   // Highlight the active thumbnail
   document.querySelectorAll('.thumbnail').forEach(thumb => {
@@ -437,7 +768,104 @@ function displayImageForProcessing(fileEntry) {
   if (activeThumbnail) {
     activeThumbnail.classList.add('active-thumbnail');
   }
+  updateGalleryNavigation();
 }
+
+// Add or update updateProcessedImagePreview to always update the details/results box
+function updateProcessedImagePreview(imageEntry) {
+  if (!resultBox) return;
+  if (imageEntry.status === 'Completed') {
+    let detailHtml = '';
+    if (imageEntry.results && imageEntry.results.length > 0) {
+      const totalDetections = imageEntry.results.length;
+      const sumConfidence = imageEntry.results.reduce((sum, det) => sum + det.confidence, 0);
+      const avgConfidence = sumConfidence / totalDetections;
+      const selectedModelName = modelSelect.options[modelSelect.selectedIndex].text;
+      const scientificNames = {
+        'Chinese Egret': 'Egretta eulophotes',
+        'Whiskered Tern': 'Chlidonias hybrida',
+        'Great Knot': 'Calidris tenuirostris'
+      };
+      detailHtml += `<p><strong>Total Detections:</strong> ${totalDetections}</p>`;
+      detailHtml += `<p><strong>Species Type:</strong> ${selectedModelName}</p>`;
+      detailHtml += `<p><strong>Scientific Name:</strong> <em>${scientificNames[selectedModelName] || 'N/A'}</em></p>`;
+      detailHtml += `<p><strong>Average Confidence:</strong> ${(avgConfidence * 100).toFixed(2)}%</p>`;
+      detailHtml += `<h4>Individual Detections:</h4><ul>`;
+      imageEntry.results.forEach(det => {
+        detailHtml += `<li>${det.class} (${(det.confidence * 100).toFixed(1)}%)</li>`;
+      });
+      detailHtml += `</ul>`;
+    } else {
+      detailHtml = `<p>No detections found for ${imageEntry.file.name}.</p>`;
+    }
+    resultBox.innerHTML = detailHtml;
+  } else if (imageEntry.status === 'Error') {
+    resultBox.innerHTML = `<p class="error-message"><strong>Error Processing:</strong> ${imageEntry.error}</p>`;
+  } else {
+    resultBox.innerHTML = '<p>Image not yet processed or no results available.</p>';
+  }
+}
+
+// Add CSS for overlay, spinner, and fade-in
+const galleryOverlayStyle = document.createElement('style');
+galleryOverlayStyle.textContent = `
+.gallery-overlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(30,34,44,0.55);
+  color: #fff;
+  font-size: 1.2em;
+  font-weight: 600;
+  border-radius: 16px;
+  z-index: 10;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s, visibility 0.3s;
+}
+.gallery-overlay-text {
+  padding: 16px 32px;
+  background: rgba(44, 62, 80, 0.7);
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid #fff;
+  border-top: 3px solid #4a69bd;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 10px;
+  display: inline-block;
+}
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.gallery-nav-btn {
+  transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
+}
+.gallery-nav-btn:hover:not(:disabled) {
+  background: #3e58a3;
+  box-shadow: 0 4px 12px rgba(74,105,189,0.18);
+  transform: translateY(-2px) scale(1.04);
+}
+.gallery-card {
+  min-height: 420px;
+  transition: min-height 0.2s;
+}
+`;
+document.head.appendChild(galleryOverlayStyle);
 
 function enableIdentify() {
   identifyBtn.disabled = false;
@@ -458,36 +886,16 @@ window.onclick = function(e) {
   }
 }
 
-// Upload button event (new functionality)
-uploadBtn.addEventListener('click', async function() {
-  if (selectedFiles.length === 0) {
-    resultBox.innerHTML = `<p style=\'color:red;\'>Please select files to upload.</p>`;
-    console.log('Upload button clicked but no files selected.'); // DEBUG: Log if no files on click
-    return;
-  }
-
-  resultBox.innerHTML = '<p>Initiating image processing...</p>'; // Changed message
-  uploadBtn.disabled = true; // Disable upload button during processing initiation
-
-  showTab('process-data'); // Immediately switch to process data tab
-  updateProcessDataView(); // Populate and update the table in the process data view
-
-  // Trigger processing for all selected files
-  for (let i = 0; i < imageProcessingStatus.length; i++) {
-    const entry = imageProcessingStatus[i];
-    if (entry.status === 'Ready') { // Only process if not already processed or errored
-      await processSingleImage(i); // Process one by one to update UI
-    }
-  }
-  uploadBtn.disabled = false; // Re-enable upload button after all processing is initiated
-});
-
 // Function to update the Process Data tab view
 function updateProcessDataView() {
   uploadedImageCount.textContent = selectedFiles.length;
   batchProgressCount.textContent = `0/${selectedFiles.length}`;
   batchProgressBar.style.width = '0%';
   imageTableBody.innerHTML = ''; // Clear previous table content
+
+  // Clear gallery and result box, show placeholder
+  if (gallery) gallery.innerHTML = '<div style="color:#b0b0b0;text-align:center;padding:40px 0;">Select an image to preview or process.</div>';
+  if (resultBox) resultBox.innerHTML = '<div style="color:#b0b0b0;text-align:center;padding:40px 0;">No image selected.</div>';
 
   if (selectedFiles.length === 0) {
     imageTableBody.innerHTML = '<tr><td colspan="5">No images uploaded.</td></tr>';
@@ -512,22 +920,24 @@ function updateProcessDataView() {
 
       // Add click listener for thumbnail to display in large preview
       row.querySelector('.thumbnail-table').addEventListener('click', () => {
-        displayImageForProcessing(imageProcessingStatus[index]);
+        previewImageForProcessing(imageProcessingStatus[index]);
       });
 
       // Add click listener for individual process button
       row.querySelector('.process-single-btn').addEventListener('click', async (e) => {
         const imageIndex = e.target.dataset.index;
-        await processSingleImage(imageIndex);
+        await displayImageForProcessing(imageProcessingStatus[imageIndex]);
       });
 
-      // Automatically display the first image in the large preview when tab is opened
-      if (index === 0) {
-        displayImageForProcessing(imageProcessingStatus[index]);
-      }
+      // (REMOVED) Do NOT auto-display the first image in the large preview
+      // if (index === 0) {
+      //   displayImageForProcessing(imageProcessingStatus[index]);
+      // }
     };
   });
   processAllImagesBtn.disabled = false; // Enable process all button once table is populated
+  updateGalleryNavigation();
+  updateProcessAllBtnState();
 }
 
 // Function to process a single image
@@ -650,63 +1060,6 @@ function checkAllProcessed() {
   }
 }
 
-// Function to update the large processed image preview
-function updateProcessedImagePreview(imageEntry) {
-  const canvas = document.getElementById('processingCanvas');
-  if (canvas && imageEntry.status === 'Completed') {
-        const ctx = canvas.getContext('2d');
-        const img = new Image();
-    img.src = imageEntry.dataUrl; // Assuming dataUrl is stored in imageEntry
-        img.onload = function() {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          ctx.drawImage(img, 0, 0);
-      imageEntry.results.forEach(det => {
-            let [x1, y1, x2, y2] = det.coordinates;
-            ctx.lineWidth = 2;
-            ctx.strokeStyle = 'red';
-            ctx.font = "16px Arial";
-            ctx.fillStyle = 'red';
-            ctx.beginPath();
-            ctx.rect(x1, y1, x2 - x1, y2 - y1);
-            ctx.stroke();
-            const label = `${det.class} (${(det.confidence * 100).toFixed(1)}%)`;
-            ctx.fillText(label, x1, y1 > 15 ? y1 - 5 : y1 + 15);
-          });
-    };
-    // Update result box with details for the displayed image
-    let detailHtml = '';
-    if (imageEntry.results && imageEntry.results.length > 0) {
-      const totalDetections = imageEntry.results.length;
-      const sumConfidence = imageEntry.results.reduce((sum, det) => sum + det.confidence, 0);
-      const avgConfidence = sumConfidence / totalDetections;
-
-      const selectedModelName = modelSelect.options[modelSelect.selectedIndex].text;
-      const scientificNames = {
-        'Chinese Egret': 'Egretta eulophotes',
-        'Whiskered Tern': 'Chlidonias hybrida',
-        'Great Knot': 'Calidris tenuirostris'
-      };
-
-      detailHtml += `<p><strong>Total Detections:</strong> ${totalDetections}</p>`;
-      detailHtml += `<p><strong>Species Type:</strong> ${selectedModelName}</p>`;
-      detailHtml += `<p><strong>Scientific Name:</strong> <em>${scientificNames[selectedModelName] || 'N/A'}</em></p>`;
-      detailHtml += `<p><strong>Average Confidence:</strong> ${(avgConfidence * 100).toFixed(2)}%</p>`;
-      detailHtml += `<h4>Individual Detections:</h4><ul>`;
-      imageEntry.results.forEach(det => {
-        detailHtml += `<li>${det.class} (${(det.confidence * 100).toFixed(1)}%)</li>`;
-      });
-      detailHtml += `</ul>`;
-    } else {
-      detailHtml = `<p>No detections found for ${imageEntry.file.name}.</p>`;
-    }
-    resultBox.innerHTML = detailHtml;
-  } else if (imageEntry.status === 'Error') {
-    resultBox.innerHTML = `<p class="error-message"><strong>Error Processing:</strong> ${imageEntry.error}</p>`;
-  } else {
-    resultBox.innerHTML = '<p>Image not yet processed or no results available.</p>';
-  }
-}
-
 // Process All Images button event
 processAllImagesBtn.addEventListener('click', async function() {
   processAllImagesBtn.disabled = true;
@@ -783,6 +1136,11 @@ function showTab(tabName) {
     selectedTabContent.style.display = 'block';
     if (tabName === 'review') {
       updateReviewDataView(); // Update review tab content when shown
+    }
+    // Remove any large preview image when switching to upload tab
+    if (tabName === 'upload') {
+      if (gallery) gallery.innerHTML = '';
+      if (resultBox) resultBox.innerHTML = '';
     }
   }
 }
@@ -880,6 +1238,348 @@ function updateReviewDataView() {
 // New function to update the model display in the Process Data tab
 function updateModelDisplayInProcessTab() {
   currentModelProcessDataSpan.textContent = currentModelSpan.textContent;
+}
+
+// Add styles for image error state
+const style = document.createElement('style');
+style.textContent = `
+  .image-load-error {
+    border: 2px solid #dc3545;
+    padding: 5px;
+    background-color: #f8d7da;
+  }
+  
+  .selected-file-item.error {
+    background-color: #f8d7da;
+    border-color: #dc3545;
+  }
+  
+  .error-message {
+    color: #dc3545;
+    font-size: 0.9em;
+    margin-left: 10px;
+  }
+`;
+document.head.appendChild(style);
+
+// Add favicon link
+const faviconLink = document.createElement('link');
+faviconLink.rel = 'icon';
+faviconLink.type = 'image/x-icon';
+faviconLink.href = '{% static "admindashboard/images/favicon.ico" %}';
+document.head.appendChild(faviconLink);
+
+// Add gallery navigation logic
+let currentGalleryIndex = 0;
+const galleryCard = document.getElementById('gallery-card');
+const galleryControls = document.getElementById('gallery-controls');
+const galleryPrevBtn = document.getElementById('gallery-prev');
+const galleryNextBtn = document.getElementById('gallery-next');
+const galleryCounter = document.getElementById('gallery-counter');
+
+function updateGalleryNavigation() {
+  if (!galleryCard) return;
+  const total = imageProcessingStatus.length;
+  if (total > 1) {
+    galleryCard.style.display = 'block';
+    galleryControls.style.display = 'flex';
+    galleryPrevBtn.style.display = 'inline-block';
+    galleryNextBtn.style.display = 'inline-block';
+    galleryCounter.textContent = `${currentGalleryIndex + 1} of ${total}`;
+    galleryPrevBtn.disabled = currentGalleryIndex === 0;
+    galleryNextBtn.disabled = currentGalleryIndex === total - 1;
+  } else if (total === 1) {
+    galleryCard.style.display = 'block';
+    galleryControls.style.display = 'none';
+  } else {
+    galleryCard.style.display = 'none';
+  }
+}
+
+galleryPrevBtn.addEventListener('click', function() {
+  if (currentGalleryIndex > 0) {
+    currentGalleryIndex--;
+    previewImageForProcessing(imageProcessingStatus[currentGalleryIndex]);
+    updateGalleryNavigation();
+  }
+});
+galleryNextBtn.addEventListener('click', function() {
+  if (currentGalleryIndex < imageProcessingStatus.length - 1) {
+    currentGalleryIndex++;
+    previewImageForProcessing(imageProcessingStatus[currentGalleryIndex]);
+    updateGalleryNavigation();
+  }
+});
+
+// Add CSS for gallery card and navigation
+const galleryStyle = document.createElement('style');
+galleryStyle.textContent = `
+.gallery-card {
+  background: rgba(30, 34, 44, 0.7);
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.25);
+  padding: 24px 16px 16px 16px;
+  margin-bottom: 24px;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+  transition: box-shadow 0.2s;
+}
+.gallery-controls {
+  margin-bottom: 10px;
+}
+.gallery-nav-btn {
+  background: rgba(74, 105, 189, 0.8);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 18px;
+  font-size: 1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+.gallery-nav-btn:disabled {
+  background: #3a3f44;
+  color: #b0b0b0;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+.gallery-counter {
+  color: #e0e0e0;
+  font-size: 1.1em;
+  font-weight: 500;
+  letter-spacing: 1px;
+}
+`;
+document.head.appendChild(galleryStyle);
+
+// Add logic for the explicit process all button
+const processAllImagesExplicitBtn = document.getElementById('processAllImagesExplicitBtn');
+function updateProcessAllBtnState() {
+  if (!processAllImagesExplicitBtn) return;
+  // Enable if there are any Ready or Error images
+  const hasReadyOrError = imageProcessingStatus.some(entry => entry.status === 'Ready' || entry.status === 'Error');
+  processAllImagesExplicitBtn.disabled = !hasReadyOrError;
+}
+processAllImagesExplicitBtn.addEventListener('click', async function() {
+  processAllImagesExplicitBtn.disabled = true;
+  for (let i = 0; i < imageProcessingStatus.length; i++) {
+    const entry = imageProcessingStatus[i];
+    if (entry.status === 'Ready' || entry.status === 'Error') {
+      await processSingleImage(i);
+    }
+  }
+  processAllImagesExplicitBtn.disabled = false;
+  updateProcessAllBtnState();
+});
+
+// Add CSS for the process all button container
+const processAllBtnStyle = document.createElement('style');
+processAllBtnStyle.textContent = `
+.process-all-btn-container {
+  text-align: center;
+  margin-bottom: 18px;
+}
+#processAllImagesExplicitBtn {
+  font-size: 1.1em;
+  font-weight: 600;
+  padding: 12px 32px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(74,105,189,0.12);
+  transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
+}
+#processAllImagesExplicitBtn:disabled {
+  background: #3a3f44;
+  color: #b0b0b0;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+#processAllImagesExplicitBtn:hover:not(:disabled) {
+  background: #3e58a3;
+  box-shadow: 0 4px 12px rgba(74,105,189,0.18);
+  transform: translateY(-2px) scale(1.04);
+}
+`;
+document.head.appendChild(processAllBtnStyle);
+
+// Add preview-only function for image preview in gallery or thumbnail clicks
+function previewImageForProcessing(fileEntry) {
+  currentProcessedImage = fileEntry.file;
+  currentProcessedImageDataUrl = null;
+  currentGalleryIndex = imageProcessingStatus.indexOf(fileEntry);
+
+  let overlay = document.getElementById('gallery-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'gallery-overlay';
+    overlay.className = 'gallery-overlay';
+    overlay.innerHTML = `<span class='gallery-overlay-text'><span class='spinner'></span> Not processed yet.</span>`;
+    galleryCard.style.position = 'relative';
+    galleryCard.appendChild(overlay);
+  }
+  overlay.style.opacity = '0';
+  overlay.style.visibility = 'hidden';
+
+  gallery.innerHTML = '';
+
+  const reader = new FileReader();
+  reader.readAsDataURL(fileEntry.file);
+  reader.onloadend = function() {
+    currentProcessedImageDataUrl = reader.result;
+    const img = new Image();
+    img.src = currentProcessedImageDataUrl;
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      canvas.id = 'processingCanvas';
+      canvas.width = img.width;
+      canvas.height = img.height;
+      canvas.style.maxWidth = '100%';
+      canvas.style.display = 'block';
+      canvas.style.margin = '0 auto 10px';
+      canvas.style.borderRadius = '10px';
+      canvas.style.boxShadow = '0 2px 12px rgba(0,0,0,0.25)';
+      canvas.style.opacity = '0';
+      canvas.style.transition = 'opacity 0.3s';
+      setTimeout(() => { canvas.style.opacity = '1'; }, 10);
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      // Draw detections if available
+      if (fileEntry.status === 'Completed' && fileEntry.results && fileEntry.results.length > 0) {
+        fileEntry.results.forEach(det => {
+          let [x1, y1, x2, y2] = det.coordinates;
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = 'red';
+          ctx.font = "16px Arial";
+          ctx.fillStyle = 'red';
+          ctx.beginPath();
+          ctx.rect(x1, y1, x2 - x1, y2 - y1);
+          ctx.stroke();
+          const label = `${det.class} (${(det.confidence * 100).toFixed(1)}%)`;
+          ctx.fillText(label, x1, y1 > 15 ? y1 - 5 : y1 + 15);
+        });
+      }
+      canvas.addEventListener('click', function() {
+        modalImage.src = canvas.toDataURL();
+        modal.style.display = 'block';
+      });
+      gallery.appendChild(canvas);
+    };
+  };
+
+  // Show overlay if not processed
+  if (fileEntry.status !== 'Completed') {
+    overlay.style.opacity = '1';
+    overlay.style.visibility = 'visible';
+  } else {
+    overlay.style.opacity = '0';
+    overlay.style.visibility = 'hidden';
+  }
+
+  updateProcessedImagePreview(fileEntry);
+  document.querySelectorAll('.thumbnail').forEach(thumb => {
+    thumb.classList.remove('active-thumbnail');
+  });
+  const activeThumbnail = document.querySelector(`.thumbnail[data-index="${imageProcessingStatus.indexOf(fileEntry)}"]`);
+  if (activeThumbnail) {
+    activeThumbnail.classList.add('active-thumbnail');
+  }
+  updateGalleryNavigation();
+}
+
+// Refactor displayImageForProcessing to only process if not already processing or completed
+async function displayImageForProcessing(fileEntry) {
+  currentProcessedImage = fileEntry.file;
+  currentProcessedImageDataUrl = null;
+  currentGalleryIndex = imageProcessingStatus.indexOf(fileEntry);
+
+  let overlay = document.getElementById('gallery-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'gallery-overlay';
+    overlay.className = 'gallery-overlay';
+    overlay.innerHTML = `<span class='gallery-overlay-text'><span class='spinner'></span> Not processed yet. Processing now...</span>`;
+    galleryCard.style.position = 'relative';
+    galleryCard.appendChild(overlay);
+  }
+  overlay.style.opacity = '0';
+  overlay.style.visibility = 'hidden';
+
+  gallery.innerHTML = '';
+
+  const reader = new FileReader();
+  reader.readAsDataURL(fileEntry.file);
+  reader.onloadend = function() {
+    currentProcessedImageDataUrl = reader.result;
+    const img = new Image();
+    img.src = currentProcessedImageDataUrl;
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      canvas.id = 'processingCanvas';
+      canvas.width = img.width;
+      canvas.height = img.height;
+      canvas.style.maxWidth = '100%';
+      canvas.style.display = 'block';
+      canvas.style.margin = '0 auto 10px';
+      canvas.style.borderRadius = '10px';
+      canvas.style.boxShadow = '0 2px 12px rgba(0,0,0,0.25)';
+      canvas.style.opacity = '0';
+      canvas.style.transition = 'opacity 0.3s';
+      setTimeout(() => { canvas.style.opacity = '1'; }, 10);
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      // Draw detections if available
+      if (fileEntry.status === 'Completed' && fileEntry.results && fileEntry.results.length > 0) {
+        fileEntry.results.forEach(det => {
+          let [x1, y1, x2, y2] = det.coordinates;
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = 'red';
+          ctx.font = "16px Arial";
+          ctx.fillStyle = 'red';
+          ctx.beginPath();
+          ctx.rect(x1, y1, x2 - x1, y2 - y1);
+          ctx.stroke();
+          const label = `${det.class} (${(det.confidence * 100).toFixed(1)}%)`;
+          ctx.fillText(label, x1, y1 > 15 ? y1 - 5 : y1 + 15);
+        });
+      }
+      canvas.addEventListener('click', function() {
+        modalImage.src = canvas.toDataURL();
+        modal.style.display = 'block';
+      });
+      gallery.appendChild(canvas);
+    };
+  };
+
+  // Only process if not already processing or completed
+  if (fileEntry.status !== 'Completed' && fileEntry.status !== 'Processing') {
+    overlay.style.opacity = '1';
+    overlay.style.visibility = 'visible';
+    fileEntry.status = 'Processing';
+    await processSingleImage(currentGalleryIndex);
+    overlay.style.opacity = '0';
+    overlay.style.visibility = 'hidden';
+    // After processing, show the preview again (now with results)
+    previewImageForProcessing(imageProcessingStatus[currentGalleryIndex]);
+    return;
+  } else if (fileEntry.status === 'Processing') {
+    overlay.style.opacity = '1';
+    overlay.style.visibility = 'visible';
+  } else {
+    overlay.style.opacity = '0';
+    overlay.style.visibility = 'hidden';
+  }
+
+  updateProcessedImagePreview(fileEntry);
+  document.querySelectorAll('.thumbnail').forEach(thumb => {
+    thumb.classList.remove('active-thumbnail');
+  });
+  const activeThumbnail = document.querySelector(`.thumbnail[data-index="${imageProcessingStatus.indexOf(fileEntry)}"]`);
+  if (activeThumbnail) {
+    activeThumbnail.classList.add('active-thumbnail');
+  }
+  updateGalleryNavigation();
 }
 </script>
 
@@ -1611,6 +2311,158 @@ body {
 /* Hide the original file preview and result containers in upload tab */
 #columns-container {
     display: none; /* Ensure it's always hidden in the upload tab */
+}
+
+/* Add new styles for file validation and progress tracking */
+.validation-rules {
+  background: #2f3338;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 20px;
+  border: 1px solid #4e535a;
+}
+
+.validation-rules h3 {
+  color: #ffffff;
+  margin-bottom: 10px;
+  font-size: 1.1em;
+}
+
+.validation-rules ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.validation-rules li {
+  color: #b0b0b0;
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+}
+
+.validation-rules li i {
+  color: #4a69bd;
+  margin-right: 10px;
+}
+
+.upload-progress-container {
+  background: #2f3338;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 20px;
+  border: 1px solid #4e535a;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.progress-header h3 {
+  color: #ffffff;
+  margin: 0;
+  font-size: 1.1em;
+}
+
+#upload-status {
+  color: #b0b0b0;
+  font-size: 0.9em;
+}
+
+.progress-bar-container {
+  background: #3e444b;
+  border-radius: 4px;
+  height: 20px;
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.progress-bar {
+  background: #4a69bd;
+  border-radius: 4px;
+  height: 100%;
+  width: 0;
+  transition: width 0.3s ease;
+}
+
+#upload-percentage {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #ffffff;
+  font-size: 0.9em;
+}
+
+.file-progress-list {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.file-progress-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 8px;
+  background: #36393f;
+  border-radius: 4px;
+}
+
+.file-name {
+  flex: 1;
+  color: #e0e0e0;
+  font-size: 0.9em;
+  margin-right: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-progress-bar {
+  flex: 2;
+  background: #3e444b;
+  border-radius: 4px;
+  height: 10px;
+  margin: 0 10px;
+  overflow: hidden;
+}
+
+.file-progress-fill {
+  background: #4a69bd;
+  height: 100%;
+  width: 0;
+  transition: width 0.3s ease;
+}
+
+.file-progress-fill.error {
+  background: #dc3545;
+}
+
+.file-progress-text {
+  color: #b0b0b0;
+  font-size: 0.8em;
+  min-width: 40px;
+  text-align: right;
+}
+
+.selected-file-size {
+  color: #b0b0b0;
+  font-size: 0.8em;
+  margin-left: 10px;
+}
+
+.selected-file-item.error {
+  background: #4a3838;
+  border-color: #cc4e4e;
+}
+
+.selected-file-item.error .error-message {
+  color: #ff9e9e;
+  font-size: 0.8em;
+  margin-left: 10px;
 }
 </style>
 {% endblock %}
