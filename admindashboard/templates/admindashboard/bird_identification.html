@@ -112,11 +112,11 @@
 
     <!-- New container for filters and process button -->
     <div class="process-data-controls">
-      <div class="filter-tabs">
-        <button class="filter-tab-button active" data-filter="all">All</button>
-        <button class="filter-tab-button" data-filter="processing">Processing</button>
-        <button class="filter-tab-button" data-filter="completed">Completed</button>
-        <button class="filter-tab-button" data-filter="error">Error</button>
+    <div class="filter-tabs">
+      <button class="filter-tab-button active" data-filter="all">All</button>
+      <button class="filter-tab-button" data-filter="processing">Processing</button>
+      <button class="filter-tab-button" data-filter="completed">Completed</button>
+      <button class="filter-tab-button" data-filter="error">Error</button>
       </div>
       <button id="processAllImagesExplicitBtn" class="action-button primary-button">Process All Images</button>
     </div>
@@ -134,9 +134,9 @@
       </div>
       <div id="gallery" style="display: flex; justify-content: center; align-items: center;"></div>
     </div>
-    <div id="result-box"></div>
+    <div id="result-box" style="margin-bottom: 24px;"></div> <!-- Added margin-bottom here -->
 
-    <div class="image-processing-table-container">
+    <div class="image-processing-table-container" style="margin-top: 24px;"> <!-- Added margin-top here -->
       <table class="image-processing-table">
         <thead>
           <tr>
@@ -153,10 +153,11 @@
       </table>
     </div>
 
-    <div class="bottom-action-buttons">
+    <!-- (REMOVED) Original bottom action buttons container with Process All Images -->
+    <!-- <div class="bottom-action-buttons">
         <button id="retryAllFailedBtn" class="action-button primary-button" style="display: none;">Retry All Failed</button>
         <button id="processAllImagesBtn" class="action-button primary-button">Process All Images</button>
-    </div>
+    </div> -->
   </div>
 
   <div id="review-content" class="content-panel" style="display: none;">
@@ -831,7 +832,7 @@ function updateProcessedImagePreview(imageEntry) {
   } else if (imageEntry.status === 'Error') {
     resultBox.innerHTML = `<p class="error-message"><strong>Error Processing:</strong> ${imageEntry.error}</p>`;
   } else {
-    resultBox.innerHTML = '<p>Image not yet processed or no results available.</p>';
+    resultBox.innerHTML = '<p style="color:#b0b0b0;text-align:center;padding:40px 0;font-size:1.2em;">No detections found or image not yet processed. Details will appear here.</p>';
   }
 }
 
@@ -935,7 +936,7 @@ function updateProcessDataView() {
 
   // Clear gallery and result box, show placeholder
   if (gallery) gallery.innerHTML = '<div style="color:#b0b0b0;text-align:center;padding:40px 0;">Select an image to preview or process.</div>';
-  if (resultBox) resultBox.innerHTML = '<div style="color:#b0b0b0;text-align:center;padding:40px 0;">No image selected.</div>';
+  if (resultBox) resultBox.innerHTML = '<div style="color:#b0b0b0;text-align:center;padding:40px 0;font-size:1.2em;">Details and AI results will appear here after processing.</div>';
 
   if (selectedFiles.length === 0) {
     imageTableBody.innerHTML = '<tr><td colspan="5">No images uploaded.</td></tr>';
@@ -1177,6 +1178,8 @@ function showTab(tabName) {
     selectedTabContent.style.display = 'block';
     if (tabName === 'review') {
       updateReviewDataView(); // Update review tab content when shown
+    } else if (tabName === 'process-data') { // Add this condition
+      updateProcessDataView(); // Ensure process data view is updated on tab switch
     }
     // Remove any large preview image when switching to upload tab
     if (tabName === 'upload') {
@@ -1516,11 +1519,11 @@ processAllBtnStyle.textContent = `
 }
 
 #processAllImagesExplicitBtn {
-  font-size: 1.1em;
+  font-size: 0.95em; /* Reduced font size for consistency */
   font-weight: 600;
-  padding: 12px 32px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(74,105,189,0.12);
+  padding: 8px 20px; /* Adjusted padding to make it smaller */
+  border-radius: 6px; /* Slightly more rounded for consistency */
+  box-shadow: 0 1px 4px rgba(74,105,189,0.08); /* Reduced shadow for a lighter feel */
   transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
 }
 #processAllImagesExplicitBtn:disabled {
