@@ -22,7 +22,7 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('accounts/', include('superadminloginapp.urls')),
+    path('accounts/', include(('superadminloginapp.urls', 'superadminloginapp'), namespace='superadminloginapp')),
     path('dashboardadminapp/', include('dashboardadminapp.urls')),
     path('admindashboard/', include('admindashboard.urls')),
     path("__reload__/", include("django_browser_reload.urls")),

@@ -1,13 +1,14 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.hashers import check_password, make_password
-from dashboardadminapp.models import User as DashboardUser
+from dashboardadminapp.models import User as DashboardUser, SystemLog
 from .models import User as SuperAdminUser
 from .forms import LoginForm
 from django.contrib.auth.decorators import login_required
 import logging
 import traceback
 import sys
+from django.contrib import messages
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -75,6 +76,15 @@ def login_view(request):
                         logger.info(f'User {new_user.username} logged in successfully')
                         logger.info(f'Session after login: {dict(request.session)}')
                         
+                        # Log successful login
+                        SystemLog.objects.create(
+                            level='INFO',
+                            source='system.auth',
+                            message=f"User '{new_user.username}' logged in successfully.",
+                            user=new_user,
+                            action='login'
+                        )
+                        
                         # Redirect based on role
                         if new_user.role == 'super_admin':
                             logger.info('User is super admin, redirecting to super admin dashboard')
@@ -126,6 +136,15 @@ def login_view(request):
                             logger.info(f'User {new_user.username} logged in successfully')
                             logger.info(f'Session after login: {dict(request.session)}')
                             
+                            # Log successful login
+                            SystemLog.objects.create(
+                                level='INFO',
+                                source='system.auth',
+                                message=f"User '{new_user.username}' logged in successfully.",
+                                user=new_user,
+                                action='login'
+                            )
+                            
                             # Redirect to admin dashboard for old model users
                             logger.info('User is from old model, redirecting to admin dashboard')
                             return redirect('admindashboard:dashboard')
@@ -160,14 +179,14 @@ def login_view(request):
 
 @login_required
 def logout_view(request):
-    logger.info('Logout view called')
-    logger.info(f'User {request.user.username} logging out')
-    
-    # Clear the session
-    request.session.flush()
-    
-    # Log out the user
+    user = request.user if request.user.is_authenticated else None
+    if user:
+        SystemLog.objects.create(
+            level='INFO',
+            source='system.auth',
+            message=f"User '{user.username}' logged out.",
+            user=user,
+            action='logout'
+        )
     logout(request)
-    
-    logger.info('User logged out successfully')
     return redirect('superadminloginapp:login')

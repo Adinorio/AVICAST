@@ -6,13 +6,6 @@ import datetime
 
 # New models will be implemented here
 
-class Log(models.Model):
-    event = models.CharField(max_length=255)
-    timestamp = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.event
-
 class User(AbstractUser):
     USER_ROLES = (
         ('super_admin', 'Super Admin'),
@@ -136,5 +129,25 @@ class PermissionSetting(models.Model):
     class Meta:
         verbose_name = "Permission Setting"
         verbose_name_plural = "Permission Settings"
+
+class SystemLog(models.Model):
+    LEVEL_CHOICES = [
+        ('INFO', 'Info'),
+        ('WARNING', 'Warning'),
+        ('ERROR', 'Error'),
+    ]
+
+    timestamp = models.DateTimeField(auto_now_add=True)
+    level = models.CharField(max_length=10, choices=LEVEL_CHOICES, default='INFO')
+    source = models.CharField(max_length=50)
+    message = models.TextField()
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    action = models.CharField(max_length=50, null=True, blank=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+
+    def __str__(self):
+        return f"{self.timestamp} - {self.level} - {self.message}"
 
 

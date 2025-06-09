@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import logout
 from django.utils.timezone import now
-from .models import Log, UserProfile, User, PermissionSetting
+from .models import UserProfile, User, PermissionSetting, SystemLog
 from django.urls import reverse
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -11,7 +11,7 @@ from django.contrib.auth.hashers import make_password
 from datetime import datetime
 from django.http import JsonResponse, HttpResponseNotAllowed
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.utils import timezone
 from datetime import timedelta
 import logging
@@ -63,15 +63,15 @@ def dashboard_view(request):
         field_workers = UserProfile.objects.filter(role="User").count()
         admins = UserProfile.objects.filter(role="Admin").count()
         total_users = field_workers + admins
-        logs = Log.objects.all().order_by('-timestamp')[:5]
         today = datetime.now()
+        logs = SystemLog.objects.all().order_by('-timestamp')[:5]
 
         return render(request, "dashboardadminapp/dashboard.html", {
             "field_workers": field_workers,
             "admins": admins,
             "total_users": total_users,
-            "logs": logs,
             "today": today,
+            "logs": logs,
         })
     except Exception as e:
         logger.error(f'Error in dashboard view: {str(e)}')
@@ -461,9 +461,44 @@ def update_permission(request):
     return HttpResponseNotAllowed(['POST'])
 
 # Logs page
-@check_auth
+@login_required
 def logs_view(request):
-    return render(request,"dashboardadminapp/logs.html",{"today":datetime.now()})
+    # Get all logs
+    logs = SystemLog.objects.all()
+    
+    # Search functionality
+    search_query = request.GET.get('search', '')
+    if search_query:
+        logs = logs.filter(
+            Q(message__icontains=search_query) |
+            Q(user__username__icontains=search_query) |
+            Q(source__icontains=search_query)
+        )
+    
+    # Filter by level if provided
+    level_filter = request.GET.get('level', '')
+    if level_filter:
+        logs = logs.filter(level=level_filter)
+    
+    # Pagination
+    paginator = Paginator(logs, 5)  # Show 5 logs per page
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+    
+    # Get counts for stats
+    total_logs = SystemLog.objects.count()
+    critical_logs = SystemLog.objects.filter(level='ERROR').count()
+    
+    context = {
+        'logs': page_obj,
+        'total_logs': total_logs,
+        'critical_logs': critical_logs,
+        'current_page': page_number,
+        'has_next': page_obj.has_next(),
+        'has_previous': page_obj.has_previous(),
+    }
+    
+    return render(request, 'dashboardadminapp/logs.html', context)
 
 # Logout
 @check_auth
@@ -486,19 +521,12 @@ def forgot_password_request(request):
         except UserProfile.DoesNotExist:
             return JsonResponse({"success": False, "error": "Unknown user ID."}, status=404)
 
-        Log.objects.create(
-            event=f"{profile.first_name} {profile.last_name} is requesting a change of password."
-        )
-
         return JsonResponse({"success": True})
     return HttpResponseNotAllowed(["POST"])
 
 @check_auth
 def notifications_view(request):
-    logs = Log.objects.all().order_by('-timestamp')
-    return render(request, "dashboardadminapp/notifications.html", {
-        "logs": logs,
-    })
+    return render(request, "dashboardadminapp/notifications.html")
 
 @check_auth
 def settings_view(request):

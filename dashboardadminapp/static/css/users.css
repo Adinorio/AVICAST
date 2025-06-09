@@ -238,6 +238,7 @@
   margin: 24px auto 0 auto;
   background: transparent;
   border-radius: 10px;
+  overflow-x: auto;
 }
 
 .users-table__bg {
@@ -245,7 +246,6 @@
   border-radius: 10px;
   padding: 0 0 24px 0;
   max-width: 1482px;
-  height: 458px;
   margin: 32px auto 24px auto;
   width: 100%;
   box-sizing: border-box;

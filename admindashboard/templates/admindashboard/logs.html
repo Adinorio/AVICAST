@@ -1,0 +1,193 @@
+{% extends 'admindashboard/base.html' %}
+{% load static %}
+
+{% block title %}Activity Logs - Avicast Dashboard{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+    <span>User Management System</span>
+    <i class="fas fa-chevron-right"></i>
+    <span>Activity Logs</span>
+</div>
+
+<div class="welcome-card">
+    <h1>Activity Logs</h1>
+    <p>Monitor system activities and user actions</p>
+</div>
+
+<div class="stats-container">
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-history"></i>
+        </div>
+        <div class="stat-info">
+            <h3>Total Log Entries</h3>
+            <p>{{ total_logs }}</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="stat-info">
+            <h3>Critical Logs (24h)</h3>
+            <p>{{ critical_logs_count }}</p>
+        </div>
+    </div>
+</div>
+
+<div class="table-container">
+    <div class="table-header">
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Search logs..." onkeyup="filterLogs()">
+        </div>
+        <div class="filter-container">
+            <select id="typeFilter" onchange="filterLogs()">
+                <option value="">All Types</option>
+                <option value="login">Login</option>
+                <option value="logout">Logout</option>
+                <option value="creation">Creation</option>
+                <option value="update">Update</option>
+                <option value="permission">Permission Change</option>
+                <option value="deletion">Deletion</option>
+            </select>
+            <select id="levelFilter" onchange="filterLogs()">
+                <option value="">All Levels</option>
+                <option value="info">Info</option>
+                <option value="warning">Warning</option>
+                <option value="error">Error</option>
+                <option value="critical">Critical</option>
+            </select>
+        </div>
+    </div>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>Type</th>
+                <th>Level</th>
+                <th>Message</th>
+                <th>User</th>
+                <th>IP Address</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+            <tr class="log-entry" data-type="{{ log.event_type }}" data-level="{{ log.level }}">
+                <td>{{ log.timestamp|date:"Y-m-d H:i:s" }}</td>
+                <td>{{ log.event_type|title }}</td>
+                <td><span class="log-level {{ log.level }}">{{ log.level|title }}</span></td>
+                <td>{{ log.message }}</td>
+                <td>{{ log.user.username }}</td>
+                <td>{{ log.ip_address }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="no-data">No logs found</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if logs.has_other_pages %}
+    <div class="pagination">
+        {% if logs.has_previous %}
+        <a href="?page={{ logs.previous_page_number }}" class="page-link">&laquo; Previous</a>
+        {% endif %}
+
+        {% for num in logs.paginator.page_range %}
+            {% if logs.number == num %}
+            <span class="page-link active">{{ num }}</span>
+            {% else %}
+            <a href="?page={{ num }}" class="page-link">{{ num }}</a>
+            {% endif %}
+        {% endfor %}
+
+        {% if logs.has_next %}
+        <a href="?page={{ logs.next_page_number }}" class="page-link">Next &raquo;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.log-level {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    font-weight: 500;
+}
+
+.log-level.info {
+    background-color: #e3f2fd;
+    color: #1976d2;
+}
+
+.log-level.warning {
+    background-color: #fff3e0;
+    color: #f57c00;
+}
+
+.log-level.error {
+    background-color: #ffebee;
+    color: #d32f2f;
+}
+
+.log-level.critical {
+    background-color: #fce4ec;
+    color: #c2185b;
+}
+
+.filter-container {
+    display: flex;
+    gap: 10px;
+}
+
+.filter-container select {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+}
+
+.search-container input {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: 300px;
+}
+
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+</style>
+
+<script>
+function filterLogs() {
+    const searchInput = document.getElementById('searchInput');
+    const typeFilter = document.getElementById('typeFilter');
+    const levelFilter = document.getElementById('levelFilter');
+    const searchText = searchInput.value.toLowerCase();
+    const selectedType = typeFilter.value.toLowerCase();
+    const selectedLevel = levelFilter.value.toLowerCase();
+
+    const rows = document.getElementsByClassName('log-entry');
+
+    for (let row of rows) {
+        const type = row.getAttribute('data-type').toLowerCase();
+        const level = row.getAttribute('data-level').toLowerCase();
+        const text = row.textContent.toLowerCase();
+
+        const matchesSearch = text.includes(searchText);
+        const matchesType = !selectedType || type === selectedType;
+        const matchesLevel = !selectedLevel || level === selectedLevel;
+
+        row.style.display = matchesSearch && matchesType && matchesLevel ? '' : 'none';
+    }
+}
+</script>
+{% endblock %} 

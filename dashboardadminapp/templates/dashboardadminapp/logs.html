@@ -22,15 +22,13 @@
     <div class="users-stat-card users-stat-card--admin">
       <span class="users-stat-card__label">Total Log Entries</span>
       <div class="users-stat-card__inner">
-        <span class="users-stat-card__value">0</span>
-        <!-- TODO: replace with actual total log entries -->
+        <span class="users-stat-card__value">{{ total_logs }}</span>
       </div>
     </div>
     <div class="users-stat-card users-stat-card--field">
       <span class="users-stat-card__label">Recent Critical Logs</span>
       <div class="users-stat-card__inner">
-        <span class="users-stat-card__value">0</span>
-        <!-- TODO: replace with actual critical logs count -->
+        <span class="users-stat-card__value">{{ critical_logs }}</span>
       </div>
     </div>
   </div>
@@ -39,11 +37,25 @@
   <section class="users-table">
     <div class="users-table__header">
       <div class="users-table__search">
-        <input type="text" placeholder="Search logs...">
+        <form method="GET" action="{% url 'dashboardadminapp:logs' %}">
+          <input type="text" name="search" placeholder="Search logs..." value="{{ request.GET.search }}">
+        </form>
       </div>
       <div class="users-table__buttons">
-        <button class="users-table__filter-button">Filters</button>
-        <!-- Removed Add User Button -->
+        <div class="log-level-filter-dropdown" style="position: relative; display: inline-block;">
+          <button type="button" class="users-table__filter-button" onclick="toggleLogLevelDropdown()">
+            {% if request.GET.level %}{{ request.GET.level|title }}{% else %}All Levels{% endif %} <span style="font-size: 14px;">&#9660;</span>
+          </button>
+          <div id="logLevelDropdown" style="display: none; position: absolute; right: 0; background: #313138; border: 1px solid #444; border-radius: 4px; z-index: 10; min-width: 140px;">
+            <a href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}" class="log-level-option" style="display: block; padding: 10px 20px; color: #fff; text-decoration: none;">All Levels</a>
+            <a href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}level=INFO" class="log-level-option" style="display: block; padding: 10px 20px; color: #fff; text-decoration: none;">Info</a>
+            <a href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}level=WARNING" class="log-level-option" style="display: block; padding: 10px 20px; color: #fff; text-decoration: none;">Warning</a>
+            <a href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}level=ERROR" class="log-level-option" style="display: block; padding: 10px 20px; color: #fff; text-decoration: none;">Error</a>
+          </div>
+        </div>
+        <form id="filter-form" method="GET" action="{% url 'dashboardadminapp:logs' %}" style="display:none;">
+          <input type="hidden" name="search" value="{{ request.GET.search }}">
+        </form>
       </div>
     </div>
     <div class="users-table__container">
@@ -51,55 +63,67 @@
         <table class="users-table__content">
           <thead>
             <tr>
-              <th class="users-table__th">Timestamp <span class="sort-icon">&#8597;</span></th>
-              <th class="users-table__th">Level <span class="sort-icon">&#8597;</span></th>
-              <th class="users-table__th">Source <span class="sort-icon">&#8597;</span></th>
-              <th class="users-table__th">Message <span class="sort-icon">&#8597;</span></th>
-              <th class="users-table__th">User <span class="sort-icon">&#8597;</span></th>
-              <th class="users-table__th">Action <span class="sort-icon">&#8597;</span></th>
+              <th class="users-table__th">Timestamp</th>
+              <th class="users-table__th">Level</th>
+              <th class="users-table__th">Source</th>
+              <th class="users-table__th">Message</th>
+              <th class="users-table__th">User</th>
+              <th class="users-table__th">Action</th>
             </tr>
           </thead>
           <tbody>
-            {% comment %}
-            Example log entry rows - replace with actual loop over log data
-            {% endcomment %}
+            {% for log in logs %}
             <tr>
-              <td class="users-table__td">2023-10-27 10:30:00</td>
-              <td class="users-table__td">INFO</td>
-              <td class="users-table__td">system.auth</td>
-              <td class="users-table__td">User 'admin' logged in successfully.</td>
-              <td class="users-table__td">admin</td>
-              <td class="users-table__td">View Details</td>
+              <td class="users-table__td">{{ log.timestamp|date:"Y-m-d H:i:s" }}</td>
+              <td class="users-table__td">{{ log.level }}</td>
+              <td class="users-table__td">{{ log.source }}</td>
+              <td class="users-table__td">{{ log.message }}</td>
+              <td class="users-table__td">{{ log.user.username|default:"N/A" }}</td>
+              <td class="users-table__td">{{ log.action }}</td>
             </tr>
+            {% empty %}
             <tr>
-              <td class="users-table__td">2023-10-27 10:35:00</td>
-              <td class="users-table__td">WARNING</td>
-              <td class="users-table__td">system.network</td>
-              <td class="users-table__td">Connection attempt failed from IP 192.168.1.100.</td>
-              <td class="users-table__td">N/A</td>
-              <td class="users-table__td">View Details</td>
+              <td colspan="6" class="users-table__td text-center">No logs found</td>
             </tr>
-             <tr>
-              <td class="users-table__td">2023-10-27 10:40:00</td>
-              <td class="users-table__td">ERROR</td>
-              <td class="users-table__td">system.database</td>
-              <td class="users-table__td">Database query failed: Table not found.</td>
-              <td class="users-table__td">system</td>
-              <td class="users-table__td">View Details</td>
-            </tr>
+            {% endfor %}
           </tbody>
         </table>
       </div>
     </div>
   </section>
+  <!-- End of Logs Table -->
 
   <!-- Pagination -->
   <div class="users-pagination">
-    <button class="users-pagination__button users-pagination__button--prev">< Previous page</button>
-    <span class="users-pagination__page-number">1</span>
-    <button class="users-pagination__button users-pagination__button--next">Next page ></button>
+    {% if logs.has_previous %}
+        <a href="?page={{ logs.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.level %}&level={{ request.GET.level }}{% endif %}" class="users-pagination__button users-pagination__button--prev">< Previous page</a>
+    {% else %}
+        <button class="users-pagination__button users-pagination__button--prev" disabled>< Previous page</button>
+    {% endif %}
+
+    <span class="users-pagination__page-number">Page {{ logs.number }} of {{ logs.paginator.num_pages }}</span>
+
+    {% if logs.has_next %}
+        <a href="?page={{ logs.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.level %}&level={{ request.GET.level }}{% endif %}" class="users-pagination__button users-pagination__button--next">Next page ></a>
+    {% else %}
+        <button class="users-pagination__button users-pagination__button--next" disabled>Next page ></button>
+    {% endif %}
   </div>
 </div>
+
+<script>
+function toggleLogLevelDropdown() {
+  var dropdown = document.getElementById('logLevelDropdown');
+  dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+}
+document.addEventListener('click', function(event) {
+  var dropdown = document.getElementById('logLevelDropdown');
+  var button = document.querySelector('.users-table__filter-button');
+  if (dropdown && button && !button.contains(event.target) && !dropdown.contains(event.target)) {
+    dropdown.style.display = 'none';
+  }
+});
+</script>
 
 {% comment %}
 Removed user drawer include and related script as they are not relevant for the logs page.
