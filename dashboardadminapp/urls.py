@@ -14,6 +14,8 @@ urlpatterns = [
     path('users/disable/<int:user_id>/', views.disable_user, name='disable_user'),
     path('users/archived/', views.archived_users, name='archived_users'),
     path('users/restore/<int:user_id>/', views.restore_user, name='restore_user'),
+    path('users/create/', views.create_user, name='create_user'),
+    path('users/stats/', views.get_user_stats, name='user_stats'),
 
     # Other Pages
     path('roles/', views.roles_view, name='roles'),

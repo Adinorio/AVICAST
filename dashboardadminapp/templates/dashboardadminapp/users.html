@@ -13,7 +13,7 @@
 
   <!-- Welcome Card -->
   <section class="users-welcome-card">
-    <h2 class="users-welcome-card__title">User Management<span class="users-count-badge">5</span></h2>
+    <h2 class="users-welcome-card__title">User Management<span class="users-count-badge">{{ total_users }}</span></h2>
     <p class="users-welcome-card__subtitle">Manage your team members and their account permissions here.</p>
   </section>
 
@@ -22,15 +22,13 @@
     <div class="users-stat-card users-stat-card--admin">
       <span class="users-stat-card__label">Most recently added User ID</span>
       <div class="users-stat-card__inner">
-        <span class="users-stat-card__value">0</span>
-        <!-- TODO: replace with {{ total_active_admins }} -->
+        <span class="users-stat-card__value">{{ latest_user_id }}</span>
       </div>
     </div>
     <div class="users-stat-card users-stat-card--field">
       <span class="users-stat-card__label">Daily active users</span>
       <div class="users-stat-card__inner">
-        <span class="users-stat-card__value">0</span>
-        <!-- TODO: replace with {{ total_active_fieldworkers }} -->
+        <span class="users-stat-card__value">{{ daily_active_users }}</span>
       </div>
     </div>
   </div>
@@ -39,7 +37,7 @@
   <section class="users-table">
     <div class="users-table__header">
       <div class="users-table__search">
-        <input type="text" placeholder="Search">
+        <input type="text" placeholder="Search" id="userSearch">
       </div>
       <div class="users-table__buttons">
         <button class="users-table__filter-button">Filters</button>
@@ -60,15 +58,19 @@
               <th class="users-table__th">Action <span class="sort-icon">&#8597;</span></th>
             </tr>
           </thead>
-          <tbody>
-            {% for i in '12345'|make_list %}
+          <tbody id="usersTableBody">
+            {% for user in users %}
             <tr>
-              <td class="users-table__td">25-XXXX-00{{ forloop.counter }}</td>
-              <td class="users-table__td">17 March 2025 10:00 AM</td>
-              <td class="users-table__td">Field Worker</td>
-              <td class="users-table__td">James Galillie Noceja</td>
-              <td class="users-table__td"><span class="users-status-pill users-status-pill--inactive">—</span></td>
-              <td class="users-table__td">03/17/25</td>
+              <td class="users-table__td">{{ user.custom_id }}</td>
+              <td class="users-table__td">{{ user.date_created|date:"d F Y h:i A" }}</td>
+              <td class="users-table__td">{{ user.get_role_display }}</td>
+              <td class="users-table__td">{{ user.get_full_name }}</td>
+              <td class="users-table__td">
+                <span class="users-status-pill users-status-pill--{% if user.is_active %}active{% else %}inactive{% endif %}">
+                  {% if user.is_active %}Active{% else %}Inactive{% endif %}
+                </span>
+              </td>
+              <td class="users-table__td">{{ user.last_updated|date:"m/d/y" }}</td>
               <td class="users-table__td"><span class="settings-icon">⚙️</span></td>
             </tr>
             {% endfor %}
@@ -94,7 +96,8 @@
   const drawerOverlay = document.getElementById('drawerOverlay');
   const closeDrawerButton = userDrawer.querySelector('.user-drawer__close-button');
   const cancelDrawerButton = userDrawer.querySelector('.user-drawer__cancel-button');
-  const createAccountButton = userDrawer.querySelector('#createAccountButton');
+  const createUserForm = document.getElementById('createUserForm');
+  const userSearch = document.getElementById('userSearch');
 
   const roleInput = userDrawer.querySelector('#userRole');
   const firstNameInput = userDrawer.querySelector('#firstName');
@@ -112,18 +115,29 @@
 
   const passwordToggleIcons = userDrawer.querySelectorAll('.password-toggle-icon');
 
+  // Populate role options
+  const roleOptions = [
+    { value: 'admin', label: 'Admin' },
+    { value: 'field_worker', label: 'Field Worker' }
+  ];
+
+  roleOptions.forEach(option => {
+    const optionElement = document.createElement('option');
+    optionElement.value = option.value;
+    optionElement.textContent = option.label;
+    roleInput.appendChild(optionElement);
+  });
+
   function openDrawer() {
     userDrawer.style.right = '0';
     drawerOverlay.style.display = 'block';
-    // Hide validation messages when opening the drawer
     hideValidationMessages();
   }
 
   function closeDrawer() {
-    userDrawer.style.right = '-500px'; // Assuming the drawer width is 500px
+    userDrawer.style.right = '-500px';
     drawerOverlay.style.display = 'none';
-    // Optional: Clear form fields when closing
-    // resetForm();
+    createUserForm.reset();
   }
 
   function hideValidationMessages() {
@@ -135,7 +149,7 @@
     drawerAlert.style.display = 'none';
   }
 
-  function validateForm(event) {
+  function validateForm() {
     let isValid = true;
     hideValidationMessages();
 
@@ -159,39 +173,234 @@
       isValid = false;
     }
 
-    if (confirmPasswordInput.value.trim() === '' || confirmPasswordInput.value !== passwordInput.value) {
+    if (passwordInput.value !== confirmPasswordInput.value) {
       passwordMatchText.style.display = 'inline';
       isValid = false;
-    }
-
-    if (!isValid) {
-      drawerAlert.style.display = 'flex'; // Show the alert message
-      event.preventDefault(); // Prevent form submission
     }
 
     return isValid;
   }
 
+  // Event Listeners
   addUserButton.addEventListener('click', openDrawer);
   closeDrawerButton.addEventListener('click', closeDrawer);
   cancelDrawerButton.addEventListener('click', closeDrawer);
   drawerOverlay.addEventListener('click', closeDrawer);
 
-  createAccountButton.addEventListener('click', validateForm);
+  // Add these utility functions at the top of your script
+  function showError(message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+    alertDiv.role = 'alert';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    // Try to find a suitable container for the alert
+    const container = document.querySelector('.content-wrapper') || 
+                     document.querySelector('.container') || 
+                     document.querySelector('main') || 
+                     document.body;
+    
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
+  }
 
+  function showSuccess(message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-success alert-dismissible fade show';
+    alertDiv.role = 'alert';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    // Try to find a suitable container for the alert
+    const container = document.querySelector('.content-wrapper') || 
+                     document.querySelector('.container') || 
+                     document.querySelector('main') || 
+                     document.body;
+    
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
+  }
+
+  // Update the form submission handler
+  createUserForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    console.log('Form submission started');
+    
+    if (!validateForm()) {
+        console.log('Form validation failed');
+        return;
+    }
+    console.log('Form validation passed');
+    
+    const formData = new FormData(this);
+    const data = {};
+    formData.forEach((value, key) => {
+        data[key] = value;
+    });
+    console.log('Form data:', {...data, password: '***'});
+    
+    try {
+        console.log('Sending request to:', '/dashboardadminapp/users/create/');
+        const response = await fetch('/dashboardadminapp/users/create/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            credentials: 'same-origin'
+        });
+        
+        console.log('Response status:', response.status);
+        
+        // Handle redirects (302)
+        if (response.redirected) {
+            console.log('Redirected to:', response.url);
+            window.location.href = response.url;
+            return;
+        }
+        
+        if (response.status === 401 || response.status === 403) {
+            console.log('Authentication error, redirecting to login');
+            window.location.href = '/accounts/login/';
+            return;
+        }
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            console.error('Expected JSON response but got:', contentType);
+            const text = await response.text();
+            console.error('Response text:', text);
+            
+            // Check if the response is a login page
+            if (text.includes('login') || text.includes('Login')) {
+                console.log('Session expired, redirecting to login');
+                window.location.href = '/accounts/login/';
+                return;
+            }
+            
+            showError('Server returned an invalid response. Please try again.');
+            return;
+        }
+        
+        const result = await response.json();
+        console.log('Response data:', result);
+        
+        if (result.status === 'success') {
+            // Add the new user to the table
+            const userTable = document.getElementById('userTable');
+            if (!userTable) {
+                console.error('User table not found');
+                showError('Could not update user table');
+                return;
+            }
+            
+            const tbody = userTable.querySelector('tbody');
+            if (!tbody) {
+                console.error('Table body not found');
+                showError('Could not update user table');
+                return;
+            }
+            
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td>${result.user.id}</td>
+                <td>${result.user.username}</td>
+                <td>${result.user.full_name}</td>
+                <td>${result.user.role}</td>
+                <td>${result.user.date_created}</td>
+                <td>${result.user.last_updated}</td>
+                <td>
+                    <span class="badge bg-success">${result.user.status}</span>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick="editUser('${result.user.id}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteUser('${result.user.id}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            tbody.insertBefore(newRow, tbody.firstChild);
+            
+            // Close the drawer and reset the form
+            closeDrawer();
+            this.reset();
+            
+            // Show success message
+            showSuccess('User created successfully');
+        } else {
+            showError(result.message || 'Failed to create user');
+        }
+    } catch (error) {
+        console.error('Exception during user creation:', error);
+        showError('An error occurred while creating the user. Please try again.');
+    }
+  });
+
+  // Password toggle functionality
   passwordToggleIcons.forEach(icon => {
-    icon.addEventListener('click', () => {
-      const passwordInput = icon.previousElementSibling;
-      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-      passwordInput.setAttribute('type', type);
-      // Optionally change icon here based on type
+    icon.addEventListener('click', function() {
+      const input = this.previousElementSibling;
+      input.type = input.type === 'password' ? 'text' : 'password';
+      this.textContent = input.type === 'password' ? '👁️' : '👁️‍🗨️';
     });
   });
 
-  // Optional: Add input event listeners for real-time validation feedback
-  // For example:
-  // roleInput.addEventListener('input', validateForm);
+  async function updateStats() {
+    try {
+      const response = await fetch('/dashboardadminapp/users/stats/');
+      const data = await response.json();
+      
+      document.querySelector('.users-count-badge').textContent = data.total_users;
+      document.querySelector('.users-stat-card--admin .users-stat-card__value').textContent = data.latest_user_id;
+      document.querySelector('.users-stat-card--field .users-stat-card__value').textContent = data.daily_active_users;
+    } catch (error) {
+      console.error('Error updating stats:', error);
+    }
+  }
 
+  // Search functionality
+  userSearch.addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const rows = document.querySelectorAll('#usersTableBody tr');
+    
+    rows.forEach(row => {
+      const text = row.textContent.toLowerCase();
+      row.style.display = text.includes(searchTerm) ? '' : 'none';
+    });
+  });
+
+  // CSRF token helper function
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
 </script>
 
 {% endblock %}

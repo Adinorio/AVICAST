@@ -23,11 +23,11 @@
             {% csrf_token %}
             <label for="user_id" class="form-label-figma">User ID</label>
             <div class="input-card-figma">
-                <input type="text" name="user_id" id="user_id" class="input-field-figma" required placeholder="Enter your ID number">
+                <input type="text" name="user_id" id="user_id" class="input-field-figma" required placeholder="Enter your ID number" autocomplete="username">
             </div>
             <label for="password" class="form-label-figma">Password</label>
             <div class="input-card-figma">
-                <input type="password" name="password" id="password" class="input-field-figma" required placeholder="Enter your password">
+                <input type="password" name="password" id="password" class="input-field-figma" required placeholder="Enter your password" autocomplete="current-password">
             </div>
             <a href="#" class="forgot-password-figma">Forgot password?</a>
             <div class="line-figma-2"></div>

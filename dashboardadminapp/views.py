@@ -1,9 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from superadminloginapp.models import User
 from django.contrib.auth import logout
 from django.utils.timezone import now
-from .models import Log, UserProfile
+from .models import Log, UserProfile, User
 from django.urls import reverse
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -11,55 +10,95 @@ import json
 from django.contrib.auth.hashers import make_password
 from datetime import datetime
 from django.http import JsonResponse, HttpResponseNotAllowed
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.db.models import Count
+from django.utils import timezone
+from datetime import timedelta
+import logging
+from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import ensure_csrf_cookie
+import traceback
+
+logger = logging.getLogger(__name__)
 
 def check_auth(view_func):
     def wrapper(request, *args, **kwargs):
-        if 'user_id' not in request.session:
+        logger.info('=' * 50)
+        logger.info('check_auth decorator called')
+        logger.info(f'User authenticated: {request.user.is_authenticated}')
+        logger.info(f'User: {request.user}')
+        logger.info(f'Session data: {dict(request.session)}')
+        
+        if not request.user.is_authenticated:
+            logger.warning('User not authenticated, redirecting to login')
             return redirect('superadminloginapp:login')
+            
         try:
             # Check if it's a superadmin
-            if request.session['user_id'] == "010101":
+            if hasattr(request.user, 'role') and request.user.role == 'super_admin':
+                logger.info('User is super admin')
                 return view_func(request, *args, **kwargs)
             # Check if it's a regular admin
-            user_profile = UserProfile.objects.get(custom_user_id=request.session['user_id'])
-            if user_profile.role == "Admin":
+            if hasattr(request.user, 'role') and request.user.role == 'admin':
+                logger.info('User is admin')
                 return view_func(request, *args, **kwargs)
+            logger.warning('User is not admin or super admin, redirecting to admin dashboard')
             return redirect('admindashboard:dashboard')
-        except UserProfile.DoesNotExist:
+        except Exception as e:
+            logger.error(f'Error in check_auth: {str(e)}')
+            logger.error(traceback.format_exc())
             return redirect('superadminloginapp:login')
     return wrapper
 
 # Dashboard
 @check_auth
 def dashboard_view(request):
-    field_workers = UserProfile.objects.filter(role="User").count()
-    admins = UserProfile.objects.filter(role="Admin").count()
-    total_users = field_workers + admins
-    logs = Log.objects.all().order_by('-timestamp')[:5]
-    today = datetime.now()
+    logger.info('=' * 50)
+    logger.info('Dashboard view called')
+    logger.info(f'User authenticated: {request.user.is_authenticated}')
+    logger.info(f'User: {request.user}')
+    logger.info(f'Session data: {dict(request.session)}')
+    
+    try:
+        field_workers = UserProfile.objects.filter(role="User").count()
+        admins = UserProfile.objects.filter(role="Admin").count()
+        total_users = field_workers + admins
+        logs = Log.objects.all().order_by('-timestamp')[:5]
+        today = datetime.now()
 
-    return render(request, "dashboardadminapp/dashboard.html", {
-        "field_workers": field_workers,
-        "admins": admins,
-        "total_users": total_users,
-        "logs": logs,
-        "today": today,
-    })
+        return render(request, "dashboardadminapp/dashboard.html", {
+            "field_workers": field_workers,
+            "admins": admins,
+            "total_users": total_users,
+            "logs": logs,
+            "today": today,
+        })
+    except Exception as e:
+        logger.error(f'Error in dashboard view: {str(e)}')
+        logger.error(traceback.format_exc())
+        return redirect('superadminloginapp:login')
+
+def is_super_admin(user):
+    return user.is_authenticated and user.role == 'super_admin'
+
+def is_admin_or_field_worker(user):
+    return user.is_authenticated and user.role in ['admin', 'field_worker']
 
 # List users
 @check_auth
 def users_view(request):
-    users = UserProfile.objects.all()
+    users = User.objects.all()
+    total_users = users.count()
+    daily_active_users = users.filter(date_created__gte=timezone.now() - timedelta(days=1)).count()
+    latest_user_id = users.order_by('-date_created').first().custom_id if users.exists() else 'N/A'
     
     context = {
-        "users": users,
-        "total_users": users.count(),
-        "admins": users.filter(role="Admin").count(),
-        "field_workers": users.filter(role="User").count(),
-        "today": datetime.now(),
+        'users': users,
+        'total_users': total_users,
+        'daily_active_users': daily_active_users,
+        'latest_user_id': latest_user_id,
     }
-    
-    return render(request, "dashboardadminapp/users.html", context)
+    return render(request, 'dashboardadminapp/users.html', context)
 
 # List archived users
 @check_auth
@@ -197,3 +236,99 @@ def notifications_view(request):
 @check_auth
 def settings_view(request):
     return render(request, "dashboardadminapp/settings.html")
+
+@ensure_csrf_cookie
+@require_http_methods(["POST"])
+@login_required
+@user_passes_test(is_super_admin)
+def create_user(request):
+    logger.info('Create user request received')
+    
+    # Check if it's an AJAX request
+    if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        logger.warning('Non-AJAX request received')
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Invalid request method'
+        }, status=400)
+
+    try:
+        data = json.loads(request.body)
+        logger.info(f'Form data: {data}')
+        
+        # Extract user data
+        first_name = data.get('firstName')
+        last_name = data.get('lastName')
+        email = data.get('email')
+        password = data.get('password')
+        role = data.get('role', 'field_worker')
+        
+        # Validate required fields
+        if not all([first_name, last_name, email, password]):
+            return JsonResponse({
+                'status': 'error',
+                'message': 'All fields are required'
+            }, status=400)
+        
+        # Check if user already exists
+        if User.objects.filter(username=email).exists():
+            return JsonResponse({
+                'status': 'error',
+                'message': 'User with this email already exists'
+            }, status=400)
+        
+        # Create the user
+        user = User.objects.create_user(
+            username=email,
+            email=email,
+            password=password,
+            first_name=first_name,
+            last_name=last_name,
+            role=role,
+            is_active=True
+        )
+        
+        # Create the user profile
+        profile = UserProfile.objects.create(
+            user=user,
+            first_name=first_name,
+            last_name=last_name,
+            email=email,
+            role=role,
+            last_active=now()
+        )
+        
+        logger.info(f'User created successfully: {user.username}')
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': 'User created successfully',
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'role': user.role,
+                'custom_id': user.custom_id
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f'Error creating user: {str(e)}')
+        logger.error(traceback.format_exc())
+        return JsonResponse({
+            'status': 'error',
+            'message': f'Error creating user: {str(e)}'
+        }, status=500)
+
+@login_required
+@user_passes_test(is_super_admin)
+def get_user_stats(request):
+    total_users = User.objects.count()
+    daily_active_users = User.objects.filter(last_login__gte=timezone.now() - timedelta(days=1)).count()
+    latest_user_id = User.objects.order_by('-date_created').first().custom_id if User.objects.exists() else 'N/A'
+    
+    return JsonResponse({
+        'total_users': total_users,
+        'daily_active_users': daily_active_users,
+        'latest_user_id': latest_user_id
+    })

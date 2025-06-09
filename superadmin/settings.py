@@ -158,3 +158,15 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Authentication settings
+LOGIN_URL = '/accounts/login/'
+LOGIN_REDIRECT_URL = '/dashboardadminapp/dashboard/'
+LOGOUT_REDIRECT_URL = '/accounts/login/'
+
+# Custom user model
+AUTH_USER_MODEL = 'dashboardadminapp.User'
+
+# Session settings
+SESSION_COOKIE_AGE = 3600  # 1 hour in seconds
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
