@@ -12,35 +12,35 @@
 <div class="dashboard">
     <div class="dashboard-grid">
         <!-- Species Distribution Report -->
-        <div class="dashboard-box" onclick="loadReport('distribution')">
+        <div class="dashboard-box">
             <i class="fas fa-chart-pie dashboard-icon"></i>
             <h2>Species Distribution</h2>
             <p>View bird species distribution across locations and time periods.</p>
-            <a href="#" class="dashboard-btn" onclick="event.preventDefault(); loadReport('distribution')">Generate Report</a>
+            <a href="{% url 'admindashboard:species_distribution' %}" class="dashboard-btn">Generate Report</a>
         </div>
 
         <!-- Population Trends -->
-        <div class="dashboard-box" onclick="loadReport('trends')">
+        <div class="dashboard-box">
             <i class="fas fa-chart-line dashboard-icon"></i>
             <h2>Population Trends</h2>
             <p>Track population changes and trends for different bird species.</p>
-            <a href="#" class="dashboard-btn" onclick="event.preventDefault(); loadReport('trends')">Generate Report</a>
+            <a href="{% url 'admindashboard:population_trends' %}" class="dashboard-btn">Generate Report</a>
         </div>
 
         <!-- Forecasting -->
-        <div class="dashboard-box" onclick="loadReport('forecasting')">
+        <div class="dashboard-box">
             <i class="fas fa-calendar-check dashboard-icon"></i>
             <h2>Forecasting</h2>
             <p>Predict optimal dates for field work to maximize bird census data collection.</p>
-            <a href="#" class="dashboard-btn" onclick="event.preventDefault(); loadReport('forecasting')">Generate Report</a>
+            <a href="{% url 'admindashboard:forecasting' %}" class="dashboard-btn">Generate Report</a>
         </div>
 
         <!-- Site Analysis -->
-        <div class="dashboard-box" onclick="loadReport('site_analysis')">
+        <div class="dashboard-box">
             <i class="fas fa-map-marked-alt dashboard-icon"></i>
             <h2>Site Analysis</h2>
             <p>Detailed analysis of bird populations across different observation sites.</p>
-            <a href="#" class="dashboard-btn" onclick="event.preventDefault(); loadReport('site_analysis')">Generate Report</a>
+            <a href="{% url 'admindashboard:site_analysis' %}" class="dashboard-btn">Generate Report</a>
         </div>
     </div>
 

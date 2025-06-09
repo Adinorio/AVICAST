@@ -981,3 +981,166 @@ def import_data(request):
         form = ImportDataForm()
     
     return render(request, 'admindashboard/import_data.html', {'form': form})
+
+@permission_required('view_report_management')
+def species_distribution_view(request):
+    """View for the species distribution report"""
+    context = {
+        'page_title': 'Species Distribution Report',
+        'active_page': 'reports',
+    }
+    return render(request, 'admindashboard/reports/species_distribution.html', context)
+
+@permission_required('view_report_management')
+def population_trends_view(request):
+    """View for the population trends report"""
+    context = {
+        'page_title': 'Population Trends Report',
+        'active_page': 'reports',
+    }
+    return render(request, 'admindashboard/reports/population_trends.html', context)
+
+@permission_required('view_report_management')
+def forecasting_view(request):
+    """View for the forecasting report"""
+    context = {
+        'page_title': 'Forecasting Report',
+        'active_page': 'reports',
+    }
+    return render(request, 'admindashboard/reports/forecasting.html', context)
+
+@permission_required('view_report_management')
+def site_analysis_view(request):
+    """View for the site analysis report"""
+    sites = Site.objects.all().order_by('name')
+    context = {
+        'page_title': 'Site Analysis Report',
+        'active_page': 'reports',
+        'sites': sites,
+    }
+    return render(request, 'admindashboard/reports/site_analysis.html', context)
+
+@permission_required('view_report_management')
+def get_site_analysis_data(request, site_id, year):
+    """API endpoint for getting site analysis data"""
+    site = get_object_or_404(Site, id=site_id)
+    
+    # Get all detections for the site and year
+    detections = BirdDetection.objects.filter(
+        site=site,
+        detection_date__year=year
+    ).select_related('species', 'species__family')
+
+    # Calculate statistics
+    total_detections = detections.count()
+    unique_species = detections.values('species').distinct().count()
+    
+    # Get most common species
+    most_common = detections.values('species__common_name')\
+        .annotate(count=models.Count('id'))\
+        .order_by('-count')\
+        .first()
+    
+    # Calculate monthly trends with family information
+    monthly_trends = detections.annotate(
+        month=models.functions.ExtractMonth('detection_date')
+    ).values('month')\
+        .annotate(
+            count=models.Count('id'),
+            avg_confidence=models.Avg('confidence')
+        )\
+        .order_by('month')
+
+    # Calculate species distribution with family information
+    species_distribution = detections.values(
+        'species__common_name',
+        'species__family__name'
+    ).annotate(
+        count=models.Count('id'),
+        avg_confidence=models.Avg('confidence')
+    ).order_by('-count')
+
+    # Calculate family distribution
+    family_distribution = detections.values(
+        'species__family__name'
+    ).annotate(
+        count=models.Count('id'),
+        species_count=models.Count('species', distinct=True)
+    ).order_by('-count')
+
+    # Calculate detailed detection data
+    detection_data = []
+    for species in species_distribution:
+        species_detections = detections.filter(species__common_name=species['species__common_name'])
+        
+        # Get most active month for this species
+        most_active_month = species_detections.annotate(
+            month=models.functions.ExtractMonth('detection_date')
+        ).values('month')\
+            .annotate(count=models.Count('id'))\
+            .order_by('-count')\
+            .first()
+        
+        # Calculate detection rate (detections per month)
+        detection_rate = species['count'] / 12  # Assuming data for all months
+        
+        detection_data.append({
+            'species': species['species__common_name'],
+            'family': species['species__family__name'],
+            'total_detections': species['count'],
+            'avg_confidence': round(species['avg_confidence'] or 0, 2),
+            'most_active_month': most_active_month['month'] if most_active_month else 'N/A',
+            'detection_rate': round(detection_rate, 2)
+        })
+
+    # Get site status and activity
+    site_status = {
+        'name': site.name,
+        'location': site.location,
+        'status': site.status,
+        'description': site.description,
+        'created_at': site.created_at.strftime('%Y-%m-%d'),
+        'last_updated': site.updated_at.strftime('%Y-%m-%d'),
+        'total_years_active': BirdDetection.objects.filter(site=site).dates('detection_date', 'year').distinct().count()
+    }
+
+    # Prepare response data
+    data = {
+        'site_info': site_status,
+        'statistics': {
+            'total_detections': total_detections,
+            'unique_species': unique_species,
+            'most_common_species': most_common['species__common_name'] if most_common else 'N/A',
+            'avg_detections_per_month': round(total_detections / 12, 2),
+            'total_families': family_distribution.count(),
+            'avg_confidence': round(detections.aggregate(avg=models.Avg('confidence'))['avg'] or 0, 2)
+        },
+        'monthly_trends': [
+            {
+                'month': item['month'],
+                'count': item['count'],
+                'avg_confidence': round(item['avg_confidence'] or 0, 2)
+            }
+            for item in monthly_trends
+        ],
+        'species_distribution': [
+            {
+                'species': item['species__common_name'],
+                'family': item['species__family__name'],
+                'count': item['count'],
+                'avg_confidence': round(item['avg_confidence'] or 0, 2)
+            }
+            for item in species_distribution
+        ],
+        'family_distribution': [
+            {
+                'family': item['species__family__name'],
+                'count': item['count'],
+                'species_count': item['species_count']
+            }
+            for item in family_distribution
+        ],
+        'detection_data': detection_data
+    }
+
+    return JsonResponse(data)

@@ -1,0 +1,32 @@
+{% extends 'admindashboard/base.html' %}
+{% load static %}
+
+{% block title %}Species Distribution Report - Avicast Dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'admindashboard/css/report.css' %}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="report-container">
+    <div class="report-header">
+        <h1>Species Distribution Report</h1>
+        <p>View bird species distribution across locations and time periods.</p>
+    </div>
+
+    <div class="report-content">
+        <!-- Add your report content here -->
+        <div class="chart-container">
+            <canvas id="distributionChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script>
+// Add your JavaScript code for the chart here
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize your chart here
+});
+</script>
+{% endblock %} 

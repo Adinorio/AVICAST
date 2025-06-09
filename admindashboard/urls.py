@@ -33,7 +33,12 @@ urlpatterns = [
     # API for site data
     path('api/sites/<int:site_id>/years/', views.get_site_years, name='get_site_years'),
     path('api/sites/<int:site_id>/months/<int:year>/', views.get_monthly_detections, name='get_monthly_detections'),
-    # Report URL
+    path('api/sites/<int:site_id>/analysis/<int:year>/', views.get_site_analysis_data, name='get_site_analysis_data'),
+    # Report URLs
     path('reports/', views.report_view, name='reports'),
+    path('reports/species-distribution/', views.species_distribution_view, name='species_distribution'),
+    path('reports/population-trends/', views.population_trends_view, name='population_trends'),
+    path('reports/forecasting/', views.forecasting_view, name='forecasting'),
+    path('reports/site-analysis/', views.site_analysis_view, name='site_analysis'),
     path('import-data/', views.import_data, name='import_data'),
 ]
