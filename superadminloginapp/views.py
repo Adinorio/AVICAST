@@ -32,6 +32,9 @@ def login_view(request):
     logger.info(f'Session data: {dict(request.session)}')
     logger.info(f'User authenticated: {request.user.is_authenticated}')
 
+    # Get the next URL from the request
+    next_url = request.GET.get('next', 'dashboardadminapp:dashboard')
+
     # If user is already authenticated, redirect to appropriate dashboard
     if request.user.is_authenticated:
         logger.info('User already authenticated, checking role')
@@ -72,8 +75,11 @@ def login_view(request):
                         logger.info(f'User {new_user.username} logged in successfully')
                         logger.info(f'Session after login: {dict(request.session)}')
                         
-                        # Redirect based on role
-                        if new_user.role == 'super_admin':
+                        # Redirect based on role and next parameter
+                        if next_url:
+                            logger.info(f'Redirecting to next URL: {next_url}')
+                            return redirect(next_url)
+                        elif new_user.role == 'super_admin':
                             logger.info('User is super admin, redirecting to super admin dashboard')
                             return redirect('dashboardadminapp:dashboard')
                         else:
@@ -81,58 +87,65 @@ def login_view(request):
                             return redirect('admindashboard:dashboard')
                     else:
                         logger.warning('Invalid password for new model user')
+                        error_message = "Invalid password"
                 except DashboardUser.DoesNotExist:
                     logger.info('User not found in new model')
+                    error_message = "User not found"
                 
                 # If new model fails, try old model
                 logger.info('Trying old model')
-                old_user = SuperAdminUser.objects.get(user_id=user_id)
-                logger.info(f'Found old user: {old_user.user_id}')
-                
-                if check_password(password, old_user.password):
-                    logger.info('Password check successful with old model')
-                    try:
-                        # Create or update user in new model
-                        new_user, created = DashboardUser.objects.get_or_create(
-                            username=user_id,
-                            defaults={
-                                'custom_id': user_id,
-                                'role': 'admin',  # Default to admin role for old users
-                                'is_active': True,
-                                'is_staff': True,
-                                'is_superuser': False
-                            }
-                        )
-                        
-                        if not created:
-                            logger.info('Updating existing user in new model')
-                            new_user.role = 'admin'  # Default to admin role for old users
-                            new_user.is_active = True
-                            new_user.is_staff = True
-                            new_user.is_superuser = False
-                        
-                        # Set the password using the proper method
-                        new_user.set_password(password)
-                        new_user.save()
-                        
-                        # Log in the user
-                        login(request, new_user, backend='django.contrib.auth.backends.ModelBackend')
-                        logger.info(f'User {new_user.username} logged in successfully')
-                        logger.info(f'Session after login: {dict(request.session)}')
-                        
-                        # Redirect to admin dashboard for old users
-                        logger.info('User is from old model, redirecting to admin dashboard')
-                        return redirect('admindashboard:dashboard')
-                    except Exception as create_error:
-                        logger.error(f'Error creating/updating user: {str(create_error)}')
-                        logger.error(traceback.format_exc())
-                        error_message = "Error creating user account"
-                else:
-                    logger.warning(f'Invalid password for user {user_id}')
-                    error_message = "Invalid password"
-            except SuperAdminUser.DoesNotExist:
-                logger.warning(f'User not found: {user_id}')
-                error_message = "User not found"
+                try:
+                    old_user = SuperAdminUser.objects.get(user_id=user_id)
+                    logger.info(f'Found old user: {old_user.user_id}')
+                    
+                    if check_password(password, old_user.password):
+                        logger.info('Password check successful with old model')
+                        try:
+                            # Create or update user in new model
+                            new_user, created = DashboardUser.objects.get_or_create(
+                                username=user_id,
+                                defaults={
+                                    'custom_id': user_id,
+                                    'role': 'admin',  # Default to admin role for old users
+                                    'is_active': True,
+                                    'is_staff': True,
+                                    'is_superuser': False
+                                }
+                            )
+                            
+                            if not created:
+                                logger.info('Updating existing user in new model')
+                                new_user.role = 'admin'  # Default to admin role for old users
+                                new_user.is_active = True
+                                new_user.is_staff = True
+                                new_user.is_superuser = False
+                            
+                            # Set the password using the proper method
+                            new_user.set_password(password)
+                            new_user.save()
+                            
+                            # Log in the user
+                            login(request, new_user, backend='django.contrib.auth.backends.ModelBackend')
+                            logger.info(f'User {new_user.username} logged in successfully')
+                            logger.info(f'Session after login: {dict(request.session)}')
+                            
+                            # Redirect based on next parameter
+                            if next_url:
+                                logger.info(f'Redirecting to next URL: {next_url}')
+                                return redirect(next_url)
+                            else:
+                                logger.info('User is from old model, redirecting to admin dashboard')
+                                return redirect('admindashboard:dashboard')
+                        except Exception as create_error:
+                            logger.error(f'Error creating/updating user: {str(create_error)}')
+                            logger.error(traceback.format_exc())
+                            error_message = "Error creating user account"
+                    else:
+                        logger.warning(f'Invalid password for user {user_id}')
+                        error_message = "Invalid password"
+                except SuperAdminUser.DoesNotExist:
+                    logger.warning(f'User not found: {user_id}')
+                    error_message = "User not found"
             except Exception as e:
                 logger.error(f'Unexpected error during login: {str(e)}')
                 logger.error(traceback.format_exc())
@@ -146,7 +159,11 @@ def login_view(request):
 
     logger.info(f'Rendering login template with error: {error_message}')
     logger.info('=' * 50)
-    return render(request, 'superadminloginapp/login.html', {'form': form, 'error_message': error_message})
+    return render(request, 'superadminloginapp/login.html', {
+        'form': form, 
+        'error_message': error_message,
+        'next': next_url
+    })
 
 @login_required
 def logout_view(request):

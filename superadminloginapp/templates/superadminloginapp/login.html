@@ -21,6 +21,9 @@
         </div>
         <form method="POST" class="form-section-figma">
             {% csrf_token %}
+            {% if next %}
+            <input type="hidden" name="next" value="{{ next }}">
+            {% endif %}
             <label for="user_id" class="form-label-figma">User ID</label>
             <div class="input-card-figma">
                 <input type="text" name="user_id" id="user_id" class="input-field-figma" required placeholder="Enter your ID number" autocomplete="username">

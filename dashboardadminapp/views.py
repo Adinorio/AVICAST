@@ -253,88 +253,73 @@ def notifications_view(request):
 def settings_view(request):
     return render(request, "dashboardadminapp/settings.html")
 
-@ensure_csrf_cookie
-@require_http_methods(["POST"])
 @login_required
-@user_passes_test(is_super_admin)
 def create_user(request):
-    logger.info('Create user request received')
-    
-    # Check if it's an AJAX request
-    if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        logger.warning('Non-AJAX request received')
-        return JsonResponse({
-            'status': 'error',
-            'message': 'Invalid request method'
-        }, status=400)
+    if request.method == 'POST':
+        try:
+            # Get data from POST request
+            first_name = request.POST.get('firstName')
+            last_name = request.POST.get('lastName')
+            password = request.POST.get('password')
+            role = request.POST.get('role')
 
-    try:
-        data = json.loads(request.body)
-        logger.info(f'Form data: {data}')
-        
-        # Extract user data
-        first_name = data.get('firstName')
-        last_name = data.get('lastName')
-        email = data.get('email')
-        password = data.get('password')
-        role = data.get('role', 'field_worker')
-        
-        # Validate required fields
-        if not all([first_name, last_name, email, password]):
+            # Validate required fields
+            if not all([first_name, last_name, password, role]):
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'All fields are required'
+                }, status=400)
+
+            # Get the latest user ID and increment
+            latest_user = User.objects.order_by('-custom_id').first()
+            if latest_user and latest_user.custom_id:
+                # Extract the sequence number and increment
+                sequence = int(latest_user.custom_id.split('-')[-1]) + 1
+            else:
+                sequence = 1
+
+            # Format: YY-MMDD-XXX
+            today = datetime.datetime.now()
+            year = str(today.year)[-2:]
+            month = str(today.month).zfill(2)
+            day = str(today.day).zfill(2)
+            custom_id = f"{year}-{month}{day}-{str(sequence).zfill(3)}"
+
+            # Create the user
+            user = User.objects.create(
+                username=custom_id,
+                first_name=first_name,
+                last_name=last_name,
+                custom_id=custom_id,
+                role=role
+            )
+            user.set_password(password)
+            user.save()
+
+            # Create the user profile
+            profile = UserProfile.objects.create(
+                user=user,
+                custom_user_id=custom_id,
+                first_name=first_name,
+                last_name=last_name,
+                email=f"{custom_id}@example.com",  # Generate a unique email
+                role=role
+            )
+
+            return JsonResponse({
+                'status': 'success',
+                'message': 'User created successfully',
+                'user_id': custom_id
+            })
+
+        except Exception as e:
+            logger.error(f"Error creating user: {str(e)}")
             return JsonResponse({
                 'status': 'error',
-                'message': 'All fields are required'
-            }, status=400)
-        
-        # Check if user already exists
-        if User.objects.filter(username=email).exists():
-            return JsonResponse({
-                'status': 'error',
-                'message': 'User with this email already exists'
-            }, status=400)
-        
-        # Create the user
-        user = User.objects.create_user(
-            username=email,
-            email=email,
-            password=password,
-            first_name=first_name,
-            last_name=last_name,
-            role=role,
-            is_active=True
-        )
-        
-        # Create the user profile
-        profile = UserProfile.objects.create(
-            user=user,
-            first_name=first_name,
-            last_name=last_name,
-            email=email,
-            role=role,
-            last_active=now()
-        )
-        
-        logger.info(f'User created successfully: {user.username}')
-        
-        return JsonResponse({
-            'status': 'success',
-            'message': 'User created successfully',
-            'user': {
-                'id': user.id,
-                'username': user.username,
-                'email': user.email,
-                'role': user.role,
-                'custom_id': user.custom_id
-            }
-        })
-        
-    except Exception as e:
-        logger.error(f'Error creating user: {str(e)}')
-        logger.error(traceback.format_exc())
-        return JsonResponse({
-            'status': 'error',
-            'message': f'Error creating user: {str(e)}'
-        }, status=500)
+                'message': f'Error creating user: {str(e)}'
+            }, status=500)
+
+    return render(request, 'dashboardadminapp/create_user.html')
 
 @login_required
 @user_passes_test(is_super_admin)
