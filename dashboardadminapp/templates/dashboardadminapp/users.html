@@ -135,6 +135,7 @@
   const drawerAlert = userDrawer.querySelector('.user-drawer__alert');
 
   const passwordToggleIcons = userDrawer.querySelectorAll('.password-toggle-icon');
+  const editPasswordToggleIcons = document.getElementById('editUserDrawer').querySelectorAll('.password-toggle-icon');
 
   // Populate role options
   const roleOptions = [
@@ -370,12 +371,41 @@
     }
   });
 
-  // Password toggle functionality
+  // Password toggle functionality for create user drawer
   passwordToggleIcons.forEach(icon => {
     icon.addEventListener('click', function() {
-      const input = this.previousElementSibling;
-      input.type = input.type === 'password' ? 'text' : 'password';
-      this.textContent = input.type === 'password' ? '👁️' : '👁️‍🗨️';
+      const targetInputId = this.dataset.target;
+      const input = userDrawer.querySelector(`#${targetInputId}`);
+      if (input.type === 'password') {
+        input.type = 'text';
+        this.querySelector('i').classList.remove('fa-eye');
+        this.querySelector('i').classList.add('fa-eye-slash');
+        this.classList.add('active');
+      } else {
+        input.type = 'password';
+        this.querySelector('i').classList.remove('fa-eye-slash');
+        this.querySelector('i').classList.add('fa-eye');
+        this.classList.remove('active');
+      }
+    });
+  });
+
+  // Password toggle functionality for edit user drawer
+  editPasswordToggleIcons.forEach(icon => {
+    icon.addEventListener('click', function() {
+      const targetInputId = this.dataset.target;
+      const input = document.getElementById('editUserDrawer').querySelector(`#${targetInputId}`);
+      if (input.type === 'password') {
+        input.type = 'text';
+        this.querySelector('i').classList.remove('fa-eye');
+        this.querySelector('i').classList.add('fa-eye-slash');
+        this.classList.add('active');
+      } else {
+        input.type = 'password';
+        this.querySelector('i').classList.remove('fa-eye-slash');
+        this.querySelector('i').classList.add('fa-eye');
+        this.classList.remove('active');
+      }
     });
   });
 
@@ -640,5 +670,40 @@
   });
 
 </script>
+
+<style>
+/* Password toggle icon styling */
+.password-input-container {
+  position: relative;
+}
+
+.password-toggle-icon {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #666; /* Darker muted color for contrast on dark background */
+  font-size: 0.9em;
+  transition: color 0.2s ease;
+}
+
+.password-toggle-icon:hover,
+.password-toggle-icon.active .fa-eye,
+.password-toggle-icon.active .fa-eye-slash {
+  color: #17a2b8; /* System accent color */
+}
+
+.password-toggle-icon .fa-eye,
+.password-toggle-icon .fa-eye-slash {
+  color: inherit; /* Inherit color from parent span */
+}
+
+/* Adjust input padding to prevent icon overlap */
+.password-input-container input[type="password"],
+.password-input-container input[type="text"] {
+  padding-right: 40px; /* Make space for the icon */
+}
+</style>
 
 {% endblock %}
