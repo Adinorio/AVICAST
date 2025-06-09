@@ -65,6 +65,7 @@ def dashboard_view(request):
         total_users = field_workers + admins
         today = datetime.now()
         logs = SystemLog.objects.all().order_by('-timestamp')[:5]
+        recent_logs = SystemLog.objects.filter(action__in=['login', 'logout']).order_by('-timestamp')[:5]
 
         return render(request, "dashboardadminapp/dashboard.html", {
             "field_workers": field_workers,
@@ -72,6 +73,7 @@ def dashboard_view(request):
             "total_users": total_users,
             "today": today,
             "logs": logs,
+            "recent_logs": recent_logs,
         })
     except Exception as e:
         logger.error(f'Error in dashboard view: {str(e)}')

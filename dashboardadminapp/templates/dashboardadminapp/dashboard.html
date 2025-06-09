@@ -47,7 +47,7 @@
           <thead>
             <tr>
               <th class="auth-logs__th">User ID <span class="sort-icon">&#8597;</span></th>
-              <th class="auth-logs__th">Last Active <span class="sort-icon">&#8597;</span></th>
+              <th class="auth-logs__th">Timestamp <span class="sort-icon">&#8597;</span></th>
               <th class="auth-logs__th">User Role <span class="sort-icon">&#8597;</span></th>
               <th class="auth-logs__th">Full Name <span class="sort-icon">&#8597;</span></th>
               <th class="auth-logs__th">Status <span class="sort-icon">&#8597;</span></th>
@@ -56,16 +56,18 @@
             </tr>
           </thead>
           <tbody>
-            {% for i in '12345'|make_list %}
+            {% for log in recent_logs %}
             <tr>
-              <td class="auth-logs__td">25-XXXX-00{{ forloop.counter }}</td>
-              <td class="auth-logs__td">17 March 2025 10:00 AM</td>
-              <td class="auth-logs__td">Field Worker</td>
-              <td class="auth-logs__td">James Galillie Noceja</td>
+              <td class="auth-logs__td">{{ log.user.custom_id|default:'N/A' }}</td>
+              <td class="auth-logs__td">{{ log.timestamp|date:"d M Y h:i A" }}</td>
+              <td class="auth-logs__td">{{ log.user.get_role_display|default:'N/A' }}</td>
+              <td class="auth-logs__td">{{ log.user.get_full_name|default:'N/A' }}</td>
               <td class="auth-logs__td"><span class="status-pill status-pill--inactive">—</span></td>
-              <td class="auth-logs__td">Log in</td>
-              <td class="auth-logs__td">Windows</td>
+              <td class="auth-logs__td">{{ log.action|title }}</td>
+              <td class="auth-logs__td">{{ log.details.OS|default:'-' }}</td>
             </tr>
+            {% empty %}
+            <tr><td class="auth-logs__td" colspan="7">No recent logs found.</td></tr>
             {% endfor %}
           </tbody>
         </table>

@@ -32,6 +32,7 @@ from django.conf import settings
 import pandas as pd
 from datetime import datetime
 from .decorators import permission_required # Import the custom decorator
+from dashboardadminapp.models import SystemLog  # Add this import at the top
 
 # Get the base directory of the project
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -138,6 +139,15 @@ def dashboard_view(request):
 
 def logout_view(request):
     """Logout view"""
+    user = request.user if request.user.is_authenticated else None
+    if user:
+        SystemLog.objects.create(
+            level='INFO',
+            source='system.auth',
+            message=f"User '{user.username}' logged out.",
+            user=user,
+            action='logout'
+        )
     logout(request)
     return redirect('superadminloginapp:login')
 
