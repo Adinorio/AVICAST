@@ -1,10 +1,10 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.hashers import check_password, make_password
 from dashboardadminapp.models import User as DashboardUser
 from .models import User as SuperAdminUser
 from .forms import LoginForm
-from django.contrib.auth import logout
+from django.contrib.auth.decorators import login_required
 import logging
 import traceback
 import sys
@@ -148,8 +148,16 @@ def login_view(request):
     logger.info('=' * 50)
     return render(request, 'superadminloginapp/login.html', {'form': form, 'error_message': error_message})
 
+@login_required
 def logout_view(request):
-    if request.user.is_authenticated:
-        logger.info(f'User {request.user.username} logged out')
+    logger.info('Logout view called')
+    logger.info(f'User {request.user.username} logging out')
+    
+    # Clear the session
+    request.session.flush()
+    
+    # Log out the user
     logout(request)
+    
+    logger.info('User logged out successfully')
     return redirect('superadminloginapp:login')

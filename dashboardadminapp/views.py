@@ -121,29 +121,45 @@ def add_user(request):
         password = request.POST.get("password")
         role = request.POST.get("role")
 
-        if User.objects.filter(user_id=email).exists():
+        # Check if user already exists
+        if User.objects.filter(username=email).exists():
             messages.error(request, "A user with this ID already exists.")
             return redirect("dashboardadminapp:add_user")
 
-        # 1. Create User
-        user = User.objects.create(
-            user_id=email,
-            password=make_password(password)
-        )
+        try:
+            # Create User with proper fields
+            user = User.objects.create(
+                username=email,  # Use email as username
+                custom_id=email,  # Use email as custom_id
+                first_name=first_name,
+                last_name=last_name,
+                email=email,
+                role=role,
+                is_active=True,
+                is_staff=True,
+                is_superuser=(role == 'super_admin')
+            )
+            user.set_password(password)  # Properly hash the password
+            user.save()
 
-        # 2. Create UserProfile
-        profile = UserProfile.objects.create(
-            user=user,
-            first_name=first_name,
-            middle_name=middle_name,
-            last_name=last_name,
-            email=email,
-            role=role,
-            last_active=now()
-        )
+            # Create UserProfile
+            profile = UserProfile.objects.create(
+                user=user,
+                first_name=first_name,
+                middle_name=middle_name,
+                last_name=last_name,
+                email=email,
+                role=role,
+                last_active=now()
+            )
 
-        messages.success(request, f"User {profile.custom_user_id} added successfully!")
-        return redirect("dashboardadminapp:users")
+            messages.success(request, f"User {user.custom_id} added successfully!")
+            return redirect("dashboardadminapp:users")
+        except Exception as e:
+            logger.error(f'Error creating user: {str(e)}')
+            logger.error(traceback.format_exc())
+            messages.error(request, "Error creating user. Please try again.")
+            return redirect("dashboardadminapp:add_user")
 
     return render(request, "dashboardadminapp/add_user.html")
 
