@@ -20,7 +20,7 @@
   <!-- Stats Cards -->
   <div class="users-stats-container">
     <div class="users-stat-card users-stat-card--admin">
-      <span class="users-stat-card__label">Most recently added User ID</span>
+      <span class="users-stat-card__label">Recently added User ID</span>
       <div class="users-stat-card__inner">
         <span class="users-stat-card__value">{{ latest_user_id }}</span>
       </div>
@@ -71,7 +71,17 @@
                 </span>
               </td>
               <td class="users-table__td">{{ user.last_updated|date:"m/d/y" }}</td>
-              <td class="users-table__td"><span class="settings-icon">⚙️</span></td>
+              <td class="users-table__td">
+                <div class="dropdown-container">
+                  <span class="settings-icon">⚙️</span>
+                  <div class="dropdown-menu">
+                    <a href="#" class="dropdown-item" data-action="edit">Edit</a>
+                    <a href="#" class="dropdown-item" data-action="archive">Archive</a>
+                    <a href="#" class="dropdown-item" data-action="disable">Disable</a>
+                    <a href="#" class="dropdown-item" data-action="delete">Delete</a>
+                  </div>
+                </div>
+              </td>
             </tr>
             {% endfor %}
           </tbody>
@@ -82,13 +92,24 @@
 
   <!-- Pagination -->
   <div class="users-pagination">
-    <button class="users-pagination__button users-pagination__button--prev">< Previous page</button>
-    <span class="users-pagination__page-number">1</span>
-    <button class="users-pagination__button users-pagination__button--next">Next page ></button>
+    {% if users.has_previous %}
+        <a href="?page={{ users.previous_page_number }}" class="users-pagination__button users-pagination__button--prev">< Previous page</a>
+    {% else %}
+        <button class="users-pagination__button users-pagination__button--prev" disabled>< Previous page</button>
+    {% endif %}
+
+    <span class="users-pagination__page-number">Page {{ users.number }} of {{ users.paginator.num_pages }}</span>
+
+    {% if users.has_next %}
+        <a href="?page={{ users.next_page_number }}" class="users-pagination__button users-pagination__button--next">Next page ></a>
+    {% else %}
+        <button class="users-pagination__button users-pagination__button--next" disabled>Next page ></button>
+    {% endif %}
   </div>
 </div>
 
 {% include 'dashboardadminapp/user_drawer.html' %}
+{% include 'dashboardadminapp/edit_user_drawer.html' %}
 
 <script>
   const addUserButton = document.getElementById('addUserButton');
@@ -117,6 +138,7 @@
 
   // Populate role options
   const roleOptions = [
+    { value: 'super_admin', label: 'Super Admin' },
     { value: 'admin', label: 'Admin' },
     { value: 'field_worker', label: 'Field Worker' }
   ];
@@ -132,12 +154,14 @@
     userDrawer.style.right = '0';
     drawerOverlay.style.display = 'block';
     hideValidationMessages();
+    closeAllDropdowns(); // Close any open dropdowns when a drawer is opened
   }
 
   function closeDrawer() {
     userDrawer.style.right = '-500px';
     drawerOverlay.style.display = 'none';
     createUserForm.reset();
+    hideDrawerAlerts();
   }
 
   function hideValidationMessages() {
@@ -146,7 +170,10 @@
     requiredLastNameText.style.display = 'none';
     requiredPasswordText.style.display = 'none';
     passwordMatchText.style.display = 'none';
+    // Existing drawerAlert is for create user form validation
+    if (drawerAlert) {
     drawerAlert.style.display = 'none';
+    }
   }
 
   function validateForm() {
@@ -181,7 +208,7 @@
     return isValid;
   }
 
-  // Event Listeners
+  // Event Listeners for Create User Drawer
   addUserButton.addEventListener('click', openDrawer);
   closeDrawerButton.addEventListener('click', closeDrawer);
   cancelDrawerButton.addEventListener('click', closeDrawer);
@@ -197,7 +224,6 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     `;
     
-    // Try to find a suitable container for the alert
     const container = document.querySelector('.content-wrapper') || 
                      document.querySelector('.container') || 
                      document.querySelector('main') || 
@@ -205,7 +231,6 @@
     
     container.insertBefore(alertDiv, container.firstChild);
     
-    // Auto-dismiss after 5 seconds
     setTimeout(() => {
         alertDiv.remove();
     }, 5000);
@@ -220,7 +245,6 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     `;
     
-    // Try to find a suitable container for the alert
     const container = document.querySelector('.content-wrapper') || 
                      document.querySelector('.container') || 
                      document.querySelector('main') || 
@@ -228,13 +252,12 @@
     
     container.insertBefore(alertDiv, container.firstChild);
     
-    // Auto-dismiss after 5 seconds
     setTimeout(() => {
         alertDiv.remove();
     }, 5000);
   }
 
-  // Update the form submission handler
+  // Update the form submission handler for Create User
   createUserForm.addEventListener('submit', async function(e) {
     e.preventDefault();
     console.log('Form submission started');
@@ -267,7 +290,6 @@
         
         console.log('Response status:', response.status);
         
-        // Handle redirects (302)
         if (response.redirected) {
             console.log('Redirected to:', response.url);
             window.location.href = response.url;
@@ -286,7 +308,6 @@
             const text = await response.text();
             console.error('Response text:', text);
             
-            // Check if the response is a login page
             if (text.includes('login') || text.includes('Login')) {
                 console.log('Session expired, redirecting to login');
                 window.location.href = '/accounts/login/';
@@ -301,7 +322,6 @@
         console.log('Response data:', result);
         
         if (result.status === 'success') {
-            // Add the new user to the table
             const userTable = document.getElementById('userTable');
             if (!userTable) {
                 console.error('User table not found');
@@ -338,12 +358,9 @@
             `;
             tbody.insertBefore(newRow, tbody.firstChild);
             
-            // Close the drawer and reset the form
             closeDrawer();
-            this.reset();
-            
-            // Show success message
-            showSuccess('User created successfully');
+            // Reload the page to ensure pagination is respected and new user is displayed correctly
+            window.location.reload();
         } else {
             showError(result.message || 'Failed to create user');
         }
@@ -375,17 +392,6 @@
     }
   }
 
-  // Search functionality
-  userSearch.addEventListener('input', function(e) {
-    const searchTerm = e.target.value.toLowerCase();
-    const rows = document.querySelectorAll('#usersTableBody tr');
-    
-    rows.forEach(row => {
-      const text = row.textContent.toLowerCase();
-      row.style.display = text.includes(searchTerm) ? '' : 'none';
-    });
-  });
-
   // CSRF token helper function
   function getCookie(name) {
     let cookieValue = null;
@@ -401,6 +407,238 @@
     }
     return cookieValue;
   }
+
+  // Function to close any open dropdowns
+  function closeAllDropdowns() {
+    document.querySelectorAll('.dropdown-menu').forEach(menu => {
+      menu.style.display = 'none';
+    });
+  }
+
+  // Click outside to close dropdowns
+  document.addEventListener('click', function(event) {
+    if (!event.target.closest('.dropdown-container') && !event.target.closest('.user-drawer')) {
+      closeAllDropdowns();
+    }
+  });
+
+  // Event listener for settings icon
+  document.querySelectorAll('.settings-icon').forEach(icon => {
+    icon.addEventListener('click', function(event) {
+      event.stopPropagation(); // Prevent document click from closing immediately
+      const dropdown = this.nextElementSibling; // Get the dropdown menu
+      
+      // Close other dropdowns
+      closeAllDropdowns();
+
+      // Toggle this dropdown
+      dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+    });
+  });
+
+  // ====== Edit User Drawer functionality ======
+  const editUserDrawer = document.getElementById('editUserDrawer');
+  const editDrawerOverlay = document.getElementById('editDrawerOverlay');
+  const closeEditDrawerButton = editUserDrawer.querySelector('.user-drawer__close-button');
+  const cancelEditDrawerButton = editUserDrawer.querySelector('.user-drawer__cancel-button');
+  const editUserForm = document.getElementById('editUserForm');
+
+  const editUserIdInput = document.getElementById('editUserId');
+  const editRoleInput = document.getElementById('editUserRole');
+  const editFirstNameInput = document.getElementById('editFirstName');
+  const editLastNameInput = document.getElementById('editLastName');
+  const editPasswordInput = document.getElementById('editPassword');
+  const editConfirmPasswordInput = document.getElementById('editConfirmPassword');
+
+  const editRequiredRoleText = editRoleInput.closest('.user-drawer__form-group').querySelector('.validation-text');
+  const editRequiredFirstNameText = editFirstNameInput.closest('.user-drawer__form-group').querySelector('.validation-text');
+  const editRequiredLastNameText = editLastNameInput.closest('.user-drawer__form-group').querySelector('.validation-text');
+  const editPasswordMatchText = editConfirmPasswordInput.closest('.user-drawer__form-group').querySelector('.validation-text');
+  // No required password text for edit, as it's optional
+
+  function openEditDrawer(userData) {
+    editUserDrawer.style.right = '0';
+    editDrawerOverlay.style.display = 'block';
+    hideEditValidationMessages();
+    closeAllDropdowns(); // Close any open dropdowns when a drawer is opened
+
+    // Populate form fields with user data
+    editUserIdInput.value = userData.custom_id;
+    editRoleInput.value = userData.role;
+    editFirstNameInput.value = userData.first_name;
+    editLastNameInput.value = userData.last_name;
+    // Clear password fields
+    editPasswordInput.value = '';
+    editConfirmPasswordInput.value = '';
+
+    // Populate role options for edit drawer
+    const editRoleOptions = [
+      { value: 'super_admin', label: 'Super Admin' },
+      { value: 'admin', label: 'Admin' },
+      { value: 'field_worker', label: 'Field Worker' }
+    ];
+
+    // Clear existing options first
+    editRoleInput.innerHTML = '<option value="">Select role</option>';
+    editRoleOptions.forEach(option => {
+      const optionElement = document.createElement('option');
+      optionElement.value = option.value;
+      optionElement.textContent = option.label;
+      editRoleInput.appendChild(optionElement);
+    });
+    editRoleInput.value = userData.role; // Set selected role
+  }
+
+  function closeEditDrawer() {
+    editUserDrawer.style.right = '-500px';
+    editDrawerOverlay.style.display = 'none';
+    editUserForm.reset();
+    hideEditValidationMessages();
+    hideDrawerAlerts(); // Hide alerts from both drawers
+  }
+
+  function hideEditValidationMessages() {
+    editRequiredRoleText.style.display = 'none';
+    editRequiredFirstNameText.style.display = 'none';
+    editRequiredLastNameText.style.display = 'none';
+    editPasswordMatchText.style.display = 'none';
+    document.getElementById('editDrawerErrorAlert').style.display = 'none';
+    document.getElementById('editDrawerSuccessAlert').style.display = 'none';
+  }
+
+  function validateEditForm() {
+    let isValid = true;
+    hideEditValidationMessages();
+
+    if (editRoleInput.value.trim() === '') {
+      editRequiredRoleText.style.display = 'inline';
+      isValid = false;
+    }
+
+    if (editFirstNameInput.value.trim() === '') {
+      editRequiredFirstNameText.style.display = 'inline';
+      isValid = false;
+    }
+
+    if (editLastNameInput.value.trim() === '') {
+      editRequiredLastNameText.style.display = 'inline';
+      isValid = false;
+    }
+
+    // Password fields are only required if they are filled
+    if (editPasswordInput.value.trim() !== '' || editConfirmPasswordInput.value.trim() !== '') {
+      if (editPasswordInput.value !== editConfirmPasswordInput.value) {
+        editPasswordMatchText.style.display = 'inline';
+        isValid = false;
+      }
+    }
+
+    return isValid;
+  }
+
+  // Event Listeners for Edit User Drawer
+  closeEditDrawerButton.addEventListener('click', closeEditDrawer);
+  cancelEditDrawerButton.addEventListener('click', closeEditDrawer);
+  editDrawerOverlay.addEventListener('click', closeEditDrawer);
+
+  // Event listener for edit dropdown item
+  document.querySelectorAll('.dropdown-item[data-action="edit"]').forEach(item => {
+    item.addEventListener('click', async function(event) {
+      event.preventDefault();
+      const userId = this.closest('tr').querySelector('.users-table__td').textContent.trim();
+      try {
+        const response = await fetch(`/dashboardadminapp/users/edit/${userId}/`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const userData = await response.json();
+        openEditDrawer(userData);
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        showError('Failed to load user data for editing.');
+      }
+    });
+  });
+
+  // Update the form submission handler for Edit User
+  editUserForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    console.log('Edit Form submission started');
+    
+    if (!validateEditForm()) {
+        console.log('Edit Form validation failed');
+        return;
+    }
+    console.log('Edit Form validation passed');
+    
+    const formData = new FormData(this);
+    const data = {};
+    formData.forEach((value, key) => {
+        data[key] = value;
+    });
+    console.log('Edit Form data:', {...data, password: '***'});
+    
+    try {
+        console.log('Sending update request to:', '/dashboardadminapp/users/update/');
+        const response = await fetch('/dashboardadminapp/users/update/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            credentials: 'same-origin'
+        });
+        
+        console.log('Update Response status:', response.status);
+        
+        if (response.redirected) {
+            console.log('Redirected to:', response.url);
+            window.location.href = response.url;
+            return;
+        }
+        
+        if (response.status === 401 || response.status === 403) {
+            console.log('Authentication error, redirecting to login');
+            window.location.href = '/accounts/login/';
+            return;
+        }
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            console.error('Expected JSON response but got:', contentType);
+            const text = await response.text();
+            console.error('Response text:', text);
+            
+            if (text.includes('login') || text.includes('Login')) {
+                console.log('Session expired, redirecting to login');
+                window.location.href = '/accounts/login/';
+                return;
+            }
+            
+            showDrawerError('Server returned an invalid response. Please try again.');
+            return;
+        }
+        
+        const result = await response.json();
+        console.log('Update Response data:', result);
+        
+        if (result.status === 'success') {
+            showDrawerSuccess('User updated successfully');
+            setTimeout(() => {
+                closeEditDrawer();
+                window.location.reload(); // Reload to reflect changes in table
+            }, 2000);
+        } else {
+            showDrawerError(result.message || 'Failed to update user');
+        }
+    } catch (error) {
+        console.error('Exception during user update:', error);
+        showDrawerError('An error occurred while updating the user. Please try again.');
+    }
+  });
+
 </script>
 
 {% endblock %}

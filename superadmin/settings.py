@@ -62,6 +62,7 @@ NPM_BIN_PATH = "C:/Program Files/nodejs/npm.cmd"
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -129,7 +130,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Manila'
 
 USE_I18N = True
 
@@ -160,7 +161,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Authentication settings
 LOGIN_URL = '/accounts/login/'
-LOGIN_REDIRECT_URL = '/dashboardadminapp/dashboard/'
+LOGIN_REDIRECT_URL = '/admindashboard/dashboard/'  # Default to admin dashboard
 LOGOUT_REDIRECT_URL = '/accounts/login/'
 
 # Custom user model
@@ -169,4 +170,40 @@ AUTH_USER_MODEL = 'dashboardadminapp.User'
 # Session settings
 SESSION_COOKIE_AGE = 3600  # 1 hour in seconds
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+
+# Logging configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'dashboardadminapp.views': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}
 

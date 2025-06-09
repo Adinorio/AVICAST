@@ -33,7 +33,7 @@ def login_view(request):
     logger.info(f'User authenticated: {request.user.is_authenticated}')
 
     # Get the next URL from the request
-    next_url = request.GET.get('next', 'dashboardadminapp:dashboard')
+    next_url = request.GET.get('next', 'admindashboard:dashboard')  # Default to admin dashboard
 
     # If user is already authenticated, redirect to appropriate dashboard
     if request.user.is_authenticated:
@@ -75,11 +75,8 @@ def login_view(request):
                         logger.info(f'User {new_user.username} logged in successfully')
                         logger.info(f'Session after login: {dict(request.session)}')
                         
-                        # Redirect based on role and next parameter
-                        if next_url:
-                            logger.info(f'Redirecting to next URL: {next_url}')
-                            return redirect(next_url)
-                        elif new_user.role == 'super_admin':
+                        # Redirect based on role
+                        if new_user.role == 'super_admin':
                             logger.info('User is super admin, redirecting to super admin dashboard')
                             return redirect('dashboardadminapp:dashboard')
                         else:
@@ -129,13 +126,9 @@ def login_view(request):
                             logger.info(f'User {new_user.username} logged in successfully')
                             logger.info(f'Session after login: {dict(request.session)}')
                             
-                            # Redirect based on next parameter
-                            if next_url:
-                                logger.info(f'Redirecting to next URL: {next_url}')
-                                return redirect(next_url)
-                            else:
-                                logger.info('User is from old model, redirecting to admin dashboard')
-                                return redirect('admindashboard:dashboard')
+                            # Redirect to admin dashboard for old model users
+                            logger.info('User is from old model, redirecting to admin dashboard')
+                            return redirect('admindashboard:dashboard')
                         except Exception as create_error:
                             logger.error(f'Error creating/updating user: {str(create_error)}')
                             logger.error(traceback.format_exc())

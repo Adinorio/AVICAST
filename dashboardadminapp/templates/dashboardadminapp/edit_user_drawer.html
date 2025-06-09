@@ -1,0 +1,70 @@
+<div id="editUserDrawer" class="user-drawer">
+  <div class="user-drawer__header">
+    <h2 class="user-drawer__title">Edit user</h2>
+    <button class="user-drawer__close-button">&times;</button>
+  </div>
+  <div class="user-drawer__body">
+    <form id="editUserForm" onsubmit="return false;">
+      {% csrf_token %}
+      <input type="hidden" id="editUserId" name="user_id">
+      <!-- Role Selection -->
+      <div class="user-drawer__form-group">
+        <label for="editUserRole">Role <span class="validation-text">(required)</span></label>
+        <select id="editUserRole" name="role" required>
+          <option value="">Select role</option>
+          <!-- Options will be populated dynamically -->
+        </select>
+      </div>
+
+      <!-- First Name -->
+      <div class="user-drawer__form-group">
+        <label for="editFirstName">First name <span class="validation-text">(required)</span></label>
+        <input type="text" id="editFirstName" name="firstName" placeholder="Required field" required>
+      </div>
+
+      <!-- Last Name -->
+      <div class="user-drawer__form-group">
+        <label for="editLastName">Last name <span class="validation-text">(required)</span></label>
+        <input type="text" id="editLastName" name="lastName" placeholder="Required field" required>
+      </div>
+
+      <!-- Password (optional for edit, only required if modified) -->
+      <div class="user-drawer__form-group">
+        <label for="editPassword">Password <span class="validation-text"></span></label>
+        <div class="password-input-container">
+          <input type="password" id="editPassword" name="password" placeholder="Leave blank to keep current password" autocomplete="new-password">
+          <span class="password-toggle-icon">👁️</span>
+        </div>
+      </div>
+
+      <!-- Confirm Password (optional for edit, only required if modified) -->
+      <div class="user-drawer__form-group">
+        <label for="editConfirmPassword">Confirm password <span class="validation-text"></span></label>
+        <div class="password-input-container">
+          <input type="password" id="editConfirmPassword" name="confirmPassword" placeholder="Repeat password" autocomplete="new-password">
+          <span class="password-toggle-icon">👁️</span>
+        </div>
+      </div>
+
+      <!-- Error Alert -->
+      <div id="editDrawerErrorAlert" class="user-drawer__alert user-drawer__alert--error" style="display: none;">
+        <span class="alert-icon">⚠️</span>
+        <span class="alert-text"></span>
+      </div>
+
+      <!-- Success Alert -->
+      <div id="editDrawerSuccessAlert" class="user-drawer__alert user-drawer__alert--success" style="display: none;">
+        <span class="alert-icon">✅</span>
+        <span class="alert-text"></span>
+      </div>
+
+      <!-- Buttons -->
+      <div class="user-drawer__buttons">
+        <button type="submit" id="updateAccountButton" class="user-drawer__create-account-button">Update account</button>
+        <button type="button" class="user-drawer__cancel-button">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="editDrawerOverlay" class="drawer-overlay"></div> 
