@@ -28,4 +28,5 @@ urlpatterns = [
     path('forgot-password/', views.forgot_password_request, name='forgot_password'),
     path('notifications/', views.notifications_view, name='notifications'),
     path('settings/', views.settings_view, name='settings'),
+    path('update_permission/', views.update_permission, name='update_permission'),
 ]

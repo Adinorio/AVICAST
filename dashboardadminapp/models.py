@@ -111,4 +111,30 @@ def generate_user_id():
         n = 1
     return f"25-2409-{n:03d}"
 
+# Add new model for Permission Settings
+class PermissionSetting(models.Model):
+    # Role to which this permission applies
+    role = models.CharField(max_length=20, choices=User.USER_ROLES, unique=True)
+
+    # Accessibility permissions
+    view_report_management = models.BooleanField(default=True)
+    view_species_management = models.BooleanField(default=True)
+    view_site_management = models.BooleanField(default=True)
+    view_bird_census_management = models.BooleanField(default=True)
+    view_image_processing = models.BooleanField(default=True)
+
+    # Option permissions
+    generate_reports = models.BooleanField(default=True)
+    modify_data = models.BooleanField(default=True)
+    add_sites = models.BooleanField(default=True)
+    add_birds = models.BooleanField(default=True)
+    generate_data = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"Permissions for {self.role}"
+
+    class Meta:
+        verbose_name = "Permission Setting"
+        verbose_name_plural = "Permission Settings"
+
 

@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import logout
 from django.utils.timezone import now
-from .models import Log, UserProfile, User
+from .models import Log, UserProfile, User, PermissionSetting
 from django.urls import reverse
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -19,6 +19,7 @@ from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import ensure_csrf_cookie
 import traceback
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.db import models
 
 logger = logging.getLogger(__name__)
 
@@ -376,13 +377,33 @@ def disable_user(request, user_id):
 # Roles page
 @check_auth
 def roles_view(request):
-    profiles = UserProfile.objects.all()
-    users_count = profiles.count()
-    return render(request, 'dashboardadminapp/roles.html', {
-        "users": profiles,
-        "today": datetime.now(),
-        "users_count": users_count,
-    })
+    # Get permission settings for admin and field worker
+    admin_permissions_obj = PermissionSetting.objects.get_or_create(role='admin')[0]
+    field_worker_permissions_obj = PermissionSetting.objects.get_or_create(role='field_worker')[0]
+
+    # Convert permission objects to dictionaries for JSON serialization
+    admin_permissions = {
+        field.name: getattr(admin_permissions_obj, field.name) 
+        for field in admin_permissions_obj._meta.fields 
+        if isinstance(field, models.BooleanField)
+    }
+    field_worker_permissions = {
+        field.name: getattr(field_worker_permissions_obj, field.name) 
+        for field in field_worker_permissions_obj._meta.fields 
+        if isinstance(field, models.BooleanField)
+    }
+
+    # Get counts of users per role
+    num_admins = User.objects.filter(role='admin').count()
+    num_field_workers = User.objects.filter(role='field_worker').count()
+
+    context = {
+        'admin_permissions': admin_permissions,
+        'field_worker_permissions': field_worker_permissions,
+        'num_admins': num_admins,
+        'num_field_workers': num_field_workers,
+    }
+    return render(request, 'dashboardadminapp/roles.html', context)
 
 # Assign roles (AJAX)
 @check_auth
@@ -396,6 +417,48 @@ def assign_roles(request):
             return JsonResponse({"success":True})
         return JsonResponse({"success":False,"error":"No role specified"})
     return JsonResponse({"success":False,"error":"Invalid method"})
+
+# Update individual permission (AJAX)
+@csrf_exempt
+@check_auth
+def update_permission(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            role = data.get('role')
+            permission_key = data.get('permission_key')
+            is_checked = data.get('is_checked')
+
+            logger.info(f"Received update request: Role={role}, Key={permission_key}, Checked={is_checked}, Type of is_checked={type(is_checked)}")
+
+            if not all([role, permission_key is not None, is_checked is not None]):
+                logger.warning("Missing data in update_permission request.")
+                return JsonResponse({'status': 'error', 'message': 'Missing data'}, status=400)
+
+            # Ensure the role is valid and the permission key exists in the model
+            if role not in ['admin', 'field_worker'] or not hasattr(PermissionSetting, permission_key):
+                logger.warning(f"Invalid role ({role}) or permission key ({permission_key}).")
+                return JsonResponse({'status': 'error', 'message': 'Invalid role or permission key'}, status=400)
+
+            permission_setting = PermissionSetting.objects.get(role=role)
+            setattr(permission_setting, permission_key, bool(is_checked)) # Ensure boolean conversion
+            permission_setting.save()
+
+            logger.info(f"Permission updated: Role='{role}', Key='{permission_key}', Value='{is_checked}'")
+            return JsonResponse({'status': 'success', 'message': 'Permission updated successfully'})
+
+        except PermissionSetting.DoesNotExist:
+            logger.error(f"Permission setting for role '{role}' not found.")
+            return JsonResponse({'status': 'error', 'message': f'Permission setting for role {role} not found'}, status=404)
+        except json.JSONDecodeError:
+            logger.error("Invalid JSON in request body.")
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            logger.error(f"Error updating permission: {str(e)}")
+            logger.error(traceback.format_exc())
+            return JsonResponse({'status': 'error', 'message': f'An error occurred: {str(e)}'},
+                                status=500)
+    return HttpResponseNotAllowed(['POST'])
 
 # Logs page
 @check_auth

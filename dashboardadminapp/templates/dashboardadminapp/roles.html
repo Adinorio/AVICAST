@@ -22,15 +22,13 @@
     <div class="stat-card stat-card--admin">
       <span class="stat-card__label">No. of admins</span>
       <div class="stat-card__inner">
-        <span class="stat-card__value">0</span>
-        <!-- TODO: replace with {{ total_roles }} -->
+        <span class="stat-card__value">{{ num_admins }}</span>
       </div>
     </div>
     <div class="stat-card stat-card--field">
       <span class="stat-card__label">No. of field workers</span>
       <div class="stat-card__inner">
-        <span class="stat-card__value">0</span>
-        <!-- TODO: replace with {{ total_permissions }} -->
+        <span class="stat-card__value">{{ num_field_workers }}</span>
       </div>
     </div>
   </div>
@@ -40,8 +38,8 @@
     <div class="roles-table__header">
       <h2 class="roles-table__title">Permissions</h2>
       <div class="roles-table__filter-buttons">
-        <span class="roles-table__filter-btn roles-table__filter-btn--admin">Admin</span>
-        <span class="roles-table__filter-btn roles-table__filter-btn--field">Field worker</span>
+        <span class="roles-table__filter-btn roles-table__filter-btn--admin active-role-tab" data-role="admin">Admin</span>
+        <span class="roles-table__filter-btn roles-table__filter-btn--field" data-role="field_worker">Field worker</span>
       </div>
     </div>
     <div class="roles-table__table-container">
@@ -53,113 +51,213 @@
               <th class="roles-table__th">Options </th>
             </tr>
           </thead>
-          <tbody>
-            <tr>
-              <td class="roles-table__td">
-                <div class="roles-flex-row">
-                  <span>1. View report management</span>
-                  <label class="switch">
-                    <input type="checkbox" checked>
-                    <span class="slider round"></span>
-                  </label>
-                </div>
-              </td>
-              <td class="roles-table__td">
-                <div class="roles-flex-row">
-                  <span>1.1 Generate reports</span>
-                  <label class="switch">
-                    <input type="checkbox" checked>
-                    <span class="slider round"></span>
-                  </label>
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <td class="roles-table__td">
-                <div class="roles-flex-row">
-                  <span>2. View species management</span>
-                  <label class="switch">
-                    <input type="checkbox" checked>
-                    <span class="slider round"></span>
-                  </label>
-                </div>
-              </td>
-              <td class="roles-table__td">
-                <div class="roles-flex-row">
-                  <span>2.1 Modify data</span>
-                  <label class="switch">
-                    <input type="checkbox" checked>
-                    <span class="slider round"></span>
-                  </label>
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <td class="roles-table__td">
-                <div class="roles-flex-row">
-                  <span>3. View site management</span>
-                  <label class="switch">
-                    <input type="checkbox" checked>
-                    <span class="slider round"></span>
-                  </label>
-                </div>
-              </td>
-              <td class="roles-table__td">
-                <div class="roles-flex-row">
-                  <span>3.1 Add sites</span>
-                  <label class="switch">
-                    <input type="checkbox" checked>
-                    <span class="slider round"></span>
-                  </label>
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <td class="roles-table__td">
-                <div class="roles-flex-row">
-                  <span>4. View bird census management</span>
-                  <label class="switch">
-                    <input type="checkbox" checked>
-                    <span class="slider round"></span>
-                  </label>
-                </div>
-              </td>
-              <td class="roles-table__td">
-                <div class="roles-flex-row">
-                  <span>4.1 Add birds</span>
-                  <label class="switch">
-                    <input type="checkbox" checked>
-                    <span class="slider round"></span>
-                  </label>
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <td class="roles-table__td">
-                <div class="roles-flex-row">
-                  <span>5. View image processing</span>
-                  <label class="switch">
-                    <input type="checkbox" checked>
-                    <span class="slider round"></span>
-                  </label>
-                </div>
-              </td>
-              <td class="roles-table__td">
-                <div class="roles-flex-row">
-                  <span>5.1 Generate data</span>
-                  <label class="switch">
-                    <input type="checkbox" checked>
-                    <span class="slider round"></span>
-                  </label>
-                </div>
-              </td>
-            </tr>
+          <tbody id="permissionsTableBody">
+            <!-- Permissions will be dynamically loaded here by JavaScript -->
           </tbody>
         </table>
       </div>
     </div>
   </section>
 </div>
+
+{{ admin_permissions|json_script:"admin_permissions_data" }}
+{{ field_worker_permissions|json_script:"field_worker_permissions_data" }}
+
+<script>
+  const adminTab = document.querySelector('[data-role="admin"]');
+  const fieldWorkerTab = document.querySelector('[data-role="field_worker"]');
+  const permissionsTableBody = document.getElementById('permissionsTableBody');
+
+  // Retrieve data safely using json_script
+  const adminPermissions = JSON.parse(document.getElementById('admin_permissions_data').textContent);
+  const fieldWorkerPermissions = JSON.parse(document.getElementById('field_worker_permissions_data').textContent);
+
+  console.log('Admin Permissions:', adminPermissions);
+  console.log('Field Worker Permissions:', fieldWorkerPermissions);
+
+  const permissionLabels = {
+    view_report_management: '1. View report management',
+    generate_reports: '1.1 Generate reports',
+    view_species_management: '2. View species management',
+    modify_data: '2.1 Modify data',
+    view_site_management: '3. View site management',
+    add_sites: '3.1 Add sites',
+    view_bird_census_management: '4. View bird census management',
+    add_birds: '4.1 Add birds',
+    view_image_processing: '5. View image processing',
+    generate_data: '5.1 Generate data',
+  };
+
+  function renderPermissions(role) {
+    permissionsTableBody.innerHTML = '';
+    const permissions = role === 'admin' ? adminPermissions : fieldWorkerPermissions;
+    
+    const permissionOrder = [
+        'view_report_management', 'generate_reports',
+        'view_species_management', 'modify_data',
+        'view_site_management', 'add_sites',
+        'view_bird_census_management', 'add_birds',
+        'view_image_processing', 'generate_data',
+    ];
+
+    // Create rows, pairing accessibility and option permissions
+    for (let i = 0; i < permissionOrder.length; i += 2) {
+      const accessibilityKey = permissionOrder[i];
+      const optionKey = permissionOrder[i + 1];
+
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td class="roles-table__td">
+          <div class="roles-flex-row">
+            <span>${permissionLabels[accessibilityKey]}</span>
+            <label class="switch">
+              <input type="checkbox" data-permission-key="${accessibilityKey}" ${permissions[accessibilityKey] ? 'checked' : ''}>
+              <span class="slider round"></span>
+            </label>
+          </div>
+        </td>
+        <td class="roles-table__td">
+          <div class="roles-flex-row">
+            <span>${permissionLabels[optionKey]}</span>
+            <label class="switch">
+              <input type="checkbox" data-permission-key="${optionKey}" ${permissions[optionKey] ? 'checked' : ''}>
+              <span class="slider round"></span>
+            </label>
+          </div>
+        </td>
+      `;
+      permissionsTableBody.appendChild(row);
+    }
+
+    // Add event listeners to new checkboxes
+    permissionsTableBody.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const permissionKey = this.dataset.permissionKey;
+            const isChecked = this.checked;
+            // Call function to update backend
+            updatePermission(role, permissionKey, isChecked);
+        });
+    });
+  }
+
+  function updatePermission(role, permissionKey, isChecked) {
+      // Implement AJAX call to update the backend
+      console.log(`Updating ${role} permission: ${permissionKey} to ${isChecked}`);
+      // Example fetch call (you'll need to define this endpoint in urls.py and views.py)
+      fetch('/dashboardadminapp/update_permission/', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': getCookie('csrftoken'),
+          },
+          body: JSON.stringify({
+              role: role,
+              permission_key: permissionKey,
+              is_checked: isChecked
+          })
+      })
+      .then(response => response.json())
+      .then(data => {
+          if (data.status === 'success') {
+              console.log('Permission updated successfully!');
+              showSuccess('Permission updated successfully!');
+              
+              // Update the local JavaScript permission object
+              if (role === 'admin') {
+                  adminPermissions[permissionKey] = isChecked;
+              } else if (role === 'field_worker') {
+                  fieldWorkerPermissions[permissionKey] = isChecked;
+              }
+              // Re-render the current permissions to reflect the change
+              renderPermissions(role);
+
+          } else {
+              console.error('Error updating permission:', data.message);
+              showError(data.message || 'Failed to update permission.');
+          }
+      })
+      .catch(error => {
+          console.error('Fetch error:', error);
+          showError('An error occurred while updating permission.');
+      });
+  }
+
+  // CSRF token helper function
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  // Event Listeners for Tab Switching
+  adminTab.addEventListener('click', () => {
+    adminTab.classList.add('active-role-tab');
+    fieldWorkerTab.classList.remove('active-role-tab');
+    renderPermissions('admin');
+  });
+
+  fieldWorkerTab.addEventListener('click', () => {
+    fieldWorkerTab.classList.add('active-role-tab');
+    adminTab.classList.remove('active-role-tab');
+    renderPermissions('field_worker');
+  });
+
+  // Initial render on page load
+  renderPermissions('admin'); // Default to Admin tab
+
+  // Add these utility functions for displaying alerts
+  function showError(message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+    alertDiv.role = 'alert';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    const container = document.querySelector('.content-wrapper') || 
+                     document.querySelector('.container') || 
+                     document.querySelector('main') || 
+                     document.body;
+    
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
+  }
+
+  function showSuccess(message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-success alert-dismissible fade show';
+    alertDiv.role = 'alert';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    const container = document.querySelector('.content-wrapper') || 
+                     document.querySelector('.container') || 
+                     document.querySelector('main') || 
+                     document.body;
+    
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
+  }
+</script>
+
 <!-- Toggle Switch CSS -->
 <style>
 .switch {
@@ -174,7 +272,7 @@
   position: absolute;
   cursor: pointer;
   top: 0; left: 0; right: 0; bottom: 0;
-  background-color: #444;
+  background-color: #A0A0A0; /* Greyish color when unchecked */
   transition: .4s;
   border-radius: 24px;
 }
@@ -190,7 +288,7 @@
   border-radius: 50%;
 }
 input:checked + .slider {
-  background-color: #00c853;
+  background-color: #778899; /* LightSlateGray - a darker blue-grey for 'on' state */
 }
 input:checked + .slider:before {
   transform: translateX(16px);

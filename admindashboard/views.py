@@ -31,6 +31,7 @@ from datetime import timedelta
 from django.conf import settings
 import pandas as pd
 from datetime import datetime
+from .decorators import permission_required # Import the custom decorator
 
 # Get the base directory of the project
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -140,6 +141,7 @@ def logout_view(request):
     logout(request)
     return redirect('superadminloginapp:login')
 
+@permission_required('view_image_processing')
 def bird_identification_view(request):
     """Bird identification view (legacy name)"""
     return render(request, 'admindashboard/bird_identification.html', {"model_in_use": model_in_use, "model_load_error": model_load_error})
@@ -148,6 +150,7 @@ def identify_bird(request):
     """Bird identification view (new name)"""
     return render(request, 'admindashboard/bird_identification.html')
 
+@permission_required('generate_data')
 @csrf_exempt
 def process_bird_image(request):
     print("Starting image processing...")  # Debug log
@@ -212,6 +215,7 @@ def process_bird_image(request):
     print("Invalid request received")  # Debug log
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
+@permission_required('view_species_management')
 def bird_list(request):
     """Main view for displaying bird families and species"""
     # Ensure specified bird families exist
@@ -237,6 +241,7 @@ def bird_list(request):
     }
     return render(request, 'admindashboard/bird_list.html', context)
 
+@permission_required('modify_data')
 @require_POST
 def add_family(request):
     """Add a new bird family"""
@@ -250,6 +255,7 @@ def add_family(request):
         messages.error(request, 'Error adding family. Please check the form.')
     return redirect('admindashboard:bird_list')
 
+@permission_required('modify_data')
 @require_POST
 @csrf_exempt
 def add_species_view(request):
@@ -272,6 +278,7 @@ def add_species_view(request):
     print("add_species_view: Invalid request method.") # Debug log
     return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=405)
 
+@permission_required('modify_data')
 @require_POST
 @csrf_exempt
 def edit_species_view(request, species_id):
@@ -419,6 +426,7 @@ def help_view(request):
     """Help page view"""
     return render(request, "admindashboard/help.html")
 
+@permission_required('view_site_management')
 def site_list(request):
     """View for displaying all sites and their details."""
     sites = Site.objects.all().order_by('name')
@@ -428,6 +436,7 @@ def site_list(request):
     }
     return render(request, 'admindashboard/site.html', context)
 
+@permission_required('view_site_management')
 def site_detail(request, site_id):
     """View for displaying detailed bird census data for a specific site and year."""
     site = get_object_or_404(Site, id=site_id)
@@ -458,6 +467,7 @@ def site_detail(request, site_id):
     }
     return render(request, 'admindashboard/site_detail.html', context)
 
+@permission_required('add_sites')
 def add_site(request):
     """Add a new site"""
     print("Received request to add site.") # Debugging log
@@ -598,6 +608,7 @@ def get_site_analysis():
         'species_per_site': list(species_per_site)
     }
 
+@permission_required('view_report_management')
 def report_view(request):
     """View for the statistical reports page"""
     report_type = request.GET.get('type')
@@ -620,7 +631,9 @@ def report_view(request):
     # Regular page load - render the template
     context = {
         'page_title': 'Statistical Reports',
-        'active_page': 'reports'
+        'active_page': 'reports',
+        'access_denied': getattr(request, 'access_denied', False),
+        'denied_feature_name': getattr(request, 'denied_feature_name', ''),
     }
     return render(request, 'admindashboard/report.html', context)
 
@@ -708,6 +721,7 @@ def check_species_dependencies(request, species_id):
         'can_delete': len(dependencies) == 0
     })
 
+@permission_required('modify_data')
 @csrf_exempt
 @require_POST
 def delete_species(request, species_id):

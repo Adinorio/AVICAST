@@ -60,6 +60,8 @@
         </section>
     </div>
 
+    {% include 'admindashboard/access_denied_overlay.html' %}
+
     <script>
         // Sidebar toggle functionality
         function toggleSidebar() {
@@ -126,6 +128,72 @@
                 window.location.href = "{% url 'admindashboard:logout' %}";
             }
         }
+
+        // Access Denied Overlay Logic
+        document.addEventListener('DOMContentLoaded', function() {
+            const accessDeniedOverlay = document.getElementById('accessDeniedOverlay');
+            const deniedFeatureNameSpan = document.getElementById('deniedFeatureName');
+            const closeButton = accessDeniedOverlay.querySelector('.close-button');
+            const understoodButton = accessDeniedOverlay.querySelector('.understood-button');
+            const countdownElement = document.getElementById('countdown');
+
+            // Django will pass these variables if access is denied
+            const accessDenied = {{ access_denied|yesno:"true,false" }};
+            const deniedFeatureName = "{{ denied_feature_name|escapejs }}";
+
+            // Normalize paths for consistent comparison
+            const currentPath = window.location.pathname.replace(/\/$/, ''); // Remove trailing slash
+            const dashboardPath = "{% url 'admindashboard:dashboard' %}".replace(/\/$/, ''); // Remove trailing slash
+
+            let countdownInterval;
+
+            function redirectToDashboard() {
+                // Only redirect if we're not already on the dashboard
+                if (currentPath !== dashboardPath) {
+                    window.location.href = dashboardPath;
+                }
+            }
+
+            function startCountdown() {
+                let timeLeft = 10;
+                countdownElement.textContent = timeLeft;
+
+                countdownInterval = setInterval(() => {
+                    timeLeft--;
+                    countdownElement.textContent = timeLeft;
+                    
+                    if (timeLeft <= 0) {
+                        clearInterval(countdownInterval);
+                        hideOverlay();
+                    }
+                }, 1000);
+            }
+
+            if (accessDenied) {
+                deniedFeatureNameSpan.textContent = deniedFeatureName;
+                accessDeniedOverlay.classList.add('show');
+                startCountdown();
+
+                function hideOverlay() {
+                    clearInterval(countdownInterval);
+                    redirectToDashboard(); // Redirect immediately
+                    accessDeniedOverlay.classList.remove('show');
+                    setTimeout(() => {
+                        accessDeniedOverlay.style.display = 'none';
+                    }, 300); // Wait for transition to finish
+                }
+
+                closeButton.addEventListener('click', hideOverlay);
+                understoodButton.addEventListener('click', hideOverlay);
+
+                // Close when clicking outside the overlay content
+                accessDeniedOverlay.addEventListener('click', function(event) {
+                    if (event.target === accessDeniedOverlay) {
+                        hideOverlay();
+                    }
+                });
+            }
+        });
     </script>
     {% block extra_js %}{% endblock %}
 </body>
