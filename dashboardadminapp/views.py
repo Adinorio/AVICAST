@@ -270,6 +270,18 @@ def create_user(request):
                     'message': 'All fields are required'
                 }, status=400)
 
+            # Check for existing user with same name
+            existing_user = User.objects.filter(
+                first_name__iexact=first_name,
+                last_name__iexact=last_name
+            ).first()
+
+            if existing_user:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'A user with the name {first_name} {last_name} already exists'
+                }, status=400)
+
             # Get the latest user ID and increment
             latest_user = User.objects.order_by('-custom_id').first()
             if latest_user and latest_user.custom_id:

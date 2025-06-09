@@ -45,9 +45,16 @@
         </div>
       </div>
 
-      <div class="user-drawer__alert">
+      <!-- Error Alert -->
+      <div id="drawerErrorAlert" class="user-drawer__alert user-drawer__alert--error" style="display: none;">
         <span class="alert-icon">⚠️</span>
-        <span class="alert-text">Check required fields before proceeding.</span>
+        <span class="alert-text"></span>
+      </div>
+
+      <!-- Success Alert -->
+      <div id="drawerSuccessAlert" class="user-drawer__alert user-drawer__alert--success" style="display: none;">
+        <span class="alert-icon">✅</span>
+        <span class="alert-text"></span>
       </div>
 
       <!-- Buttons -->
@@ -59,4 +66,107 @@
   </div>
 </div>
 
-<div id="drawerOverlay" class="drawer-overlay"></div> 
+<div id="drawerOverlay" class="drawer-overlay"></div>
+
+<style>
+.user-drawer__alert {
+  padding: 12px;
+  border-radius: 4px;
+  margin: 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-drawer__alert--error {
+  background-color: #495057;
+  border: 1px solid #343a40;
+  color: #E06666;
+}
+
+.user-drawer__alert--success {
+  background-color: #495057;
+  border: 1px solid #343a40;
+  color: #FFFFFF;
+}
+
+.alert-icon {
+  font-size: 1.2em;
+  color: #FFD700;
+}
+
+.alert-text {
+  font-size: 0.9em;
+  font-weight: 500;
+  color: inherit;
+}
+</style>
+
+<script>
+function showDrawerError(message) {
+  const errorAlert = document.getElementById('drawerErrorAlert');
+  const successAlert = document.getElementById('drawerSuccessAlert');
+  
+  errorAlert.querySelector('.alert-text').textContent = message;
+  errorAlert.style.display = 'flex';
+  successAlert.style.display = 'none';
+}
+
+function showDrawerSuccess(message) {
+  const errorAlert = document.getElementById('drawerErrorAlert');
+  const successAlert = document.getElementById('drawerSuccessAlert');
+  
+  successAlert.querySelector('.alert-text').textContent = message;
+  successAlert.style.display = 'flex';
+  errorAlert.style.display = 'none';
+}
+
+function hideDrawerAlerts() {
+  const errorAlert = document.getElementById('drawerErrorAlert');
+  const successAlert = document.getElementById('drawerSuccessAlert');
+  
+  errorAlert.style.display = 'none';
+  successAlert.style.display = 'none';
+}
+
+// Update the form submission handler
+document.getElementById('createUserForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  hideDrawerAlerts();
+  
+  if (!validateForm()) {
+    return;
+  }
+  
+  const formData = new FormData(this);
+  
+  try {
+    const response = await fetch('/dashboardadminapp/users/create/', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        'X-Requested-With': 'XMLHttpRequest',
+        'Accept': 'application/json'
+      },
+      credentials: 'same-origin'
+    });
+    
+    const result = await response.json();
+    
+    if (result.status === 'success') {
+      showDrawerSuccess('User created successfully');
+      // Close drawer after 2 seconds
+      setTimeout(() => {
+        closeDrawer();
+        // Refresh the page to show new user
+        window.location.reload();
+      }, 2000);
+    } else {
+      showDrawerError(result.message || 'Failed to create user');
+    }
+  } catch (error) {
+    showDrawerError('An error occurred while creating the user. Please try again.');
+  }
+});
+</script> 
