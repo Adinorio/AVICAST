@@ -11,6 +11,20 @@ A Django-based web application for bird identification and management, featuring
 - RESTful API endpoints
 - Responsive web interface
 
+## Login tutorial
+
+- **User ID:**
+```python
+010101
+```
+- **Password:**
+```python
+010101
+```
+
+1. **Login** using the super admin account stated above to access the user management system, and then create a new user in the user management tab.
+2. **Use** the ID and password of your new user as **Admin** or **Field worker** to access the main website.
+
 ## Quick Setup Guide
 
 1. **Clone the repository:**
