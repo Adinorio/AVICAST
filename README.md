@@ -11,11 +11,62 @@ A Django-based web application for bird identification and management, featuring
 - RESTful API endpoints
 - Responsive web interface
 
-## Setup Instructions
+## Quick Setup Guide
+
+1. **Clone the repository:**
+```bash
+git clone <repository-url>
+cd Web-Development
+```
+
+2. **Install MariaDB:**
+   - Download and install MariaDB from [MariaDB Downloads](https://mariadb.org/download/)
+   - During installation:
+     - Set root password as: `root`
+     - Set port as: `3306`
+   - Create a new database named `avicast`
+
+3. **Configure Database Settings:**
+   - The database settings are already configured in the project:
+```python
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'admin5.0_db',
+        'USER': 'root',
+        'PASSWORD': 'root',
+        'HOST': '127.0.0.1',
+        'PORT': '3306',
+    }
+}
+```
+
+4. **Download Required Files:**
+   - Download files from the Google Drive link
+   - Paste all downloaded files into the cloned repository folder
+
+5. **Run Setup:**
+```bash
+python setup
+```
+
+6. **Start the Application:**
+```bash
+python run
+```
+
+If you encounter any issues:
+- Check MariaDB configuration (password, port, database name)
+- If database migrations are needed, run:
+```bash
+python migrate
+```
+
+## Detailed Setup Instructions
 
 ### Prerequisites
 - Python 3.11.6
-- MySQL/MariaDB
+- MariaDB
 - Git
 - CUDA-capable GPU (recommended for model training)
 
@@ -115,16 +166,18 @@ Web-Development/
 
 If you encounter any issues:
 
-1. Model Loading Issues:
+1. Database Issues:
+   - Verify MariaDB is running
+   - Check database connection settings
+   - Ensure database `avicast` exists
+   - Verify root password is set to `root`
+   - Confirm port is set to `3306`
+
+2. Model Loading Issues:
    - Ensure PyTorch and CUDA are properly installed
    - Check if model files exist in correct locations
    - Verify model file permissions
    - https://drive.google.com/drive/folders/1xgaO4Ntb0zNHbXZdZwKgza9AL0xpnjVq?usp=drive_link
-
-2. Database Issues:
-   - Check database connection settings in `.env`
-   - Ensure MySQL service is running
-   - Verify database user permissions
 
 3. General Issues:
    - Check if all required packages are installed
