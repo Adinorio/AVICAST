@@ -19,7 +19,7 @@ A Django-based web application for bird identification and management, featuring
 ```
 - **Password:**
 ```python
-010101
+Avicast123
 ```
 
 1. **Login** using the super admin account stated above to access the user management system, and then create a new user in the user management tab.
