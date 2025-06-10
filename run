@@ -1,0 +1,27 @@
+import os
+import webbrowser
+import subprocess
+import sys
+import time
+
+print("Starting server...")
+python_exe = sys.executable
+
+# Start the server process
+process = subprocess.Popen([python_exe, "manage.py", "runserver"])
+
+# Wait a moment for the server to start
+time.sleep(2)
+
+# Open the browser
+print("Opening browser...")
+webbrowser.open("http://127.0.0.1:8000/accounts/login/")
+
+try:
+    # Wait for the process to complete
+    process.wait()
+except KeyboardInterrupt:
+    print("\nShutting down server...")
+    process.terminate()
+    process.wait()
+    print("Server stopped.") 

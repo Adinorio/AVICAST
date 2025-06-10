@@ -1,0 +1,55 @@
+import os
+import subprocess
+import sys
+import time
+import pkg_resources
+
+def run_command(command, description):
+    print(f"\n{description}...")
+    result = subprocess.run(command, shell=True)
+    if result.returncode != 0:
+        print(f"Error: {description} failed!")
+        sys.exit(1)
+    print(f"{description} completed successfully!")
+
+def check_python_version():
+    print("Checking Python version compatibility...")
+    current_version = sys.version_info
+    print(f"Current Python version: {current_version.major}.{current_version.minor}.{current_version.micro}")
+    
+    # Django 5.2.1 requires Python 3.10 or higher
+    if current_version.major < 3 or (current_version.major == 3 and current_version.minor < 10):
+        print("Error: This project requires Python 3.10 or higher!")
+        print("Please install a compatible Python version.")
+        sys.exit(1)
+    
+    print("Python version is compatible!")
+
+# Check Python version first
+check_python_version()
+
+# Check if virtual environment already exists
+venv_path = "AVICAST_WEB_311"
+if os.path.exists(venv_path):
+    print(f"Error: Virtual environment '{venv_path}' already exists!")
+    print("Please delete the existing virtual environment first if you want to create a new one.")
+    sys.exit(1)
+
+# Create virtual environment
+run_command("python -m venv AVICAST_WEB_311", "Creating virtual environment")
+
+# Activate virtual environment and install requirements
+if os.name == 'nt':  # Windows
+    activate_cmd = "AVICAST_WEB_311\\Scripts\\activate.bat"
+else:  # Unix/Linux/Mac
+    activate_cmd = "source AVICAST_WEB_311/bin/activate"
+
+# Install requirements
+run_command(f"{activate_cmd} && pip install -r requirements-base.txt", "Installing requirements")
+
+# Run migrations
+run_command(f"{activate_cmd} && python manage.py makemigrations", "Creating migrations")
+run_command(f"{activate_cmd} && python manage.py migrate", "Applying migrations")
+
+print("\nSetup completed successfully!")
+print("\nYou can now run the server using: python run") 

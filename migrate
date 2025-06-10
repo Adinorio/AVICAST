@@ -1,0 +1,23 @@
+import os
+import subprocess
+import sys
+
+def run_command(command, description):
+    print(f"\n{description}...")
+    result = subprocess.run(command, shell=True)
+    if result.returncode != 0:
+        print(f"Error: {description} failed!")
+        sys.exit(1)
+    print(f"{description} completed successfully!")
+
+# Activate virtual environment and run migrations
+if os.name == 'nt':  # Windows
+    activate_cmd = "AVICAST_WEB_311\\Scripts\\activate.bat"
+else:  # Unix/Linux/Mac
+    activate_cmd = "source AVICAST_WEB_311/bin/activate"
+
+# Run both migration commands
+run_command(f"{activate_cmd} && python manage.py makemigrations", "Creating migrations")
+run_command(f"{activate_cmd} && python manage.py migrate", "Applying migrations")
+
+print("\nAll migrations completed successfully!") 
