@@ -2,7 +2,6 @@ import os
 import subprocess
 import sys
 import time
-import pkg_resources
 
 def run_command(command, description):
     print(f"\n{description}...")
@@ -12,21 +11,72 @@ def run_command(command, description):
         sys.exit(1)
     print(f"{description} completed successfully!")
 
+def find_python311():
+    """Try to find Python 3.11.6 in common locations"""
+    if os.name == 'nt':  # Windows
+        possible_paths = [
+            r"C:\Python311\python.exe",
+            r"C:\Users\%USERNAME%\AppData\Local\Programs\Python\Python311\python.exe",
+            r"C:\Program Files\Python311\python.exe",
+            r"C:\Program Files (x86)\Python311\python.exe",
+            r"C:\Users\SPINEL\AppData\Local\Programs\Python\Python311\python.exe"  # Added your specific path
+        ]
+        
+        # Also check PATH
+        try:
+            result = subprocess.run(['where', 'python'], capture_output=True, text=True)
+            if result.returncode == 0:
+                for path in result.stdout.splitlines():
+                    if 'Python311' in path:
+                        return path
+        except:
+            pass
+    else:  # Unix/Linux/Mac
+        possible_paths = [
+            "/usr/local/bin/python3.11",
+            "/usr/bin/python3.11",
+            "/opt/python3.11/bin/python3.11"
+        ]
+    
+    for path in possible_paths:
+        if os.path.exists(path):
+            # Verify it's Python 3.11.6
+            try:
+                result = subprocess.run([path, '--version'], capture_output=True, text=True)
+                if '3.11.6' in result.stdout:
+                    return path
+            except:
+                continue
+    
+    return None
+
 def check_python_version():
     print("Checking Python version compatibility...")
     current_version = sys.version_info
     print(f"Current Python version: {current_version.major}.{current_version.minor}.{current_version.micro}")
     
-    # Django 5.2.1 requires Python 3.10 or higher
-    if current_version.major < 3 or (current_version.major == 3 and current_version.minor < 10):
-        print("Error: This project requires Python 3.10 or higher!")
-        print("Please install a compatible Python version.")
+    # First check if Python 3.11.6 is installed somewhere
+    python311_path = find_python311()
+    if python311_path:
+        print(f"\nFound Python 3.11.6 at: {python311_path}")
+        print("Will use this version for setup.")
+        return python311_path
+    
+    # If not found, check current version
+    if current_version.major != 3 or current_version.minor != 11 or current_version.micro != 6:
+        print("\nError: This project requires Python 3.11.6!")
+        print("\nPlease follow these steps:")
+        print("1. Download Python 3.11.6 from: https://www.python.org/downloads/release/python-3116/")
+        print("2. Install it on your system")
+        print("3. Make sure to check 'Add Python 3.11 to PATH' during installation")
+        print("4. Run this setup script again")
         sys.exit(1)
     
     print("Python version is compatible!")
+    return None
 
-# Check Python version first
-check_python_version()
+# Check Python version and find Python 3.11.6 if available
+python311_path = check_python_version()
 
 # Check if virtual environment already exists
 venv_path = "AVICAST_WEB_311"
@@ -35,8 +85,13 @@ if os.path.exists(venv_path):
     print("Please delete the existing virtual environment first if you want to create a new one.")
     sys.exit(1)
 
-# Create virtual environment
-run_command("python -m venv AVICAST_WEB_311", "Creating virtual environment")
+# Create virtual environment using Python 3.11.6 if found, otherwise use current Python
+if python311_path:
+    venv_cmd = f'"{python311_path}" -m venv {venv_path}'
+else:
+    venv_cmd = "python -m venv AVICAST_WEB_311"
+
+run_command(venv_cmd, "Creating virtual environment")
 
 # Activate virtual environment and install requirements
 if os.name == 'nt':  # Windows
