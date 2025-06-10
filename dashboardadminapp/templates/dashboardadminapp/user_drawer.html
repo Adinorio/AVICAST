@@ -15,6 +15,12 @@
         </select>
       </div>
 
+      <!-- Custom ID (only for super_admin) -->
+      <div class="user-drawer__form-group" id="customIdGroup" style="display: none;">
+        <label for="customId">Custom ID <span class="validation-text">(required for Super Admin)</span></label>
+        <input type="text" id="customId" name="customId" placeholder="Enter custom ID" pattern="[0-9]{6}" title="Please enter a 6-digit number">
+      </div>
+
       <!-- First Name -->
       <div class="user-drawer__form-group">
         <label for="firstName">First name <span class="validation-text">(required)</span></label>
@@ -127,6 +133,63 @@ function hideDrawerAlerts() {
   
   errorAlert.style.display = 'none';
   successAlert.style.display = 'none';
+}
+
+// Add event listener for role selection
+document.getElementById('userRole').addEventListener('change', function() {
+  const customIdGroup = document.getElementById('customIdGroup');
+  const customIdInput = document.getElementById('customId');
+  
+  if (this.value === 'super_admin') {
+    customIdGroup.style.display = 'block';
+    customIdInput.required = true;
+  } else {
+    customIdGroup.style.display = 'none';
+    customIdInput.required = false;
+    customIdInput.value = ''; // Clear the value when hidden
+  }
+});
+
+// Update validateForm function
+function validateForm() {
+  let isValid = true;
+  hideValidationMessages();
+
+  if (roleInput.value.trim() === '') {
+    requiredRoleText.style.display = 'inline';
+    isValid = false;
+  }
+
+  // Add custom ID validation for super_admin
+  if (roleInput.value === 'super_admin') {
+    const customIdInput = document.getElementById('customId');
+    if (!customIdInput.value.match(/^[0-9]{6}$/)) {
+      customIdInput.closest('.user-drawer__form-group').querySelector('.validation-text').style.display = 'inline';
+      isValid = false;
+    }
+  }
+
+  if (firstNameInput.value.trim() === '') {
+    requiredFirstNameText.style.display = 'inline';
+    isValid = false;
+  }
+
+  if (lastNameInput.value.trim() === '') {
+    requiredLastNameText.style.display = 'inline';
+    isValid = false;
+  }
+
+  if (passwordInput.value.trim() === '') {
+    requiredPasswordText.style.display = 'inline';
+    isValid = false;
+  }
+
+  if (passwordInput.value !== confirmPasswordInput.value) {
+    passwordMatchText.style.display = 'inline';
+    isValid = false;
+  }
+
+  return isValid;
 }
 
 // Update the form submission handler
