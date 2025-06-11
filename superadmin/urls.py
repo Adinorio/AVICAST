@@ -22,8 +22,9 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('accounts/', include(('superadminloginapp.urls', 'superadminloginapp'), namespace='superadminloginapp')),
-    path('dashboardadminapp/', include('dashboardadminapp.urls')),
-    path('admindashboard/', include('admindashboard.urls')),
+    path('', include('src.apps.authentication.urls')),
+    path('user-management/', include('src.apps.user_management.urls')),
+    path('admin-dashboard/', include('admindashboard.urls')),
+    path('theme/', include('theme.urls')),
     path("__reload__/", include("django_browser_reload.urls")),
-] + static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

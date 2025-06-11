@@ -32,7 +32,7 @@ from django.conf import settings
 import pandas as pd
 from datetime import datetime
 from .decorators import permission_required # Import the custom decorator
-from dashboardadminapp.models import SystemLog  # Add this import at the top
+from src.apps.user_management.models import SystemLog  # Updated import path
 
 # Get the base directory of the project
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -149,7 +149,7 @@ def logout_view(request):
             action='logout'
         )
     logout(request)
-    return redirect('superadminloginapp:login')
+    return redirect('authentication:login')
 
 @permission_required('view_image_processing')
 def bird_identification_view(request):

@@ -39,14 +39,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'superadminloginapp',
-    'dashboardadminapp',
+    'src.apps.authentication',
+    'src.apps.user_management',
     'admindashboard',
-
     'tailwind',
-    'theme',
     'django_browser_reload',
-
 ]
 
 TAILWIND_APP_NAME = 'theme'
@@ -148,9 +145,9 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 # Ensure all static directories are included
 STATICFILES_DIRS = [
-    BASE_DIR / "static",
-    BASE_DIR / "superadminloginapp" / "static",
-    BASE_DIR / "dashboardadminapp" / "static",  # ✅ Add this!
+    BASE_DIR / "src" / "apps" / "authentication" / "static",
+    BASE_DIR / "src" / "apps" / "user_management" / "static",
+    BASE_DIR / "admindashboard" / "static",
 ]
 
 
@@ -160,12 +157,12 @@ STATICFILES_DIRS = [
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Authentication settings
-LOGIN_URL = '/accounts/login/'
+LOGIN_URL = '/authentication/login/'
 LOGIN_REDIRECT_URL = '/admindashboard/dashboard/'  # Default to admin dashboard
-LOGOUT_REDIRECT_URL = '/accounts/login/'
+LOGOUT_REDIRECT_URL = '/authentication/login/'
 
 # Custom user model
-AUTH_USER_MODEL = 'dashboardadminapp.User'
+AUTH_USER_MODEL = 'user_management.User'
 
 # Session settings
 SESSION_COOKIE_AGE = 3600  # 1 hour in seconds
@@ -181,27 +178,22 @@ LOGGING = {
             'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
             'style': '{',
         },
-        'simple': {
-            'format': '{levelname} {message}',
-            'style': '{',
-        },
     },
     'handlers': {
         'console': {
-            'level': 'DEBUG',
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
     },
     'loggers': {
-        'dashboardadminapp.views': {
+        'src.apps.authentication.views': {
             'handlers': ['console'],
             'level': 'DEBUG',
-            'propagate': False,
+            'propagate': True,
         },
-        'django': {
+        'src.apps.user_management.views': {
             'handlers': ['console'],
-            'level': 'INFO',
+            'level': 'DEBUG',
             'propagate': True,
         },
     },

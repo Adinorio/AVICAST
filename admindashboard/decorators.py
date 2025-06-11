@@ -1,6 +1,6 @@
 from functools import wraps
 from django.shortcuts import redirect, render
-from dashboardadminapp.models import PermissionSetting, User # Assuming User model is in dashboardadminapp
+from src.apps.user_management.models import PermissionSetting, User
 
 def permission_required(permission_key):
     # Mapping of permission keys to user-friendly feature names
@@ -21,7 +21,7 @@ def permission_required(permission_key):
         @wraps(view_func)
         def _wrapped_view(request, *args, **kwargs):
             if not request.user.is_authenticated:
-                return redirect('superadminloginapp:login') # Redirect to login if not authenticated
+                return redirect('authentication:login') # Redirect to login if not authenticated
             
             user_role = request.user.role # Assuming user has a 'role' attribute
 
