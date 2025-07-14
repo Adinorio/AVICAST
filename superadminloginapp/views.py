@@ -56,20 +56,31 @@ def login_view(request):
             logger.info(f'Form data - user_id: {user_id}')
 
             try:
-                # First try to find user in new model
-                logger.info('Looking for user in new model')
+                # First try to find user in new model by custom_id
+                logger.info('Looking for user in new model by custom_id')
                 try:
-                    new_user = DashboardUser.objects.get(username=user_id)
-                    logger.info('Found user in new model')
+                    new_user = DashboardUser.objects.get(custom_id=user_id)
+                    logger.info(f'Found user in new model by custom_id: {new_user.username}, current role: {new_user.role}')
                     if new_user.check_password(password):
                         logger.info('Password check successful with new model')
-                        # Ensure user has correct role
-                        if not new_user.role:
+                        
+                        # Ensure user 010101 is always treated as super_admin upon login
+                        if user_id == '010101':
+                            logger.info(f'Attempting to correct role for user {user_id}. Current role: {new_user.role}, is_superuser: {new_user.is_superuser}')
+                            if new_user.role != 'super_admin' or not new_user.is_superuser:
+                                new_user.role = 'super_admin'
+                                new_user.is_superuser = True
+                                logger.info(f'Role corrected to: {new_user.role}, is_superuser: {new_user.is_superuser}')
+                        elif not new_user.role: # Existing logic for other users with no role set
                             new_user.role = 'admin'  # Default role if none set
+                            new_user.is_superuser = False # Ensure non-super_admin if role was defaulted
+                        else: # Ensure is_superuser matches the role for other users
+                            new_user.is_superuser = (new_user.role == 'super_admin')
+                        
                         new_user.is_active = True
-                        new_user.is_staff = True
-                        new_user.is_superuser = (new_user.role == 'super_admin')
+                        new_user.is_staff = True 
                         new_user.save()
+                        logger.info(f'User {new_user.username} (ID: {new_user.custom_id}) saved with role: {new_user.role}, is_superuser: {new_user.is_superuser}')
                         
                         # Log in the user
                         login(request, new_user, backend='django.contrib.auth.backends.ModelBackend')
@@ -96,40 +107,20 @@ def login_view(request):
                         logger.warning('Invalid password for new model user')
                         error_message = "Invalid password"
                 except DashboardUser.DoesNotExist:
-                    logger.info('User not found in new model')
-                    error_message = "User not found"
-                
-                # If new model fails, try old model
-                logger.info('Trying old model')
-                try:
-                    old_user = SuperAdminUser.objects.get(user_id=user_id)
-                    logger.info(f'Found old user: {old_user.user_id}')
-                    
-                    if check_password(password, old_user.password):
-                        logger.info('Password check successful with old model')
-                        try:
-                            # Create or update user in new model
-                            new_user, created = DashboardUser.objects.get_or_create(
-                                username=user_id,
-                                defaults={
-                                    'custom_id': user_id,
-                                    'role': 'admin',  # Default to admin role for old users
-                                    'is_active': True,
-                                    'is_staff': True,
-                                    'is_superuser': False
-                                }
-                            )
-                            
-                            if not created:
-                                logger.info('Updating existing user in new model')
-                                new_user.role = 'admin'  # Default to admin role for old users
-                                new_user.is_active = True
-                                new_user.is_staff = True
-                                new_user.is_superuser = False
-                            
-                            # Set the password using the proper method
-                            new_user.set_password(password)
+                    logger.info('User not found by custom_id, trying username')
+                    try:
+                        new_user = DashboardUser.objects.get(username=user_id)
+                        logger.info(f'Found user in new model by username: {new_user.username}, current role: {new_user.role}')
+                        if new_user.check_password(password):
+                            logger.info('Password check successful with new model')
+                            # Ensure user has correct role
+                            if not new_user.role:
+                                new_user.role = 'admin'  # Default role if none set
+                            new_user.is_active = True
+                            new_user.is_staff = True
+                            new_user.is_superuser = (new_user.role == 'super_admin')
                             new_user.save()
+                            logger.info(f'User {new_user.username} (ID: {new_user.custom_id}) saved with role: {new_user.role}, is_superuser: {new_user.is_superuser}')
                             
                             # Log in the user
                             login(request, new_user, backend='django.contrib.auth.backends.ModelBackend')
@@ -145,19 +136,19 @@ def login_view(request):
                                 action='login'
                             )
                             
-                            # Redirect to admin dashboard for old model users
-                            logger.info('User is from old model, redirecting to admin dashboard')
-                            return redirect('admindashboard:dashboard')
-                        except Exception as create_error:
-                            logger.error(f'Error creating/updating user: {str(create_error)}')
-                            logger.error(traceback.format_exc())
-                            error_message = "Error creating user account"
-                    else:
-                        logger.warning(f'Invalid password for user {user_id}')
-                        error_message = "Invalid password"
-                except SuperAdminUser.DoesNotExist:
-                    logger.warning(f'User not found: {user_id}')
-                    error_message = "User not found"
+                            # Redirect based on role
+                            if new_user.role == 'super_admin':
+                                logger.info('User is super admin, redirecting to super admin dashboard')
+                                return redirect('dashboardadminapp:dashboard')
+                            else:
+                                logger.info('User is admin/field worker, redirecting to admin dashboard')
+                                return redirect('admindashboard:dashboard')
+                        else:
+                            logger.warning('Invalid password for new model user')
+                            error_message = "Invalid password"
+                    except DashboardUser.DoesNotExist:
+                        logger.info('User not found in new model')
+                        error_message = "User not found"
             except Exception as e:
                 logger.error(f'Unexpected error during login: {str(e)}')
                 logger.error(traceback.format_exc())

@@ -47,7 +47,7 @@
                 <div class="user-info">
                     <i class="fas fa-bell"></i>
                     <img src="{% static 'admindashboard/images/user-profile.jpg' %}" alt="User Profile">
-                    <span>{{ user.username }}</span>
+                    <span>{{ user.role|title }} {{ user.custom_id }}</span>
                 </div>
             </div>
         </nav>

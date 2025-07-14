@@ -191,6 +191,7 @@ def create_user(request):
             last_name = request.POST.get('lastName')
             password = request.POST.get('password')
             role = request.POST.get('role')
+            custom_id = request.POST.get('customId')  # Get custom ID if provided
 
             # Validate required fields
             if not all([first_name, last_name, password, role]):
@@ -198,6 +199,21 @@ def create_user(request):
                     'status': 'error',
                     'message': 'All fields are required'
                 }, status=400)
+
+            # For super_admin role, validate custom ID
+            if role == 'super_admin':
+                if not custom_id or not custom_id.isdigit() or len(custom_id) != 6:
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': 'Super Admin requires a valid 6-digit custom ID'
+                    }, status=400)
+                
+                # Check if custom ID already exists
+                if User.objects.filter(custom_id=custom_id).exists():
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': f'Custom ID {custom_id} is already in use'
+                    }, status=400)
 
             # Check for existing user with same name
             existing_user = User.objects.filter(
@@ -211,20 +227,22 @@ def create_user(request):
                     'message': f'A user with the name {first_name} {last_name} already exists'
                 }, status=400)
 
-            # Get the latest user ID and increment
-            latest_user = User.objects.order_by('-custom_id').first()
-            if latest_user and latest_user.custom_id:
-                # Extract the sequence number and increment
-                sequence = int(latest_user.custom_id.split('-')[-1]) + 1
-            else:
-                sequence = 1
+            # Generate custom ID for non-super_admin users
+            if role != 'super_admin':
+                # Get the latest user ID and increment
+                latest_user = User.objects.order_by('-custom_id').first()
+                if latest_user and latest_user.custom_id:
+                    # Extract the sequence number and increment
+                    sequence = int(latest_user.custom_id.split('-')[-1]) + 1
+                else:
+                    sequence = 1
 
-            # Format: YY-MMDD-XXX
-            today = datetime.now()
-            year = str(today.year)[-2:]
-            month = str(today.month).zfill(2)
-            day = str(today.day).zfill(2)
-            custom_id = f"{year}-{month}{day}-{str(sequence).zfill(3)}"
+                # Format: YY-MMDD-XXX
+                today = datetime.now()
+                year = str(today.year)[-2:]
+                month = str(today.month).zfill(2)
+                day = str(today.day).zfill(2)
+                custom_id = f"{year}-{month}{day}-{str(sequence).zfill(3)}"
 
             # Create the user
             user = User.objects.create(
@@ -232,7 +250,10 @@ def create_user(request):
                 first_name=first_name,
                 last_name=last_name,
                 custom_id=custom_id,
-                role=role
+                role=role,
+                is_active=True,
+                is_staff=True,
+                is_superuser=(role == 'super_admin')
             )
             user.set_password(password)
             user.save()
