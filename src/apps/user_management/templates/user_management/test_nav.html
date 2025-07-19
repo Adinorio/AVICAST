@@ -1,0 +1,23 @@
+{% extends 'user_management/base.html' %}
+
+{% block content %}
+<div style="padding: 2rem;">
+    <h1>Navigation Test Page</h1>
+    <p>This page is for testing navigation links.</p>
+    
+    <h2>Direct Links Test:</h2>
+    <ul>
+        <li><a href="{% url 'user_management:dashboard' %}">Dashboard</a></li>
+        <li><a href="{% url 'user_management:users' %}">Users</a></li>
+        <li><a href="{% url 'user_management:roles' %}">Roles</a></li>
+        <li><a href="{% url 'user_management:logs' %}">Logs</a></li>
+        <li><a href="{% url 'user_management:notifications' %}">Notifications</a></li>
+        <li><a href="{% url 'user_management:settings' %}">Settings</a></li>
+    </ul>
+    
+    <h2>Current User Info:</h2>
+    <p>Username: {{ user.username }}</p>
+    <p>Role: {{ user.role }}</p>
+    <p>Is Authenticated: {{ user.is_authenticated }}</p>
+</div>
+{% endblock %} 

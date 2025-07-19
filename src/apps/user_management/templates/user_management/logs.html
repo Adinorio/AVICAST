@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'user_management/base.html' %}
 {% load static %}
 
 {% block content %}
@@ -37,7 +37,7 @@
   <section class="users-table">
     <div class="users-table__header">
       <div class="users-table__search">
-        <form method="GET" action="{% url 'dashboardadminapp:logs' %}">
+        <form method="GET" action="{% url 'user_management:logs' %}">
           <input type="text" name="search" placeholder="Search logs..." value="{{ request.GET.search }}">
         </form>
       </div>
@@ -53,7 +53,7 @@
             <a href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}level=ERROR" class="log-level-option" style="display: block; padding: 10px 20px; color: #fff; text-decoration: none;">Error</a>
           </div>
         </div>
-        <form id="filter-form" method="GET" action="{% url 'dashboardadminapp:logs' %}" style="display:none;">
+        <form id="filter-form" method="GET" action="{% url 'user_management:logs' %}" style="display:none;">
           <input type="hidden" name="search" value="{{ request.GET.search }}">
         </form>
       </div>

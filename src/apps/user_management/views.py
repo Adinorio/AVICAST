@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import logout, get_user_model
 from django.utils.timezone import now
-from .models import UserProfile, User, PermissionSetting, SystemLog
+from .models import UserProfile, PermissionSetting, SystemLog
 from django.urls import reverse
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -32,7 +32,7 @@ def check_auth(view_func):
         logger.info('check_auth decorator called')
         logger.info(f'User authenticated: {request.user.is_authenticated}')
         logger.info(f'User: {request.user}')
-        logger.info(f'Session data: {dict(request.session)}')
+        logger.info(f'Session data: {dict(request.session) if hasattr(request, "session") else "No session"}')
         
         if not request.user.is_authenticated:
             logger.warning('User not authenticated, redirecting to login')
@@ -119,14 +119,14 @@ def users_view(request):
         'num_pages': paginator.num_pages,
         'current_page_number': users.number,
     }
-    return render(request, 'dashboardadminapp/users.html', context)
+    return render(request, 'user_management/users.html', context)
 
 # List archived users
 @check_auth
 def archived_users(request):
     users = UserProfile.objects.all()  # Temporarily show all users
     today = datetime.now()
-    return render(request, "dashboardadminapp/archived_user.html", {
+    return render(request, "user_management/archived_user.html", {
         "users": users,
         "today": today
     })
@@ -145,7 +145,7 @@ def add_user(request):
         # Check if user already exists
         if User.objects.filter(username=email).exists():
             messages.error(request, "A user with this ID already exists.")
-            return redirect("dashboardadminapp:add_user")
+            return redirect("user_management:add_user")
 
         try:
             # Create User with proper fields
@@ -175,14 +175,14 @@ def add_user(request):
             )
 
             messages.success(request, f"User {user.custom_id} added successfully!")
-            return redirect("dashboardadminapp:users")
+            return redirect("user_management:users")
         except Exception as e:
             logger.error(f'Error creating user: {str(e)}')
             logger.error(traceback.format_exc())
             messages.error(request, "Error creating user. Please try again.")
-            return redirect("dashboardadminapp:add_user")
+            return redirect("user_management:add_user")
 
-    return render(request, "dashboardadminapp/add_user.html")
+    return render(request, "user_management/add_user.html")
 
 # Create user (re-added)
 @login_required
@@ -296,12 +296,12 @@ def edit_user(request, user_id=None):
             user_profile.save()
 
             messages.success(request, f"User {user_to_edit.custom_id} updated successfully!")
-            return redirect("dashboardadminapp:users")
+            return redirect("user_management:users")
         except Exception as e:
             logger.error(f'Error updating user: {str(e)}')
             logger.error(traceback.format_exc())
             messages.error(request, "Error updating user. Please try again.")
-            return redirect("dashboardadminapp:edit_user", user_id=user_id)
+            return redirect("user_management:edit_user", user_id=user_id)
 
     else:
         try:
@@ -316,7 +316,7 @@ def edit_user(request, user_id=None):
             logger.error(f'Error fetching user for edit: {str(e)}')
             logger.error(traceback.format_exc())
             messages.error(request, "User not found.")
-            return redirect("dashboardadminapp:users")
+            return redirect("user_management:users")
 
 
 @csrf_exempt
@@ -344,20 +344,47 @@ def disable_user(request, user_id):
 @check_auth
 def roles_view(request):
     # Get permission settings for admin and field worker
-    admin_permissions = PermissionSetting.objects.filter(role='Admin').first()
-    field_worker_permissions = PermissionSetting.objects.filter(role='Field Worker').first()
+    admin_permissions = PermissionSetting.objects.filter(role='admin').first()
+    field_worker_permissions = PermissionSetting.objects.filter(role='field_worker').first()
 
     # If settings don't exist, create default ones
     if not admin_permissions:
-        admin_permissions = PermissionSetting.objects.create(role='Admin')
+        admin_permissions = PermissionSetting.objects.create(role='admin')
     if not field_worker_permissions:
-        field_worker_permissions = PermissionSetting.objects.create(role='Field Worker')
+        field_worker_permissions = PermissionSetting.objects.create(role='field_worker')
 
-    context = {
-        'admin_permissions': admin_permissions,
-        'field_worker_permissions': field_worker_permissions,
+    # Convert model instances to dictionaries for JSON serialization
+    admin_permissions_dict = {
+        'view_report_management': admin_permissions.view_report_management if admin_permissions else False,
+        'generate_reports': admin_permissions.generate_reports if admin_permissions else False,
+        'view_species_management': admin_permissions.view_species_management if admin_permissions else False,
+        'modify_data': admin_permissions.modify_data if admin_permissions else False,
+        'view_site_management': admin_permissions.view_site_management if admin_permissions else False,
+        'add_sites': admin_permissions.add_sites if admin_permissions else False,
+        'view_bird_census_management': admin_permissions.view_bird_census_management if admin_permissions else False,
+        'add_birds': admin_permissions.add_birds if admin_permissions else False,
+        'view_image_processing': admin_permissions.view_image_processing if admin_permissions else False,
+        'generate_data': admin_permissions.generate_data if admin_permissions else False,
     }
-    return render(request, 'dashboardadminapp/roles.html', context)
+    
+    field_worker_permissions_dict = {
+        'view_report_management': field_worker_permissions.view_report_management if field_worker_permissions else False,
+        'generate_reports': field_worker_permissions.generate_reports if field_worker_permissions else False,
+        'view_species_management': field_worker_permissions.view_species_management if field_worker_permissions else False,
+        'modify_data': field_worker_permissions.modify_data if field_worker_permissions else False,
+        'view_site_management': field_worker_permissions.view_site_management if field_worker_permissions else False,
+        'add_sites': field_worker_permissions.add_sites if field_worker_permissions else False,
+        'view_bird_census_management': field_worker_permissions.view_bird_census_management if field_worker_permissions else False,
+        'add_birds': field_worker_permissions.add_birds if field_worker_permissions else False,
+        'view_image_processing': field_worker_permissions.view_image_processing if field_worker_permissions else False,
+        'generate_data': field_worker_permissions.generate_data if field_worker_permissions else False,
+    }
+    
+    context = {
+        'admin_permissions': admin_permissions_dict,
+        'field_worker_permissions': field_worker_permissions_dict,
+    }
+    return render(request, 'user_management/roles.html', context)
 
 @check_auth
 def assign_roles(request):
@@ -365,7 +392,7 @@ def assign_roles(request):
     context = {
         'users': users
     }
-    return render(request, "dashboardadminapp/assign_roles.html", context)
+    return render(request, "user_management/assign_roles.html", context)
 
 @csrf_exempt
 @check_auth
@@ -404,7 +431,7 @@ def update_permission(request):
             return JsonResponse({'status': 'error', 'message': f'An error occurred: {e}'}, status=500)
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
-@login_required
+@check_auth
 def logs_view(request):
     # Get all logs
     logs_list = SystemLog.objects.all().order_by('-timestamp')
@@ -418,7 +445,12 @@ def logs_view(request):
     except EmptyPage:
         logs = paginator.page(paginator.num_pages)
 
-    return render(request, 'dashboardadminapp/logs.html', {'logs': logs})
+    context = {
+        'logs': logs,
+        'total_logs': SystemLog.objects.count(),
+        'critical_logs': SystemLog.objects.filter(level='ERROR').count(),
+    }
+    return render(request, 'user_management/logs.html', context)
 
 @check_auth
 def custom_logout(request):
@@ -452,7 +484,7 @@ def forgot_password_request(request):
 
 @check_auth
 def notifications_view(request):
-    return render(request, 'dashboardadminapp/notifications.html')
+    return render(request, 'user_management/notifications.html')
 
 @check_auth
 def settings_view(request):
@@ -483,3 +515,8 @@ def is_super_admin(user):
 
 def is_admin_or_field_worker(user):
     return user.is_authenticated and user.role in ['admin', 'field_worker'] 
+
+@check_auth
+def test_nav_view(request):
+    """Test view for navigation"""
+    return render(request, 'user_management/test_nav.html') 

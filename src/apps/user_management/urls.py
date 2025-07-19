@@ -29,4 +29,5 @@ urlpatterns = [
     path('notifications/', views.notifications_view, name='notifications'),
     path('settings/', views.settings_view, name='settings'),
     path('update_permission/', views.update_permission, name='update_permission'),
+    path('test-nav/', views.test_nav_view, name='test_nav'),
 ] 

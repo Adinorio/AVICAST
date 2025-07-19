@@ -22,19 +22,16 @@
                 <i class="sidebar__nav-icon fas fa-tachometer-alt"></i>
                 <span class="sidebar__nav-text">Dashboard</span>
             </a></li>
-            <li><a href="{% url 'user_management:users' %}" class="sidebar__nav-item {% if request.resolver_name == 'user_management:users' %}sidebar__nav-item--active{% endif %}" data-nav="user-management" aria-label="User Management" tabindex="0">
+            <li><a href="{% url 'user_management:users' %}" class="sidebar__nav-item {% if request.resolver_match.url_name == 'users' %}sidebar__nav-item--active{% endif %}" data-nav="user-management" aria-label="User Management" tabindex="0">
                 <i class="sidebar__nav-icon fas fa-users"></i>
                 <span class="sidebar__nav-text">User Management</span>
             </a></li>
-            <li><a href="{% url 'user_management:roles' %}" class="sidebar__nav-item {% if request.resolver_name == 'user_management:roles' %}sidebar__nav-item--active{% endif %}" data-nav="roles" aria-label="Roles" tabindex="0">
+            <li><a href="{% url 'user_management:roles' %}" class="sidebar__nav-item {% if request.resolver_match.url_name == 'roles' %}sidebar__nav-item--active{% endif %}" data-nav="roles" aria-label="Roles" tabindex="0">
                 <i class="sidebar__nav-icon fas fa-user-tag"></i>
                 <span class="sidebar__nav-text">Roles</span>
             </a></li>
-            <li><a href="#" class="sidebar__nav-item {% if request.resolver_name == 'user_management:assignment' %}sidebar__nav-item--active{% endif %}" data-nav="assignment" aria-label="Assignment" tabindex="0">
-                <i class="sidebar__nav-icon fas fa-clipboard-list"></i>
-                <span class="sidebar__nav-text">Assignment</span>
-            </a></li>
-            <li><a href="{% url 'user_management:logs' %}" class="sidebar__nav-item {% if request.resolver_name == 'user_management:logs' %}sidebar__nav-item--active{% endif %}" data-nav="history" aria-label="History" tabindex="0">
+
+            <li><a href="{% url 'user_management:logs' %}" class="sidebar__nav-item {% if request.resolver_match.url_name == 'logs' %}sidebar__nav-item--active{% endif %}" data-nav="history" aria-label="History" tabindex="0">
                 <i class="sidebar__nav-icon fas fa-history"></i>
                 <span class="sidebar__nav-text">History</span>
             </a></li>
@@ -43,24 +40,22 @@
         <!-- Bottom Section -->
         <div class="sidebar__bottom">
             <ul class="sidebar__nav sidebar__nav--bottom">
-                <li><a href="{% url 'user_management:notifications' %}" class="sidebar__nav-item {% if request.resolver_name == 'user_management:notifications' %}sidebar__nav-item--active{% endif %}" data-nav="notifications" aria-label="Notifications" tabindex="0">
+                <li><a href="{% url 'user_management:notifications' %}" class="sidebar__nav-item {% if request.resolver_match.url_name == 'notifications' %}sidebar__nav-item--active{% endif %}" data-nav="notifications" aria-label="Notifications" tabindex="0">
                     <i class="sidebar__nav-icon fas fa-bell"></i>
                     <span class="sidebar__nav-text">Notifications</span>
                     <span class="sidebar__badge sidebar__badge--show">1</span>
                 </a></li>
-                <li><a href="{% url 'user_management:settings' %}" class="sidebar__nav-item {% if request.resolver_name == 'user_management:settings' %}sidebar__nav-item--active{% endif %}" data-nav="settings" aria-label="Settings" tabindex="0">
+                <li><a href="{% url 'user_management:settings' %}" class="sidebar__nav-item {% if request.resolver_match.url_name == 'settings' %}sidebar__nav-item--active{% endif %}" data-nav="settings" aria-label="Settings" tabindex="0">
                     <i class="sidebar__nav-icon fas fa-cog"></i>
                     <span class="sidebar__nav-text">Settings</span>
                 </a></li>
                 <li><a href="{% url 'authentication:logout' %}" class="sidebar__nav-item" data-nav="logout" aria-label="Logout" tabindex="0">
-                    <span class="sidebar__icon-container">
-                        <i class="fas fa-sign-out-alt sidebar__icon"></i>
-                    </span>
-                    <span class="sidebar__label">Logout</span>
+                    <i class="sidebar__nav-icon fas fa-sign-out-alt"></i>
+                    <span class="sidebar__nav-text">Logout</span>
                 </a></li>
             </ul>
             <div class="sidebar__profile">
-                <div class="sidebar__avatar sidebar__avatar--profile"><img src="{% static 'images/TranspaCENRO.png' %}" alt="User Avatar" class="sidebar__profile-image"></div>
+                <div class="sidebar__avatar sidebar__avatar--profile"><i class="fas fa-user-circle sidebar__profile-image" style="font-size: 2rem; color: #fff;"></i></div>
                 <div class="sidebar__profile-text">
                     <span class="sidebar__username">Dhenz Sherwin Cuenca</span>
                     <span class="sidebar__role">Super Admin</span>
@@ -93,14 +88,11 @@ document.addEventListener('focusout', (e) => {
 // Handle click events
 navItems.forEach(item => {
     item.addEventListener('click', function(e) {
-        if (this.tagName === 'BUTTON') {
-            e.preventDefault();
-            // Remove active class from all items
-            navItems.forEach(i => i.classList.remove('sidebar__nav-item--active'));
-            // Add active class to clicked item
-            this.classList.add('sidebar__nav-item--active');
-            this.focus();
-        }
+        // Remove active class from all items
+        navItems.forEach(i => i.classList.remove('sidebar__nav-item--active'));
+        // Add active class to clicked item
+        this.classList.add('sidebar__nav-item--active');
+        this.focus();
     });
 });
 
@@ -134,8 +126,8 @@ document.addEventListener('keydown', function(e) {
         navItems[prevIdx].classList.add('sidebar__nav-item--active');
         navItems[prevIdx].focus();
     } else if (e.key === 'Enter' && current.tagName === 'A') {
-        e.preventDefault();
-        current.click();
+        // Don't prevent default for Enter key on links
+        // Let the browser handle the navigation
     }
 });
 

@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'user_management/base.html' %}
 {% load static %}
 
 {% block content %}
@@ -144,7 +144,7 @@
       // Implement AJAX call to update the backend
       console.log(`Updating ${role} permission: ${permissionKey} to ${isChecked}`);
       // Example fetch call (you'll need to define this endpoint in urls.py and views.py)
-      fetch('/dashboardadminapp/update_permission/', {
+      fetch('/user-management/update_permission/', {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',

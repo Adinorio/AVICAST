@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'user_management/base.html' %}
 {% load static %}
 
 {% block content %}
@@ -108,8 +108,7 @@
   </div>
 </div>
 
-{% include 'dashboardadminapp/user_drawer.html' %}
-{% include 'dashboardadminapp/edit_user_drawer.html' %}
+<!-- User drawer templates removed - functionality will be added later -->
 
 <script>
   const addUserButton = document.getElementById('addUserButton');

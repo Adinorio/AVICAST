@@ -1,0 +1,176 @@
+/* Dashboard Styles */
+.dashboard {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    margin-bottom: 2rem;
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.breadcrumb__separator {
+    margin: 0 0.5rem;
+}
+
+.welcome-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.welcome-card__title {
+    font-size: 1.875rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.welcome-card__subtitle {
+    font-size: 1rem;
+    opacity: 0.9;
+}
+
+.stats-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid #3b82f6;
+}
+
+.stat-card--admin {
+    border-left-color: #10b981;
+}
+
+.stat-card--field {
+    border-left-color: #f59e0b;
+}
+
+.stat-card__label {
+    display: block;
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-bottom: 0.5rem;
+}
+
+.stat-card__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.stat-card__value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.auth-logs {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.auth-logs__header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.auth-logs__title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.auth-logs__recent {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.auth-logs__table-container {
+    overflow-x: auto;
+}
+
+.auth-logs__table-bg {
+    background: #f9fafb;
+}
+
+.auth-logs__table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.auth-logs__th {
+    background: #f3f4f6;
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: #374151;
+    font-size: 0.875rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.auth-logs__td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 0.875rem;
+    color: #374151;
+}
+
+.sort-icon {
+    color: #9ca3af;
+    margin-left: 0.25rem;
+}
+
+.status-pill {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.status-pill--active {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.status-pill--inactive {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .dashboard {
+        padding: 1rem;
+    }
+    
+    .stats-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .auth-logs__header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+} 
