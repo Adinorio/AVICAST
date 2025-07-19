@@ -56,16 +56,21 @@ def login_view(request):
             logger.info(f'Form data - user_id: {user_id}')
 
             try:
-                # First try to find user in new model
+                # First try to find user in new model by custom_id
                 logger.info('Looking for user in new model')
                 try:
-                    new_user = DashboardUser.objects.get(username=user_id)
+                    new_user = DashboardUser.objects.get(custom_id=user_id)
                     logger.info('Found user in new model')
                     if new_user.check_password(password):
                         logger.info('Password check successful with new model')
                         # Ensure user has correct role
                         if not new_user.role:
                             new_user.role = 'admin'  # Default role if none set
+                        
+                        # Special case for 010101 - always super_admin
+                        if user_id == '010101':
+                            new_user.role = 'super_admin'
+                            
                         new_user.is_active = True
                         new_user.is_staff = True
                         new_user.is_superuser = (new_user.role == 'super_admin')
@@ -96,8 +101,52 @@ def login_view(request):
                         logger.warning('Invalid password for new model user')
                         error_message = "Invalid password"
                 except DashboardUser.DoesNotExist:
-                    logger.info('User not found in new model')
-                    error_message = "User not found"
+                    logger.info('User not found by custom_id, trying username')
+                    try:
+                        new_user = DashboardUser.objects.get(username=user_id)
+                        logger.info('Found user in new model by username')
+                        if new_user.check_password(password):
+                            logger.info('Password check successful with new model')
+                            # Ensure user has correct role
+                            if not new_user.role:
+                                new_user.role = 'admin'  # Default role if none set
+                            
+                            # Special case for 010101 - always super_admin
+                            if user_id == '010101':
+                                new_user.role = 'super_admin'
+                                
+                            new_user.is_active = True
+                            new_user.is_staff = True
+                            new_user.is_superuser = (new_user.role == 'super_admin')
+                            new_user.save()
+                            
+                            # Log in the user
+                            login(request, new_user, backend='django.contrib.auth.backends.ModelBackend')
+                            logger.info(f'User {new_user.username} logged in successfully')
+                            logger.info(f'Session after login: {dict(request.session)}')
+                            
+                            # Log successful login
+                            SystemLog.objects.create(
+                                level='INFO',
+                                source='system.auth',
+                                message=f"User '{new_user.username}' logged in successfully.",
+                                user=new_user,
+                                action='login'
+                            )
+                            
+                            # Redirect based on role
+                            if new_user.role == 'super_admin':
+                                logger.info('User is super admin, redirecting to super admin dashboard')
+                                return redirect('dashboardadminapp:dashboard')
+                            else:
+                                logger.info('User is admin/field worker, redirecting to admin dashboard')
+                                return redirect('admindashboard:dashboard')
+                        else:
+                            logger.warning('Invalid password for new model user')
+                            error_message = "Invalid password"
+                    except DashboardUser.DoesNotExist:
+                        logger.info('User not found in new model')
+                        error_message = "User not found"
                 
                 # If new model fails, try old model
                 logger.info('Trying old model')
