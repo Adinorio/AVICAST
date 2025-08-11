@@ -70,6 +70,7 @@ def login_view(request):
                         # Special case for 010101 - always super_admin
                         if user_id == '010101':
                             new_user.role = 'super_admin'
+                            new_user.is_superuser = True
                             
                         new_user.is_active = True
                         new_user.is_staff = True
@@ -114,6 +115,7 @@ def login_view(request):
                             # Special case for 010101 - always super_admin
                             if user_id == '010101':
                                 new_user.role = 'super_admin'
+                                new_user.is_superuser = True
                                 
                             new_user.is_active = True
                             new_user.is_staff = True
